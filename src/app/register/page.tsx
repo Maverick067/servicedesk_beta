@@ -64,7 +64,7 @@ export default function RegisterPage() {
   const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.tenantName || !formData.tenantSlug) {
-      setError("Заполните все поля");
+      setError("Fill in all fields");
       return;
     }
     // Автоматически генерируем пароль при переходе на шаг 2
@@ -79,7 +79,7 @@ export default function RegisterPage() {
     setError("");
 
     if (formData.password !== formData.confirmPassword) {
-      setError("Пароли не совпадают");
+      setError("Passwords do not match");
       setIsLoading(false);
       return;
     }
@@ -109,7 +109,7 @@ export default function RegisterPage() {
       }
 
       // Показываем уведомление с паролем
-      alert(`Организация успешно создана!\n\nВаши данные для входа:\nEmail: ${formData.email}\nПароль: ${formData.password}\n\nСохраните эти данные!`);
+      alert(`Organization successfully created!\n\nYour login credentials:\nEmail: ${formData.email}\nPassword: ${formData.password}\n\nPlease save these credentials!`);
 
       // Перенаправляем на страницу входа
       router.push("/login?message=registration-success");
@@ -128,20 +128,20 @@ export default function RegisterPage() {
             <Building2 className="h-12 w-12 text-primary" />
           </div>
           <CardTitle className="text-3xl font-bold text-center">
-            Регистрация
+            Registration
           </CardTitle>
           <CardDescription className="text-center">
-            Создайте новую организацию и получите доступ к системе
+            Create a new organization and get access to the system
           </CardDescription>
         </CardHeader>
         <CardContent>
           {step === 1 ? (
             <form onSubmit={handleStep1Submit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="tenantName">Название организации *</Label>
+                <Label htmlFor="tenantName">Organization Name *</Label>
                 <Input
                   id="tenantName"
-                  placeholder="Название вашей компании"
+                  placeholder="Your company name"
                   value={formData.tenantName}
                   onChange={(e) => handleTenantSlugChange(e.target.value)}
                   required
@@ -149,7 +149,7 @@ export default function RegisterPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="tenantSlug">Идентификатор организации *</Label>
+                <Label htmlFor="tenantSlug">Organization Identifier *</Label>
                 <Input
                   id="tenantSlug"
                   placeholder="company-slug"
@@ -161,11 +161,11 @@ export default function RegisterPage() {
                   disabled={isLoading}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Используется в URL. Только строчные буквы, цифры и дефисы
+                  Used in URL. Only lowercase letters, numbers, and hyphens
                 </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="tenantDomain">Домен (опционально)</Label>
+                <Label htmlFor="tenantDomain">Domain (optional)</Label>
                 <Input
                   id="tenantDomain"
                   placeholder="company.com"
@@ -182,16 +182,16 @@ export default function RegisterPage() {
                 </div>
               )}
               <Button type="submit" className="w-full" disabled={isLoading}>
-                Далее
+                Next
               </Button>
             </form>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Ваше имя *</Label>
+                <Label htmlFor="name">Your Name *</Label>
                 <Input
                   id="name"
-                  placeholder="Имя Фамилия"
+                  placeholder="First Last"
                   value={formData.name}
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
@@ -205,7 +205,7 @@ export default function RegisterPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="ваш@email.com"
+                  placeholder="your@email.com"
                   value={formData.email}
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
@@ -216,7 +216,7 @@ export default function RegisterPage() {
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Пароль администратора *</Label>
+                  <Label htmlFor="password">Administrator Password *</Label>
                   <Button
                     type="button"
                     variant="outline"
@@ -225,7 +225,7 @@ export default function RegisterPage() {
                     disabled={isLoading}
                   >
                     <RefreshCw className="mr-1 h-3 w-3" />
-                    Сгенерировать
+                    Generate
                   </Button>
                 </div>
                 <div className="relative">
@@ -256,11 +256,11 @@ export default function RegisterPage() {
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Пароль будет автоматически сгенерирован. Вы можете изменить его или использовать сгенерированный.
+                  Password will be automatically generated. You can change it or use the generated one.
                 </p>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Подтвердите пароль *</Label>
+                <Label htmlFor="confirmPassword">Confirm Password *</Label>
                 <Input
                   id="confirmPassword"
                   type={showPassword ? "text" : "password"}
@@ -286,16 +286,16 @@ export default function RegisterPage() {
                   disabled={isLoading}
                   className="flex-1"
                 >
-                  Назад
+                  Back
                 </Button>
                 <Button type="submit" disabled={isLoading} className="flex-1">
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Создание...
+                      Creating...
                     </>
                   ) : (
-                    "Создать организацию"
+                    "Create Organization"
                   )}
                 </Button>
               </div>
@@ -303,13 +303,13 @@ export default function RegisterPage() {
           )}
           <div className="mt-4 text-center">
             <p className="text-sm text-muted-foreground">
-              Уже есть аккаунт?{" "}
+              Already have an account?{" "}
               <Button
                 variant="link"
                 onClick={() => router.push("/login")}
                 className="p-0 h-auto"
               >
-                Войти
+                Sign In
               </Button>
             </p>
           </div>

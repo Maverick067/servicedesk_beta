@@ -11,12 +11,12 @@ import { ModuleGuard } from "@/components/module-guard";
 
 export default function AutomationPage() {
   return (
-    <ModuleGuard module="automation" moduleName="Автоматизация">
+    <ModuleGuard module="automation" moduleName="Automation">
       <div className="container relative">
       <PageHeader>
-        <PageHeaderHeading>Автоматизация</PageHeaderHeading>
+        <PageHeaderHeading>Automation</PageHeaderHeading>
         <PageHeaderDescription>
-          Создавайте правила автоматизации для тикетов с условиями и действиями.
+          Create automation rules for tickets with conditions and actions.
         </PageHeaderDescription>
       </PageHeader>
       <div className="flex justify-end mb-4">
@@ -26,7 +26,7 @@ export default function AutomationPage() {
             className={cn(buttonVariants({ variant: "default" }))}
           >
             <PlusCircle className="mr-2 h-4 w-4" />
-            Создать правило
+            Create Rule
           </Link>
         </CreateRuleDialog>
       </div>

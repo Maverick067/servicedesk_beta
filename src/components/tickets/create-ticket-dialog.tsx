@@ -64,7 +64,7 @@ export function CreateTicketDialog() {
     categoryId: "none",
   });
 
-  // Загружаем категории, очереди и кастомные поля при монтировании компонента
+  // Load categories, queues and custom fields when component mounts
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -118,7 +118,7 @@ export function CreateTicketDialog() {
       if (!response.ok) {
         const data = await response.json();
         if (data.details) {
-          // Показываем детали валидации
+          // Show validation details
           const errorMessages = data.details.map((detail: any) => detail.message).join(", ");
           throw new Error(errorMessages);
         }
@@ -137,42 +137,44 @@ export function CreateTicketDialog() {
   return (
     <Card>
       <form onSubmit={handleSubmit}>
-        <CardHeader>
-          <CardTitle>Создать новый тикет</CardTitle>
-          <CardDescription>
-            Опишите вашу проблему или запрос
+        <CardHeader className="px-3 sm:px-6 py-3 sm:py-6">
+          <CardTitle className="text-lg sm:text-xl md:text-2xl">Create New Ticket</CardTitle>
+          <CardDescription className="text-xs sm:text-sm">
+            Describe your problem or request
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Заголовок *</Label>
+        <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6">
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="title" className="text-xs sm:text-sm">Title *</Label>
             <Input
               id="title"
-              placeholder="Краткое описание проблемы"
+              placeholder="Brief description of the problem"
               value={formData.title}
               onChange={(e) =>
                 setFormData({ ...formData, title: e.target.value })
               }
               required
               disabled={isLoading}
+              className="h-9 sm:h-10 text-xs sm:text-sm"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Описание *</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="description" className="text-xs sm:text-sm">Description *</Label>
             <Textarea
               id="description"
-              placeholder="Подробное описание проблемы или запроса"
+              placeholder="Detailed description of the problem or request"
               value={formData.description}
               onChange={(e) =>
                 setFormData({ ...formData, description: e.target.value })
               }
               required
               disabled={isLoading}
-              rows={6}
+              rows={4}
+              className="text-xs sm:text-sm min-h-[80px] sm:min-h-[120px]"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="queue">Очередь</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="queue" className="text-xs sm:text-sm">Queue</Label>
             <Select
               value={formData.queueId || "none"}
               onValueChange={(value) =>
@@ -180,23 +182,23 @@ export function CreateTicketDialog() {
               }
               disabled={isLoading}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Выберите очередь (необязательно)" />
+              <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                <SelectValue placeholder="Select a queue (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Без очереди</SelectItem>
+                <SelectItem value="none" className="text-xs sm:text-sm">No queue</SelectItem>
                 {queues
                   .filter((queue) => queue.id)
                   .map((queue) => (
-                    <SelectItem key={queue.id} value={queue.id}>
+                    <SelectItem key={queue.id} value={queue.id} className="text-xs sm:text-sm">
                       {queue.name}
                     </SelectItem>
                   ))}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="priority">Приоритет</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="priority" className="text-xs sm:text-sm">Priority</Label>
             <Select
               value={formData.priority}
               onValueChange={(value) =>
@@ -204,19 +206,19 @@ export function CreateTicketDialog() {
               }
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="LOW">Низкий</SelectItem>
-                <SelectItem value="MEDIUM">Средний</SelectItem>
-                <SelectItem value="HIGH">Высокий</SelectItem>
-                <SelectItem value="URGENT">Срочный</SelectItem>
+                <SelectItem value="LOW" className="text-xs sm:text-sm">Low</SelectItem>
+                <SelectItem value="MEDIUM" className="text-xs sm:text-sm">Medium</SelectItem>
+                <SelectItem value="HIGH" className="text-xs sm:text-sm">High</SelectItem>
+                <SelectItem value="URGENT" className="text-xs sm:text-sm">Urgent</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="category">Категория</Label>
+          <div className="space-y-1.5 sm:space-y-2">
+            <Label htmlFor="category" className="text-xs sm:text-sm">Category</Label>
             <Select
               value={formData.categoryId || "none"}
               onValueChange={(value) =>
@@ -224,15 +226,15 @@ export function CreateTicketDialog() {
               }
               disabled={isLoading}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Выберите категорию (необязательно)" />
+              <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
+                <SelectValue placeholder="Select a category (optional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="none">Без категории</SelectItem>
+                <SelectItem value="none" className="text-xs sm:text-sm">No category</SelectItem>
                 {categories
                   .filter((category) => category.id)
                   .map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
+                    <SelectItem key={category.id} value={category.id} className="text-xs sm:text-sm">
                       {category.name}
                     </SelectItem>
                   ))}
@@ -247,28 +249,35 @@ export function CreateTicketDialog() {
             }
           />
           {error && (
-            <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+            <div className="text-xs sm:text-sm text-red-600 bg-red-50 p-2 sm:p-3 rounded-md">
               {error}
             </div>
           )}
         </CardContent>
-        <CardFooter className="flex justify-between">
+        <CardFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0 justify-between px-3 sm:px-6 pb-3 sm:pb-6">
           <Button
             type="button"
             variant="outline"
             onClick={() => router.back()}
             disabled={isLoading}
+            className="w-full sm:w-auto touch-manipulation"
+            size="sm"
           >
-            Отмена
+            <span className="text-xs sm:text-sm">Cancel</span>
           </Button>
-          <Button type="submit" disabled={isLoading}>
+          <Button 
+            type="submit" 
+            disabled={isLoading}
+            className="w-full sm:w-auto touch-manipulation"
+            size="sm"
+          >
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Создание...
+                <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                <span className="text-xs sm:text-sm">Creating...</span>
               </>
             ) : (
-              "Создать тикет"
+              <span className="text-xs sm:text-sm">Create Ticket</span>
             )}
           </Button>
         </CardFooter>

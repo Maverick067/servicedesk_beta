@@ -22,6 +22,10 @@ interface Tenant {
   slug: string;
   domain: string | null;
   createdAt: string;
+  group: {
+    id: string;
+    name: string;
+  } | null;
   _count: {
     users: number;
     tickets: number;
@@ -34,9 +38,9 @@ export default function TenantsPage() {
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Проверяем, что пользователь - админ или tenant админ
+  // Check if user is admin or tenant admin
   useEffect(() => {
-    if (status === "loading") return; // Ждем загрузки сессии
+    if (status === "loading") return; // Wait for session to load
     
     if (!session || (session.user.role !== "ADMIN" && session.user.role !== "TENANT_ADMIN")) {
       router.push("/dashboard");
@@ -46,7 +50,7 @@ export default function TenantsPage() {
 
   useEffect(() => {
     async function fetchTenants() {
-      // Не загружаем данные, если пользователь не админ или tenant админ
+      // Don't load data if user is not admin or tenant admin
       if (!session || (session.user.role !== "ADMIN" && session.user.role !== "TENANT_ADMIN")) {
         setIsLoading(false);
         return;
@@ -68,7 +72,7 @@ export default function TenantsPage() {
   }, [session]);
 
   const handleDeleteTenant = async (tenantId: string, tenantName: string) => {
-    if (!confirm(`Вы уверены, что хотите удалить организацию "${tenantName}"? Это действие нельзя отменить.`)) {
+    if (!confirm(`Are you sure you want to delete the organization "${tenantName}"? This action cannot be undone.`)) {
       return;
     }
 
@@ -82,11 +86,11 @@ export default function TenantsPage() {
         throw new Error(data.error || "Failed to delete tenant");
       }
 
-      // Обновляем список организаций
+      // Update organizations list
       setTenants(tenants.filter(tenant => tenant.id !== tenantId));
-      toast.success("Организация успешно удалена!");
+      toast.success("Organization successfully deleted!");
     } catch (err: any) {
-      toast.error("Ошибка удаления организации", { description: err.message });
+      toast.error("Error deleting organization", { description: err.message });
     }
   };
 
@@ -95,9 +99,9 @@ export default function TenantsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Организации</h1>
+            <h1 className="text-3xl font-bold">Organizations</h1>
             <p className="text-muted-foreground mt-2">
-              Управление организациями и их данными
+              Manage organizations and their data
             </p>
           </div>
         </div>
@@ -116,15 +120,15 @@ export default function TenantsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Организации</h1>
+          <h1 className="text-3xl font-bold">Organizations</h1>
           <p className="text-muted-foreground mt-2">
-            Управление организациями и их данными
+            Manage organizations and their data
           </p>
         </div>
         {session?.user.role === "ADMIN" && (
           <Button onClick={() => router.push('/dashboard/tenants/create-with-admin')}>
             <Plus className="mr-2 h-4 w-4" />
-            Создать организацию
+            Create Organization
           </Button>
         )}
       </div>
@@ -133,14 +137,14 @@ export default function TenantsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <Building2 className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Нет организаций</h3>
+            <h3 className="text-lg font-semibold mb-2">No organizations</h3>
             <p className="text-muted-foreground mb-4">
-              Создайте первую организацию для начала работы
+              Create your first organization to get started
             </p>
             {session?.user.role === "ADMIN" && (
               <Button onClick={() => router.push('/dashboard/tenants/create-with-admin')}>
                 <Plus className="mr-2 h-4 w-4" />
-                Создать организацию
+                Create Organization
               </Button>
             )}
           </CardContent>
@@ -152,7 +156,14 @@ export default function TenantsPage() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <CardTitle className="text-xl mb-2">{tenant.name}</CardTitle>
+                    <div className="flex items-center gap-2 mb-2">
+                      <CardTitle className="text-xl">{tenant.name}</CardTitle>
+                      {tenant.group && (
+                        <Badge variant="secondary" className="text-xs">
+                          {tenant.group.name}
+                        </Badge>
+                      )}
+                    </div>
                     <CardDescription className="mb-2">
                       <code className="text-sm bg-muted px-2 py-1 rounded">
                         {tenant.slug}
@@ -174,11 +185,11 @@ export default function TenantsPage() {
                   <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
-                      <span>{tenant._count.users} пользователей</span>
+                      <span>{tenant._count.users} users</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Ticket className="h-4 w-4 text-muted-foreground" />
-                      <span>{tenant._count.tickets} тикетов</span>
+                      <span>{tenant._count.tickets} tickets</span>
                     </div>
                   </div>
                 </div>
@@ -189,7 +200,7 @@ export default function TenantsPage() {
                     className="flex-1"
                     onClick={() => router.push(`/dashboard/tenants/${tenant.id}/edit`)}
                   >
-                    Редактировать
+                    Edit
                   </Button>
                   <Button 
                     variant="outline" 
@@ -197,7 +208,7 @@ export default function TenantsPage() {
                     className="flex-1"
                     onClick={() => router.push(`/dashboard/tenants/${tenant.id}/users`)}
                   >
-                    Пользователи
+                    Users
                   </Button>
                   <Button 
                     variant="destructive" 
@@ -206,7 +217,7 @@ export default function TenantsPage() {
                     onClick={() => handleDeleteTenant(tenant.id, tenant.name)}
                   >
                     <Trash2 className="mr-1 h-3 w-3" />
-                    Удалить
+                    Delete
                   </Button>
                 </div>
               </CardContent>

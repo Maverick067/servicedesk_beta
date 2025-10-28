@@ -6,6 +6,7 @@ import { z } from "zod";
 import { createTicketNotifications } from "@/lib/notifications";
 import { createAuditLog, getClientIp, getUserAgent } from "@/lib/audit-log";
 import { calculateSlaDueDate } from "@/lib/sla-utils";
+import { autoAssignTicket } from "@/lib/ticket-assignment";
 
 const createTicketSchema = z.object({
   title: z.string().min(3, "Заголовок должен содержать минимум 3 символа"),
@@ -31,30 +32,26 @@ export async function GET(request: Request) {
 
     const where: any = {};
 
-    // Глобальный ADMIN видит ВСЕ тикеты всех организаций
-    if (session.user.role !== "ADMIN") {
-      // Для остальных ролей фильтруем по tenantId
-      if (!session.user.tenantId) {
-        return NextResponse.json({ error: "Tenant ID required" }, { status: 400 });
-      }
-      where.tenantId = session.user.tenantId;
+    // Глобальный ADMIN (без tenantId) НЕ видит обычные тикеты
+    if (session.user.role === "ADMIN" && !session.user.tenantId) {
+      // Супер-админ работает только с support-тикетами
+      return NextResponse.json([]);
     }
 
+    // Все остальные роли фильтруем по tenantId
+    if (!session.user.tenantId) {
+      return NextResponse.json({ error: "Tenant ID required" }, { status: 400 });
+    }
+    where.tenantId = session.user.tenantId;
+
     // Логика видимости тикетов:
-    // - USER: видит только свои тикеты
-    // - AGENT: видит назначенные на него тикеты или тикеты из категорий, где он назначен (если нет прав canViewAllTickets)
+    // - USER: видит только свои тикеты (созданные им)
+    // - AGENT: видит ВСЕ тикеты своего тенанта (поддержка всех клиентов)
     // - TENANT_ADMIN: видит ВСЕ тикеты своей организации
-    // - ADMIN: видит ВСЕ тикеты всех организаций
     if (session.user.role === "USER") {
       where.creatorId = session.user.id;
-    } else if (session.user.role === "AGENT" && !session.user.permissions?.canViewAllTickets) {
-      // Агент без прав canViewAllTickets видит только тикеты, назначенные на него
-      where.OR = [
-        { assigneeId: session.user.id },
-        { creatorId: session.user.id },
-      ];
     }
-    // TENANT_ADMIN и ADMIN видят все тикеты (нет дополнительных условий)
+    // AGENT и TENANT_ADMIN видят все тикеты своего тенанта (фильтр по tenantId уже установлен)
 
     if (status) {
       where.status = status;
@@ -132,6 +129,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Супер-админ не может создавать обычные тикеты (только support-тикеты)
+    if (session.user.role === "ADMIN" && !session.user.tenantId) {
+      return NextResponse.json(
+        { error: "Super admins cannot create regular tickets. Use support tickets instead." },
+        { status: 403 }
+      );
+    }
+
+    // Проверяем наличие tenantId
+    if (!session.user.tenantId) {
+      return NextResponse.json({ error: "Tenant ID required" }, { status: 400 });
+    }
+
     const body = await request.json();
     const validatedData = createTicketSchema.parse(body);
 
@@ -200,10 +210,18 @@ export async function POST(request: Request) {
       });
     }
 
-    // Автоматическое назначение агента
-    let assignedAgentId = null;
-    if (validatedData.categoryId) {
-      assignedAgentId = await assignTicketToAgent(ticket.id, validatedData.categoryId, session.user.tenantId);
+    // 🤖 Автоматическое распределение тикета между агентами
+    const assignedAgentId = await autoAssignTicket({
+      tenantId: session.user.tenantId,
+      categoryId: validatedData.categoryId || null,
+    });
+
+    // Обновляем тикет с назначенным агентом
+    if (assignedAgentId) {
+      await prisma.ticket.update({
+        where: { id: ticket.id },
+        data: { assigneeId: assignedAgentId },
+      });
     }
 
     // Создаем уведомления о новом тикете
@@ -253,57 +271,3 @@ export async function POST(request: Request) {
     );
   }
 }
-
-// Функция для автоматического назначения тикета агенту
-async function assignTicketToAgent(ticketId: string, categoryId: string, tenantId: string): Promise<string | null> {
-  try {
-    // Находим агентов, назначенных на эту категорию
-    const categoryAssignments = await prisma.categoryAgentAssignment.findMany({
-      where: {
-        categoryId: categoryId,
-        agent: {
-          tenantId: tenantId,
-          role: "AGENT",
-          isActive: true,
-        },
-      },
-      include: {
-        agent: true,
-      },
-    });
-
-    if (categoryAssignments.length === 0) {
-      console.log(`No agents assigned to category ${categoryId}`);
-      return null;
-    }
-
-    // Находим доступного агента (статус AVAILABLE)
-    const availableAgent = categoryAssignments.find(
-      assignment => assignment.agent.agentStatus === "AVAILABLE"
-    );
-
-    if (availableAgent) {
-      // Назначаем тикет доступному агенту
-      await prisma.ticket.update({
-        where: { id: ticketId },
-        data: { assigneeId: availableAgent.agentId },
-      });
-      console.log(`Ticket ${ticketId} assigned to agent ${availableAgent.agent.email}`);
-      return availableAgent.agentId;
-    } else {
-      // Если нет доступных агентов, назначаем первого агента категории
-      // и эскалируем тикет (можно добавить уведомления)
-      const firstAgent = categoryAssignments[0];
-      await prisma.ticket.update({
-        where: { id: ticketId },
-        data: { assigneeId: firstAgent.agentId },
-      });
-      console.log(`Ticket ${ticketId} assigned to busy agent ${firstAgent.agent.email} (escalated)`);
-      return firstAgent.agentId;
-    }
-  } catch (error) {
-    console.error("Error assigning ticket to agent:", error);
-    return null;
-  }
-}
-

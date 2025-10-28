@@ -34,10 +34,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Суперадмин (ADMIN без tenantId) видит все политики
+    const whereClause = session.user.role === "ADMIN" && !session.user.tenantId
+      ? {} // Суперадмин видит все
+      : { tenantId: session.user.tenantId };
+
     const policies = await prisma.slaPolicy.findMany({
-      where: {
-        tenantId: session.user.tenantId,
-      },
+      where: whereClause,
       include: {
         _count: {
           select: {

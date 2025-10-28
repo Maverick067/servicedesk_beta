@@ -8,47 +8,113 @@ import {
   AvatarImage,
 } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
-import { LogOut, Settings } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
-export function DashboardHeader() {
+interface DashboardHeaderProps {
+  onMenuToggle?: () => void;
+  mobileMenuOpen?: boolean;
+}
+
+export function DashboardHeader({ onMenuToggle, mobileMenuOpen }: DashboardHeaderProps) {
   const { data: session } = useSession();
 
+  const getRoleLabel = () => {
+    switch (session?.user.role) {
+      case "ADMIN": return "Администратор";
+      case "TENANT_ADMIN": return "Админ организации";
+      case "AGENT": return "Агент";
+      case "USER": return "Пользователь";
+      default: return "";
+    }
+  };
+
   return (
-    <header className="border-b bg-white">
-      <div className="flex h-16 items-center px-6 justify-between">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold text-primary">ServiceDesk</h1>
+    <header className="border-b bg-white sticky top-0 z-30">
+      <div className="flex h-14 sm:h-16 items-center px-3 sm:px-6 justify-between">
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Кнопка мобильного меню */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden"
+            onClick={onMenuToggle}
+          >
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
+          </Button>
+          
+          <h1 className="text-lg sm:text-2xl font-bold text-primary">ServiceDesk</h1>
           {session?.user.tenantSlug && (
-            <span className="text-sm text-muted-foreground">
+            <span className="hidden sm:inline text-sm text-muted-foreground">
               {session.user.tenantSlug}
             </span>
           )}
         </div>
 
-        <div className="flex items-center gap-4">
-          {/* <NotificationBell /> */}
-          <div className="text-right">
-            <p className="text-sm font-medium">{session?.user.name || session?.user.email}</p>
-            <p className="text-xs text-muted-foreground">
-              {session?.user.role === "ADMIN" && "Администратор"}
-              {session?.user.role === "TENANT_ADMIN" && "Администратор организации"}
-              {session?.user.role === "AGENT" && "Агент"}
-              {session?.user.role === "USER" && "Пользователь"}
-            </p>
+        <div className="flex items-center gap-2 sm:gap-4">
+          {/* Десктопная версия профиля */}
+          <div className="hidden md:flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-sm font-medium">{session?.user.name || session?.user.email}</p>
+              <p className="text-xs text-muted-foreground">{getRoleLabel()}</p>
+            </div>
+            <Avatar>
+              <AvatarImage src={session?.user.avatar} />
+              <AvatarFallback>
+                {session?.user.name ? getInitials(session.user.name) : "UN"}
+              </AvatarFallback>
+            </Avatar>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => signOut({ callbackUrl: "/login" })}
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
-          <Avatar>
-            <AvatarImage src={session?.user.avatar} />
-            <AvatarFallback>
-              {session?.user.name ? getInitials(session.user.name) : "UN"}
-            </AvatarFallback>
-          </Avatar>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => signOut({ callbackUrl: "/login" })}
-          >
-            <LogOut className="h-4 w-4" />
-          </Button>
+
+          {/* Мобильная версия профиля (dropdown) */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild className="md:hidden">
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={session?.user.avatar} />
+                  <AvatarFallback className="text-xs">
+                    {session?.user.name ? getInitials(session.user.name) : "UN"}
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>
+                <div>
+                  <p className="text-sm font-medium">{session?.user.name || session?.user.email}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{getRoleLabel()}</p>
+                  {session?.user.tenantSlug && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Тенант: {session.user.tenantSlug}
+                    </p>
+                  )}
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Выйти</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

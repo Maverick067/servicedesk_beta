@@ -74,18 +74,18 @@ const priorityColors: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
-  OPEN: "Открыт",
-  IN_PROGRESS: "В работе",
-  PENDING: "Ожидание",
-  RESOLVED: "Решен",
-  CLOSED: "Закрыт",
+  OPEN: "Open",
+  IN_PROGRESS: "In Progress",
+  PENDING: "Pending",
+  RESOLVED: "Resolved",
+  CLOSED: "Closed",
 };
 
 const priorityLabels: Record<string, string> = {
-  LOW: "Низкий",
-  MEDIUM: "Средний",
-  HIGH: "Высокий",
-  URGENT: "Срочный",
+  LOW: "Low",
+  MEDIUM: "Medium",
+  HIGH: "High",
+  URGENT: "Urgent",
 };
 
 export function TicketList() {
@@ -97,12 +97,12 @@ export function TicketList() {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Загружаем тикеты
+        // Load tickets
         const ticketsResponse = await fetch("/api/tickets");
         const ticketsData = await ticketsResponse.json();
         setTickets(ticketsData);
 
-        // Загружаем количество непрочитанных комментариев
+        // Load unread comment counts
         const unreadResponse = await fetch("/api/tickets/unread-counts");
         if (unreadResponse.ok) {
           const unreadData = await unreadResponse.json();
@@ -117,7 +117,7 @@ export function TicketList() {
 
     fetchData();
 
-    // Слушаем события обновления комментариев
+    // Listen for comment update events
     const handleCommentAdded = (event: CustomEvent) => {
       const { ticketId, commentCount } = event.detail;
       setTickets(prevTickets => 
@@ -127,7 +127,7 @@ export function TicketList() {
             : ticket
         )
       );
-      // Обновляем счетчик непрочитанных
+      // Update unread counter
       setUnreadCounts(prev => ({
         ...prev,
         [ticketId]: (prev[ticketId] || 0) + 1
@@ -157,14 +157,14 @@ export function TicketList() {
     return (
       <Card>
         <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">Нет тикетов</p>
+          <p className="text-muted-foreground">No tickets</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {tickets.map((ticket, index) => (
         <motion.div
           key={ticket.id}
@@ -173,35 +173,37 @@ export function TicketList() {
           transition={{ delay: index * 0.05, duration: 0.3 }}
         >
           <Card
-            className="cursor-pointer hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-l-4 overflow-hidden group"
+            className="cursor-pointer hover:shadow-xl transition-all duration-300 sm:hover:-translate-y-1 border-l-4 overflow-hidden group touch-manipulation active:scale-[0.98]"
             style={{ borderLeftColor: ticket.category?.color || '#3b82f6' }}
             onClick={() => router.push(`/dashboard/tickets/${ticket.id}`)}
           >
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="outline" className="font-mono text-xs bg-gradient-to-r from-blue-50 to-purple-50">
-                      <Hash className="h-3 w-3 mr-1" />
-                      {formatTicketNumber(ticket.tenant?.slug || 'GLOBAL', ticket.number)}
+            <CardHeader className="pb-2 sm:pb-3 px-3 sm:px-6 py-3 sm:py-4">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  {/* Badges Row - horizontal scroll on mobile */}
+                  <div className="flex items-center gap-1.5 sm:gap-2 mb-2 overflow-x-auto pb-1 scrollbar-thin">
+                    <Badge variant="outline" className="font-mono text-[10px] sm:text-xs bg-gradient-to-r from-blue-50 to-purple-50 flex-shrink-0">
+                      <Hash className="h-3 w-3 mr-0.5 sm:mr-1" />
+                      <span className="hidden xs:inline">{formatTicketNumber(ticket.tenant?.slug || 'GLOBAL', ticket.number)}</span>
+                      <span className="xs:hidden">#{ticket.number}</span>
                     </Badge>
                     {ticket.queue && (
                       <Badge 
                         variant="secondary" 
-                        className="text-xs"
+                        className="text-[10px] sm:text-xs flex-shrink-0"
                         style={{ 
                           backgroundColor: `${ticket.queue.color}20`,
                           color: ticket.queue.color,
                           borderColor: ticket.queue.color
                         }}
                       >
-                        📥 {ticket.queue.name}
+                        <span className="hidden sm:inline">📥 </span>{ticket.queue.name}
                       </Badge>
                     )}
                     {ticket.category && (
                       <Badge 
                         variant="secondary" 
-                        className="text-xs"
+                        className="text-[10px] sm:text-xs flex-shrink-0"
                         style={{ 
                           backgroundColor: `${ticket.category.color}20`,
                           color: ticket.category.color,
@@ -213,76 +215,133 @@ export function TicketList() {
                     )}
                     <SlaBadge slaDueDate={ticket.slaDueDate} slaBreached={ticket.slaBreached} />
                   </div>
-                  <CardTitle className="text-lg mb-2 group-hover:text-blue-600 transition-colors">
+                  
+                  {/* Title - responsive size */}
+                  <CardTitle className="text-base sm:text-lg mb-1.5 sm:mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
                     {ticket.title}
                   </CardTitle>
-                  <CardDescription className="line-clamp-2">
+                  
+                  {/* Description - hide on small screens */}
+                  <CardDescription className="line-clamp-1 sm:line-clamp-2 text-xs sm:text-sm">
                     {ticket.description}
                   </CardDescription>
                 </div>
-                <div className="flex gap-2 ml-4">
-                  <Badge className={`${statusColors[ticket.status]} transition-transform group-hover:scale-105`}>
+                
+                {/* Status/Priority - column on mobile */}
+                <div className="flex sm:flex-col gap-1.5 sm:gap-2 sm:ml-4">
+                  <Badge className={`${statusColors[ticket.status]} transition-transform group-hover:scale-105 text-[10px] sm:text-xs flex-shrink-0`}>
                     {statusLabels[ticket.status]}
                   </Badge>
-                  <Badge className={`${priorityColors[ticket.priority]} transition-transform group-hover:scale-105`}>
+                  <Badge className={`${priorityColors[ticket.priority]} transition-transform group-hover:scale-105 text-[10px] sm:text-xs flex-shrink-0`}>
                     {priorityLabels[ticket.priority]}
                   </Badge>
                 </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage src={ticket.creator.avatar || undefined} />
-                    <AvatarFallback className="text-xs">
-                      {getInitials(ticket.creator.name || ticket.creator.email)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="text-muted-foreground">
-                    {ticket.creator.name || ticket.creator.email}
+              </div>
+            </CardHeader>
+            
+            <CardContent className="px-3 sm:px-6 py-2 sm:py-4">
+              {/* Mobile version - stack */}
+              <div className="flex flex-col sm:hidden gap-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Avatar className="h-5 w-5 flex-shrink-0">
+                      <AvatarImage src={ticket.creator.avatar || undefined} />
+                      <AvatarFallback className="text-[10px]">
+                        {getInitials(ticket.creator.name || ticket.creator.email)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-muted-foreground truncate">
+                      {ticket.creator.name || ticket.creator.email}
+                    </span>
+                  </div>
+                  <span className="text-muted-foreground text-[10px] flex-shrink-0 ml-2">
+                    {formatDate(ticket.createdAt)}
                   </span>
                 </div>
-                {ticket.assignee && (
-                  <>
-                    <span className="text-muted-foreground">→</span>
-                    <div className="flex items-center gap-2">
-                      <Avatar className="h-6 w-6">
+                
+                <div className="flex items-center justify-between">
+                  {ticket.assignee && (
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="text-muted-foreground flex-shrink-0">→</span>
+                      <Avatar className="h-5 w-5 flex-shrink-0">
                         <AvatarImage src={ticket.assignee.avatar || undefined} />
-                        <AvatarFallback className="text-xs">
+                        <AvatarFallback className="text-[10px]">
                           {getInitials(ticket.assignee.name || ticket.assignee.email)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-muted-foreground">
+                      <span className="text-muted-foreground truncate">
                         {ticket.assignee.name || ticket.assignee.email}
                       </span>
                     </div>
-                  </>
-                )}
-              </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 text-blue-700">
-                    <MessageSquare className="h-4 w-4" />
-                    <span className="text-sm font-medium">{ticket._count.comments}</span>
-                  </div>
-                  {unreadCounts[ticket.id] > 0 && (
-                    <div className="relative">
-                      <div className="flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-red-500 text-white text-xs font-bold">
+                  )}
+                  
+                  <div className="flex items-center gap-1.5 ml-auto">
+                    <div className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-700">
+                      <MessageSquare className="h-3 w-3" />
+                      <span className="text-xs font-medium">{ticket._count.comments}</span>
+                    </div>
+                    {unreadCounts[ticket.id] > 0 && (
+                      <div className="flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold">
                         {unreadCounts[ticket.id]}
                       </div>
-                      <span className="sr-only">Непрочитанных комментариев: {unreadCounts[ticket.id]}</span>
-                    </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+              
+              {/* Desktop version - row */}
+              <div className="hidden sm:flex items-center justify-between text-sm">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage src={ticket.creator.avatar || undefined} />
+                      <AvatarFallback className="text-xs">
+                        {getInitials(ticket.creator.name || ticket.creator.email)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="text-muted-foreground">
+                      {ticket.creator.name || ticket.creator.email}
+                    </span>
+                  </div>
+                  {ticket.assignee && (
+                    <>
+                      <span className="text-muted-foreground">→</span>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={ticket.assignee.avatar || undefined} />
+                          <AvatarFallback className="text-xs">
+                            {getInitials(ticket.assignee.name || ticket.assignee.email)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-muted-foreground">
+                          {ticket.assignee.name || ticket.assignee.email}
+                        </span>
+                      </div>
+                    </>
                   )}
                 </div>
-                <span className="text-muted-foreground">
-                  {formatDate(ticket.createdAt)}
-                </span>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 text-blue-700">
+                      <MessageSquare className="h-4 w-4" />
+                      <span className="text-sm font-medium">{ticket._count.comments}</span>
+                    </div>
+                    {unreadCounts[ticket.id] > 0 && (
+                      <div className="relative">
+                        <div className="flex items-center justify-center h-5 min-w-[20px] px-1.5 rounded-full bg-red-500 text-white text-xs font-bold">
+                          {unreadCounts[ticket.id]}
+                        </div>
+                        <span className="sr-only">Unread comments: {unreadCounts[ticket.id]}</span>
+                      </div>
+                    )}
+                  </div>
+                  <span className="text-muted-foreground">
+                    {formatDate(ticket.createdAt)}
+                  </span>
+                </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
         </motion.div>
       ))}
     </div>

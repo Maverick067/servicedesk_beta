@@ -1,72 +1,76 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
-// POST /api/users/[id]/reset-password - Сбросить пароль пользователя
+/**
+ * POST /api/users/[id]/reset-password - Сброс пароля пользователя
+ * Только для глобальных ADMIN
+ */
 export async function POST(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    
+    // Только глобальные админы могут сбрасывать пароли
+    if (!session?.user || session.user.role !== "ADMIN") {
+      return NextResponse.json(
+        { error: "Unauthorized. Only global admins can reset passwords." },
+        { status: 401 }
+      );
     }
 
-    // Проверяем права на сброс паролей
-    const canReset = 
-      session.user.role === "ADMIN" || 
-      session.user.role === "TENANT_ADMIN" ||
-      (session.user.role === "AGENT" && session.user.permissions?.canResetPasswords);
+    const { newPassword } = await request.json();
 
-    if (!canReset) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    if (!newPassword || newPassword.length < 8) {
+      return NextResponse.json(
+        { error: "Password must be at least 8 characters long" },
+        { status: 400 }
+      );
     }
 
-    // Проверяем, что пользователь существует и принадлежит к той же организации
-    const user = await prisma.user.findFirst({
-      where: {
-        id: params.id,
-        tenantId: session.user.tenantId,
+    // Проверяем, существует ли пользователь
+    const user = await prisma.user.findUnique({
+      where: { id: params.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
       },
     });
 
     if (!user) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Агенты не могут сбрасывать пароли админов
-    if (session.user.role === "AGENT" && (user.role === "ADMIN" || user.role === "TENANT_ADMIN")) {
-      return NextResponse.json(
-        { error: "Агенты не могут сбрасывать пароли админов" },
-        { status: 403 }
-      );
-    }
+    // Хешируем новый пароль
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Генерируем временный пароль
-    const temporaryPassword = Math.random().toString(36).slice(-8);
-    const hashedPassword = await bcrypt.hash(temporaryPassword, 10);
-
+    // Обновляем пароль
     await prisma.user.update({
       where: { id: params.id },
-      data: { password: hashedPassword },
+      data: {
+        password: hashedPassword,
+      },
     });
 
-    return NextResponse.json({ 
-      message: "Password reset successfully",
-      temporaryPassword,
+    // Логируем действие
+    console.log(
+      `[ADMIN ACTION] Admin ${session.user.email} reset password for user ${user.email}`
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: `Password reset successfully for ${user.email}`,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error resetting password:", error);
     return NextResponse.json(
-      { error: "Failed to reset password" },
+      { error: error.message || "Internal Server Error" },
       { status: 500 }
     );
   }
 }
-

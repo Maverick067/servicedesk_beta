@@ -26,8 +26,18 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
+    // Супер-админ видит только TENANT_ADMIN'ов (не обычных пользователей и агентов)
+    let whereClause: any = getTenantWhereClause(session);
+    
+    if (session.user.role === "ADMIN" && !session.user.tenantId) {
+      // Глобальный админ видит только TENANT_ADMIN'ов
+      whereClause = {
+        role: "TENANT_ADMIN",
+      };
+    }
+
     const users = await prisma.user.findMany({
-      where: { ...getTenantWhereClause(session) },
+      where: whereClause,
       select: {
         id: true,
         name: true,
@@ -36,6 +46,13 @@ export async function GET(request: Request) {
         avatar: true,
         isActive: true,
         createdAt: true,
+        tenantId: true,
+        tenant: {
+          select: {
+            name: true,
+            slug: true,
+          },
+        },
         _count: {
           select: {
             createdTickets: true,

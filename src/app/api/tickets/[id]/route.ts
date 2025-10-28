@@ -24,6 +24,15 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Супер-админ не имеет доступа к обычным тикетам
+    if (session.user.role === "ADMIN" && !session.user.tenantId) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    if (!session.user.tenantId) {
+      return NextResponse.json({ error: "Tenant ID required" }, { status: 400 });
+    }
+
     const ticket = await prisma.ticket.findFirst({
       where: {
         id: params.id,
@@ -88,6 +97,14 @@ export async function GET(
     // - ADMIN: видит все тикеты организации
     if (session.user.role === "USER" && ticket.creatorId !== session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Если создатель тикета открывает свой тикет - обновляем время последнего просмотра
+    if (ticket.creatorId === session.user.id) {
+      await prisma.ticket.update({
+        where: { id: params.id },
+        data: { lastViewedByCreatorAt: new Date() },
+      });
     }
 
     return NextResponse.json(ticket);

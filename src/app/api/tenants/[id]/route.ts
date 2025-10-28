@@ -1,33 +1,37 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const updateTenantSchema = z.object({
-  name: z.string().min(2).optional(),
-  slug: z.string().min(2).regex(/^[a-z0-9-]+$/).optional(),
-  domain: z.string().optional(),
+  name: z.string().min(2, "Название должно содержать минимум 2 символа"),
+  settings: z.object({
+    ticketPrefix: z.string().optional(),
+  }).optional(),
 });
 
-// GET /api/tenants/[id] - Получить организацию
+/**
+ * GET /api/tenants/[id]
+ * Получить информацию об организации
+ */
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
+
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только админы и tenant админы могут получать данные организации
-    if (session.user.role !== "ADMIN" && session.user.role !== "TENANT_ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    // Проверка прав доступа
+    const canAccess =
+      session.user.role === "ADMIN" || // Глобальный админ
+      (session.user.role === "TENANT_ADMIN" && session.user.tenantId === params.id); // Админ своей организации
 
-    // TENANT_ADMIN может видеть только свою организацию
-    if (session.user.role === "TENANT_ADMIN" && session.user.tenantId !== params.id) {
+    if (!canAccess) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -38,6 +42,18 @@ export async function GET(
           select: {
             users: true,
             tickets: true,
+            categories: true,
+            queues: true,
+            customFields: true,
+          },
+        },
+        users: {
+          where: {
+            role: "AGENT",
+            isActive: true,
+          },
+          select: {
+            id: true,
           },
         },
       },
@@ -47,130 +63,138 @@ export async function GET(
       return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
     }
 
-    return NextResponse.json(tenant);
-  } catch (error) {
+    // Подсчет открытых тикетов
+    const openTicketsCount = await prisma.ticket.count({
+      where: {
+        tenantId: params.id,
+        status: {
+          notIn: ["RESOLVED", "CLOSED"],
+        },
+      },
+    });
+
+    // Формируем ответ
+    const response = {
+      id: tenant.id,
+      name: tenant.name,
+      slug: tenant.slug,
+      domain: tenant.domain,
+      customDomain: tenant.customDomain,
+      customDomainVerified: tenant.customDomainVerified,
+      settings: tenant.settings || {},
+      createdAt: tenant.createdAt,
+      updatedAt: tenant.updatedAt,
+      stats: {
+        totalUsers: tenant._count.users,
+        totalAgents: tenant.users.length,
+        totalTickets: tenant._count.tickets,
+        openTickets: openTicketsCount,
+        categories: tenant._count.categories,
+        queues: tenant._count.queues,
+        customFields: tenant._count.customFields,
+      },
+    };
+
+    return NextResponse.json(response);
+  } catch (error: any) {
     console.error("Error fetching tenant:", error);
     return NextResponse.json(
-      { error: "Failed to fetch tenant" },
+      { error: error.message || "Internal Server Error" },
       { status: 500 }
     );
   }
 }
 
-// PATCH /api/tenants/[id] - Обновить организацию
+/**
+ * PATCH /api/tenants/[id]
+ * Обновить информацию об организации
+ */
 export async function PATCH(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
+
     if (!session?.user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только админы и tenant админы могут обновлять организацию
-    if (session.user.role !== "ADMIN" && session.user.role !== "TENANT_ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
+    // Проверка прав доступа
+    const canUpdate =
+      session.user.role === "ADMIN" || // Глобальный админ
+      (session.user.role === "TENANT_ADMIN" && session.user.tenantId === params.id); // Админ своей организации
 
-    // TENANT_ADMIN может обновлять только свою организацию
-    if (session.user.role === "TENANT_ADMIN" && session.user.tenantId !== params.id) {
+    if (!canUpdate) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const body = await request.json();
     const validatedData = updateTenantSchema.parse(body);
 
-    // Проверяем существование tenant
-    const existingTenant = await prisma.tenant.findUnique({
+    // Получаем текущие настройки
+    const currentTenant = await prisma.tenant.findUnique({
       where: { id: params.id },
+      select: { settings: true },
     });
 
-    if (!existingTenant) {
+    if (!currentTenant) {
       return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
     }
 
-    // Проверяем уникальность slug (если изменяется)
-    if (validatedData.slug && validatedData.slug !== existingTenant.slug) {
-      const slugExists = await prisma.tenant.findUnique({
-        where: { slug: validatedData.slug },
-      });
+    // Объединяем настройки
+    const currentSettings = (currentTenant.settings as any) || {};
+    const newSettings = {
+      ...currentSettings,
+      ...(validatedData.settings || {}),
+    };
 
-      if (slugExists) {
-        return NextResponse.json(
-          { error: "Организация с таким slug уже существует" },
-          { status: 400 }
-        );
-      }
-    }
-
-    // Проверяем уникальность domain (если изменяется)
-    if (validatedData.domain && validatedData.domain !== existingTenant.domain) {
-      const domainExists = await prisma.tenant.findUnique({
-        where: { domain: validatedData.domain },
-      });
-
-      if (domainExists) {
-        return NextResponse.json(
-          { error: "Организация с таким доменом уже существует" },
-          { status: 400 }
-        );
-      }
-    }
-
-    const tenant = await prisma.tenant.update({
+    const updatedTenant = await prisma.tenant.update({
       where: { id: params.id },
-      data: validatedData,
-      include: {
-        _count: {
-          select: {
-            users: true,
-            tickets: true,
-          },
-        },
+      data: {
+        name: validatedData.name,
+        settings: newSettings,
       },
     });
 
-    return NextResponse.json(tenant);
-  } catch (error) {
+    return NextResponse.json(updatedTenant);
+  } catch (error: any) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: "Validation error", details: error.errors },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: error.issues }, { status: 400 });
     }
-
     console.error("Error updating tenant:", error);
     return NextResponse.json(
-      { error: "Failed to update tenant" },
+      { error: error.message || "Internal Server Error" },
       { status: 500 }
     );
   }
 }
 
-// DELETE /api/tenants/[id] - Удалить организацию
+/**
+ * DELETE /api/tenants/[id]
+ * Удалить организацию (ОПАСНАЯ ОПЕРАЦИЯ!)
+ */
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session?.user || session.user.role !== "ADMIN") {
+
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Только глобальный админ может удалять организации
+    if (session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const tenant = await prisma.tenant.findUnique({
-      where: { id: params.id },
-    });
-
-    if (!tenant) {
-      return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
-    }
-
-    // Нельзя удалить свою организацию
-    if (tenant.id === session.user.tenantId) {
+    // Проверяем подтверждение
+    const { confirmation } = await request.json();
+    if (confirmation !== "DELETE") {
       return NextResponse.json(
-        { error: "Нельзя удалить свою организацию" },
+        { error: "Confirmation required" },
         { status: 400 }
       );
     }
@@ -179,11 +203,11 @@ export async function DELETE(
       where: { id: params.id },
     });
 
-    return NextResponse.json({ message: "Tenant deleted successfully" });
-  } catch (error) {
+    return NextResponse.json({ success: true, message: "Tenant deleted successfully" });
+  } catch (error: any) {
     console.error("Error deleting tenant:", error);
     return NextResponse.json(
-      { error: "Failed to delete tenant" },
+      { error: error.message || "Internal Server Error" },
       { status: 500 }
     );
   }

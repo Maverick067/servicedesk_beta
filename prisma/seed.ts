@@ -6,6 +6,27 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Начало заполнения базы данных...");
 
+  // Хешируем пароли
+  const superAdminPassword = await bcrypt.hash("superadmin", 10);
+  const adminPassword = await bcrypt.hash("admin123", 10);
+  const agentPassword = await bcrypt.hash("agent123", 10);
+  const userPassword = await bcrypt.hash("user123", 10);
+
+  // ВАЖНО: Создаем ГЛОБАЛЬНОГО СУПЕР АДМИНА БЕЗ tenantId
+  const superAdmin = await prisma.user.upsert({
+    where: { email: "superadmin@servicedesk.com" },
+    update: {},
+    create: {
+      email: "superadmin@servicedesk.com",
+      name: "Супер Администратор",
+      password: superAdminPassword,
+      role: "ADMIN",
+      tenantId: null, // Глобальный админ БЕЗ привязки к tenant
+    },
+  });
+
+  console.log("✅ Создан глобальный супер-админ:", superAdmin.email);
+
   // Создаем демо организацию (tenant)
   const tenant = await prisma.tenant.upsert({
     where: { slug: "demo" },
@@ -19,20 +40,15 @@ async function main() {
 
   console.log("✅ Создана организация:", tenant.name);
 
-  // Хешируем пароли
-  const adminPassword = await bcrypt.hash("admin123", 10);
-  const agentPassword = await bcrypt.hash("agent123", 10);
-  const userPassword = await bcrypt.hash("user123", 10);
-
-  // Создаем пользователей
+  // Создаем пользователей для демо организации
   const admin = await prisma.user.upsert({
     where: { email: "admin@demo.com" },
     update: {},
     create: {
       email: "admin@demo.com",
-      name: "Администратор",
+      name: "Администратор Организации",
       password: adminPassword,
-      role: "ADMIN",
+      role: "TENANT_ADMIN", // Изменили на TENANT_ADMIN
       tenantId: tenant.id,
     },
   });
@@ -61,8 +77,8 @@ async function main() {
     },
   });
 
-  console.log("✅ Созданы пользователи:");
-  console.log("  - Админ:", admin.email);
+  console.log("✅ Созданы пользователи организации:");
+  console.log("  - Администратор тенанта:", admin.email);
   console.log("  - Агент:", agent.email);
   console.log("  - Пользователь:", user.email);
 
@@ -200,7 +216,11 @@ async function main() {
   console.log("\n🎉 База данных успешно заполнена демо данными!");
   console.log("\n📝 Учетные данные для входа:");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log("👑 Администратор:");
+  console.log("🔥 СУПЕР АДМИНИСТРАТОР (Глобальный доступ):");
+  console.log("   Email: superadmin@servicedesk.com");
+  console.log("   Пароль: superadmin");
+  console.log("   Доступ: Админ-панель, все организации");
+  console.log("\n👑 Администратор организации Demo:");
   console.log("   Email: admin@demo.com");
   console.log("   Пароль: admin123");
   console.log("\n👨‍💼 Агент поддержки:");

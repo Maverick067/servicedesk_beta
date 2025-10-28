@@ -75,3 +75,100 @@
   }
 }
 
+@layer utilities {
+  @keyframes notification-pop {
+    0% {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.2);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes notification-bounce {
+    0%, 100% {
+      transform: scale(1);
+    }
+    25% {
+      transform: scale(1.2);
+    }
+    50% {
+      transform: scale(0.95);
+    }
+    75% {
+      transform: scale(1.05);
+    }
+  }
+
+  .animate-notification-pop {
+    animation: notification-pop 0.5s ease-out;
+  }
+
+  .animate-notification-bounce {
+    animation: notification-bounce 0.6s ease-in-out;
+  }
+
+  /* Утилиты для touch-устройств */
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Кастомный scrollbar для мобильных */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+  }
+
+  /* Адаптивные брейкпоинты */
+  @media (min-width: 475px) {
+    .xs\:inline {
+      display: inline;
+    }
+    
+    .xs\:hidden {
+      display: none;
+    }
+  }
+
+  /* Улучшенный фокус для мобильных */
+  @media (hover: none) and (pointer: coarse) {
+    button:focus,
+    a:focus,
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: 2px solid hsl(var(--primary));
+      outline-offset: 2px;
+    }
+  }
+
+  /* Улучшенная прокрутка для iOS */
+  @supports (-webkit-overflow-scrolling: touch) {
+    .overflow-auto,
+    .overflow-y-auto,
+    .overflow-x-auto {
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+}
+

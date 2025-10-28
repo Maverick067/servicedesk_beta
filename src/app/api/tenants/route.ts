@@ -18,23 +18,67 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Глобальный админ видит все организации
-    if (session.user.role === "ADMIN") {
-      const tenants = await prisma.tenant.findMany({
-        include: {
-          _count: {
-            select: {
-              users: true,
-              tickets: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-      });
+    // Глобальный админ видит все организации с группами
+    if (session.user.role === "ADMIN" && !session.user.tenantId) {
+      try {
+        // Временное отключение RLS для супер-админа
+        const tenants = await prisma.$queryRaw<Array<{
+          id: string;
+          name: string;
+          slug: string;
+          domain: string | null;
+          createdAt: Date;
+          users_count: bigint;
+          tickets_count: bigint;
+          group_id: string | null;
+          group_name: string | null;
+        }>>`
+          SELECT 
+            t.id, 
+            t.name, 
+            t.slug, 
+            t.domain, 
+            t."createdAt",
+            (SELECT COUNT(*) FROM users WHERE "tenantId" = t.id) as users_count,
+            (SELECT COUNT(*) FROM tickets WHERE "tenantId" = t.id) as tickets_count,
+            tg.id as group_id,
+            tg.name as group_name
+          FROM tenants t
+          LEFT JOIN tenant_groups tg ON t."groupId" = tg.id
+          ORDER BY t."createdAt" DESC
+        `;
 
-      return NextResponse.json(tenants);
+        console.log("Raw tenants data:", tenants);
+
+        // Преобразуем результат в нужный формат
+        const formattedTenants = tenants.map((t) => ({
+          id: t.id,
+          name: t.name,
+          slug: t.slug,
+          domain: t.domain,
+          createdAt: t.createdAt,
+          _count: {
+            users: Number(t.users_count) || 0,
+            tickets: Number(t.tickets_count) || 0,
+          },
+          group: t.group_id
+            ? {
+                id: t.group_id,
+                name: t.group_name,
+              }
+            : null,
+        }));
+
+        console.log("Formatted tenants data:", formattedTenants);
+
+        return NextResponse.json(formattedTenants);
+      } catch (error: any) {
+        console.error("Error in tenant query:", error);
+        return NextResponse.json(
+          { error: error.message || "Failed to fetch tenants" },
+          { status: 500 }
+        );
+      }
     }
 
     // TENANT_ADMIN видит только свою организацию

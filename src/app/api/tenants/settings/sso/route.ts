@@ -31,6 +31,19 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Суперадмин не имеет tenantId, возвращаем пустые настройки
+    if (user.role === "ADMIN" && !user.tenantId) {
+      return NextResponse.json({
+        ssoEnabled: false,
+        ssoProvider: "google",
+        googleClientId: "",
+        googleClientSecret: "",
+        azureAdClientId: "",
+        azureAdClientSecret: "",
+        azureAdTenantId: "",
+      });
+    }
+
     if (!user.tenantId) {
       return NextResponse.json(
         { error: "No tenant associated with user" },

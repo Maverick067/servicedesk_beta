@@ -25,6 +25,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ArrowLeft, Loader2, MessageSquare, Hash } from "lucide-react";
 import { formatTicketNumber } from "@/lib/ticket-utils";
+import { FileUpload } from "@/components/attachments/file-upload";
 
 const statusColors: Record<string, string> = {
   OPEN: "bg-blue-100 text-blue-800",
@@ -42,18 +43,18 @@ const priorityColors: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
-  OPEN: "Открыт",
-  IN_PROGRESS: "В работе",
-  PENDING: "Ожидание",
-  RESOLVED: "Решен",
-  CLOSED: "Закрыт",
+  OPEN: "Open",
+  IN_PROGRESS: "In Progress",
+  PENDING: "Pending",
+  RESOLVED: "Resolved",
+  CLOSED: "Closed",
 };
 
 const priorityLabels: Record<string, string> = {
-  LOW: "Низкий",
-  MEDIUM: "Средний",
-  HIGH: "Высокий",
-  URGENT: "Срочный",
+  LOW: "Low",
+  MEDIUM: "Medium",
+  HIGH: "High",
+  URGENT: "Urgent",
 };
 
 export default function TicketDetailPage() {
@@ -68,30 +69,30 @@ export default function TicketDetailPage() {
 
   const canEdit = session?.user.role === "ADMIN" || session?.user.role === "AGENT";
 
-  useEffect(() => {
-    async function fetchTicket() {
+  const fetchTicket = async () => {
+    try {
+      const response = await fetch(`/api/tickets/${params.id}`);
+      if (!response.ok) throw new Error("Failed to fetch ticket");
+      const data = await response.json();
+      setTicket(data);
+
+      // Mark comments as read
       try {
-        const response = await fetch(`/api/tickets/${params.id}`);
-        if (!response.ok) throw new Error("Failed to fetch ticket");
-        const data = await response.json();
-        setTicket(data);
-
-        // Помечаем комментарии как прочитанные
-        try {
-          await fetch(`/api/tickets/${params.id}/unread-comments`, {
-            method: "POST",
-          });
-        } catch (error) {
-          console.error("Error marking comments as read:", error);
-          // Не прерываем загрузку тикета из-за ошибки
-        }
+        await fetch(`/api/tickets/${params.id}/unread-comments`, {
+          method: "POST",
+        });
       } catch (error) {
-        console.error("Error fetching ticket:", error);
-      } finally {
-        setIsLoading(false);
+        console.error("Error marking comments as read:", error);
+        // Don't interrupt ticket loading due to error
       }
+    } catch (error) {
+      console.error("Error fetching ticket:", error);
+    } finally {
+      setIsLoading(false);
     }
+  };
 
+  useEffect(() => {
     if (params.id) {
       fetchTicket();
     }
@@ -118,8 +119,8 @@ export default function TicketDetailPage() {
       });
       setComment("");
       
-      // Обновляем счетчик комментариев в списке тикетов
-      // Это можно сделать через событие или через обновление localStorage
+      // Update comment counter in ticket list
+      // This can be done via event or localStorage update
       window.dispatchEvent(new CustomEvent('commentAdded', { 
         detail: { ticketId: params.id, commentCount: ticket.comments.length + 1 } 
       }));
@@ -181,35 +182,43 @@ export default function TicketDetailPage() {
   if (!ticket) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Тикет не найден</p>
+        <p className="text-muted-foreground">Ticket not found</p>
         <Button onClick={() => router.back()} className="mt-4">
-          Вернуться назад
+          Go back
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      <Button variant="ghost" onClick={() => router.back()}>
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Назад
+    <div className="space-y-4 sm:space-y-6">
+      <Button 
+        variant="ghost" 
+        onClick={() => router.back()}
+        className="touch-manipulation -ml-2 sm:ml-0"
+        size="sm"
+      >
+        <ArrowLeft className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+        <span className="text-xs sm:text-sm">Back</span>
       </Button>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           <Card className="border-l-4" style={{ borderLeftColor: ticket.category?.color || '#3b82f6' }}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Badge variant="outline" className="font-mono bg-gradient-to-r from-blue-50 to-purple-50">
-                      <Hash className="h-3 w-3 mr-1" />
-                      {formatTicketNumber(ticket.tenant?.slug || 'GLOBAL', ticket.number)}
+            <CardHeader className="pb-3 sm:pb-6 px-3 sm:px-6">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+                <div className="flex-1 min-w-0">
+                  {/* Badges - horizontal scroll on mobile */}
+                  <div className="flex items-center gap-1.5 sm:gap-2 mb-2 sm:mb-3 overflow-x-auto pb-1 scrollbar-thin">
+                    <Badge variant="outline" className="font-mono text-[10px] sm:text-xs bg-gradient-to-r from-blue-50 to-purple-50 flex-shrink-0">
+                      <Hash className="h-3 w-3 mr-0.5 sm:mr-1" />
+                      <span className="hidden xs:inline">{formatTicketNumber(ticket.tenant?.slug || 'GLOBAL', ticket.number)}</span>
+                      <span className="xs:hidden">#{ticket.number}</span>
                     </Badge>
                     {ticket.category && (
                       <Badge 
                         variant="secondary"
+                        className="text-[10px] sm:text-xs flex-shrink-0"
                         style={{ 
                           backgroundColor: `${ticket.category.color}20`,
                           color: ticket.category.color,
@@ -220,87 +229,111 @@ export default function TicketDetailPage() {
                       </Badge>
                     )}
                   </div>
-                  <CardTitle className="text-2xl mb-2">
+                  <CardTitle className="text-lg sm:text-xl md:text-2xl mb-1 sm:mb-2 line-clamp-2">
                     {ticket.title}
                   </CardTitle>
-                  <CardDescription>
-                    Создан {formatDate(ticket.createdAt)}
+                  <CardDescription className="text-xs sm:text-sm">
+                    Created {formatDate(ticket.createdAt)}
                   </CardDescription>
                 </div>
-                <div className="flex gap-2">
-                  <Badge className={statusColors[ticket.status]}>
+                
+                {/* Status/Priority/Comments - vertical on mobile */}
+                <div className="flex sm:flex-col gap-1.5 sm:gap-2 flex-wrap">
+                  <Badge className={`${statusColors[ticket.status]} text-[10px] sm:text-xs flex-shrink-0`}>
                     {statusLabels[ticket.status]}
                   </Badge>
-                  <Badge className={priorityColors[ticket.priority]}>
+                  <Badge className={`${priorityColors[ticket.priority]} text-[10px] sm:text-xs flex-shrink-0`}>
                     {priorityLabels[ticket.priority]}
                   </Badge>
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 text-blue-700">
-                    <MessageSquare className="h-4 w-4" />
-                    <span className="text-sm font-medium">{ticket.comments.length}</span>
+                  <div className="flex items-center gap-0.5 sm:gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md bg-blue-50 text-blue-700 flex-shrink-0">
+                    <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+                    <span className="text-xs sm:text-sm font-medium">{ticket.comments.length}</span>
                   </div>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="prose max-w-none">
-                <p className="whitespace-pre-wrap">{ticket.description}</p>
+            <CardContent className="px-3 sm:px-6">
+              <div className="prose max-w-none prose-sm sm:prose-base">
+                <p className="whitespace-pre-wrap text-sm sm:text-base">{ticket.description}</p>
               </div>
             </CardContent>
           </Card>
 
+          {/* File Attachments */}
           <Card>
-            <CardHeader>
-              <CardTitle>Комментарии ({ticket.comments.length})</CardTitle>
+            <CardHeader className="px-3 sm:px-6 py-3 sm:py-6">
+              <CardTitle className="text-base sm:text-lg">Attachments</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="px-3 sm:px-6">
+              <FileUpload
+                ticketId={ticket.id}
+                ticketType="regular"
+                attachments={ticket.attachments || []}
+                onUploadComplete={fetchTicket}
+                onDeleteComplete={fetchTicket}
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="px-3 sm:px-6 py-3 sm:py-6">
+              <CardTitle className="text-base sm:text-lg">Comments ({ticket.comments.length})</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6">
               {ticket.comments.map((comment: any) => (
-                <div key={comment.id} className="flex gap-4">
-                  <Avatar>
+                <div key={comment.id} className="flex gap-2 sm:gap-4">
+                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0">
                     <AvatarImage src={comment.author.avatar || undefined} />
-                    <AvatarFallback>
+                    <AvatarFallback className="text-xs sm:text-sm">
                       {getInitials(comment.author.name || comment.author.email)}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col xs:flex-row xs:items-center gap-1 xs:gap-2 mb-1">
+                      <span className="font-medium text-xs sm:text-sm truncate">
                         {comment.author.name || comment.author.email}
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-[10px] xs:text-xs text-muted-foreground flex-shrink-0">
                         {formatDate(comment.createdAt)}
                       </span>
                       {comment.isInternal && (
-                        <Badge variant="secondary" className="text-xs">
-                          Внутренний
+                        <Badge variant="secondary" className="text-[10px] xs:text-xs w-fit">
+                          Internal
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm whitespace-pre-wrap">
+                    <p className="text-xs sm:text-sm whitespace-pre-wrap break-words">
                       {comment.content}
                     </p>
                   </div>
                 </div>
               ))}
 
-              <form onSubmit={handleAddComment} className="space-y-4 pt-4 border-t">
-                <div className="space-y-2">
-                  <Label>Добавить комментарий</Label>
+              <form onSubmit={handleAddComment} className="space-y-3 sm:space-y-4 pt-3 sm:pt-4 border-t">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label className="text-xs sm:text-sm">Add Comment</Label>
                   <Textarea
                     value={comment}
                     onChange={(e) => setComment(e.target.value)}
-                    placeholder="Напишите комментарий..."
+                    placeholder="Write a comment..."
                     disabled={isSubmitting}
-                    rows={4}
+                    rows={3}
+                    className="text-xs sm:text-sm min-h-[60px] sm:min-h-[80px]"
                   />
                 </div>
-                <Button type="submit" disabled={isSubmitting || !comment.trim()}>
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting || !comment.trim()}
+                  className="w-full sm:w-auto touch-manipulation"
+                  size="sm"
+                >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Отправка...
+                      <Loader2 className="mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                      <span className="text-xs sm:text-sm">Sending...</span>
                     </>
                   ) : (
-                    "Отправить"
+                    <span className="text-xs sm:text-sm">Send</span>
                   )}
                 </Button>
               </form>
@@ -308,29 +341,29 @@ export default function TicketDetailPage() {
           </Card>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Информация</CardTitle>
+            <CardHeader className="px-3 sm:px-6 py-3 sm:py-6">
+              <CardTitle className="text-base sm:text-lg">Information</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4 px-3 sm:px-6">
               <div>
-                <Label className="text-muted-foreground">Создатель</Label>
-                <div className="flex items-center gap-2 mt-2">
-                  <Avatar className="h-8 w-8">
+                <Label className="text-muted-foreground text-xs sm:text-sm">Creator</Label>
+                <div className="flex items-center gap-2 mt-1.5 sm:mt-2">
+                  <Avatar className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0">
                     <AvatarImage src={ticket.creator.avatar || undefined} />
-                    <AvatarFallback>
+                    <AvatarFallback className="text-xs">
                       {getInitials(ticket.creator.name || ticket.creator.email)}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <p className="text-sm font-medium">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium truncate">
                       {ticket.creator.name || ticket.creator.email}
                     </p>
-                    <p className="text-xs text-muted-foreground">
-                      {ticket.creator.role === "ADMIN" && "Администратор"}
-                      {ticket.creator.role === "AGENT" && "Агент"}
-                      {ticket.creator.role === "USER" && "Пользователь"}
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">
+                      {ticket.creator.role === "ADMIN" && "Administrator"}
+                      {ticket.creator.role === "AGENT" && "Agent"}
+                      {ticket.creator.role === "USER" && "User"}
                     </p>
                   </div>
                 </div>
@@ -338,21 +371,21 @@ export default function TicketDetailPage() {
 
               {ticket.assignee && (
                 <div>
-                  <Label className="text-muted-foreground">Назначен</Label>
-                  <div className="flex items-center gap-2 mt-2">
-                    <Avatar className="h-8 w-8">
+                  <Label className="text-muted-foreground text-xs sm:text-sm">Assigned To</Label>
+                  <div className="flex items-center gap-2 mt-1.5 sm:mt-2">
+                    <Avatar className="h-7 w-7 sm:h-8 sm:w-8 flex-shrink-0">
                       <AvatarImage src={ticket.assignee.avatar || undefined} />
-                      <AvatarFallback>
+                      <AvatarFallback className="text-xs">
                         {getInitials(ticket.assignee.name || ticket.assignee.email)}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <p className="text-sm font-medium">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium truncate">
                         {ticket.assignee.name || ticket.assignee.email}
                       </p>
-                      <p className="text-xs text-muted-foreground">
-                        {ticket.assignee.role === "AGENT" && "Агент"}
-                        {ticket.assignee.role === "ADMIN" && "Администратор"}
+                      <p className="text-[10px] sm:text-xs text-muted-foreground">
+                        {ticket.assignee.role === "AGENT" && "Agent"}
+                        {ticket.assignee.role === "ADMIN" && "Administrator"}
                       </p>
                     </div>
                   </div>
@@ -361,41 +394,41 @@ export default function TicketDetailPage() {
 
               {canEdit && (
                 <>
-                  <div className="space-y-2">
-                    <Label>Статус</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label className="text-xs sm:text-sm">Status</Label>
                     <Select
                       value={ticket.status}
                       onValueChange={handleUpdateStatus}
                       disabled={isUpdating}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="OPEN">Открыт</SelectItem>
-                        <SelectItem value="IN_PROGRESS">В работе</SelectItem>
-                        <SelectItem value="PENDING">Ожидание</SelectItem>
-                        <SelectItem value="RESOLVED">Решен</SelectItem>
-                        <SelectItem value="CLOSED">Закрыт</SelectItem>
+                        <SelectItem value="OPEN" className="text-xs sm:text-sm">Open</SelectItem>
+                        <SelectItem value="IN_PROGRESS" className="text-xs sm:text-sm">In Progress</SelectItem>
+                        <SelectItem value="PENDING" className="text-xs sm:text-sm">Pending</SelectItem>
+                        <SelectItem value="RESOLVED" className="text-xs sm:text-sm">Resolved</SelectItem>
+                        <SelectItem value="CLOSED" className="text-xs sm:text-sm">Closed</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Приоритет</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label className="text-xs sm:text-sm">Priority</Label>
                     <Select
                       value={ticket.priority}
                       onValueChange={handleUpdatePriority}
                       disabled={isUpdating}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="h-9 sm:h-10 text-xs sm:text-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="LOW">Низкий</SelectItem>
-                        <SelectItem value="MEDIUM">Средний</SelectItem>
-                        <SelectItem value="HIGH">Высокий</SelectItem>
-                        <SelectItem value="URGENT">Срочный</SelectItem>
+                        <SelectItem value="LOW" className="text-xs sm:text-sm">Low</SelectItem>
+                        <SelectItem value="MEDIUM" className="text-xs sm:text-sm">Medium</SelectItem>
+                        <SelectItem value="HIGH" className="text-xs sm:text-sm">High</SelectItem>
+                        <SelectItem value="URGENT" className="text-xs sm:text-sm">Urgent</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -404,8 +437,8 @@ export default function TicketDetailPage() {
 
               {ticket.category && (
                 <div>
-                  <Label className="text-muted-foreground">Категория</Label>
-                  <p className="text-sm mt-1">{ticket.category.name}</p>
+                  <Label className="text-muted-foreground text-xs sm:text-sm">Category</Label>
+                  <p className="text-xs sm:text-sm mt-1">{ticket.category.name}</p>
                 </div>
               )}
             </CardContent>
@@ -415,4 +448,5 @@ export default function TicketDetailPage() {
     </div>
   );
 }
+
 

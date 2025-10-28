@@ -44,7 +44,7 @@ export default function LoginPage() {
         router.refresh();
       }
     } catch (error) {
-      setError("Произошла ошибка при входе");
+      setError("An error occurred during login");
     } finally {
       setIsLoading(false);
     }
@@ -56,7 +56,7 @@ export default function LoginPage() {
     try {
       await signIn(provider, { callbackUrl: "/dashboard" });
     } catch (error) {
-      setError(`Ошибка входа через ${provider}`);
+      setError(`Login error via ${provider}`);
       setIsSSOLoading(null);
     }
   };
@@ -69,7 +69,7 @@ export default function LoginPage() {
             ServiceDesk
           </CardTitle>
           <CardDescription className="text-center">
-            Войдите в свой аккаунт для управления тикетами
+            Sign in to your account to manage tickets
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -79,7 +79,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
-                placeholder="ваш@email.com"
+                placeholder="your@email.com"
                 value={formData.email}
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
@@ -89,7 +89,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Пароль</Label>
+              <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
                 type="password"
@@ -111,10 +111,10 @@ export default function LoginPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Вход...
+                  Signing in...
                 </>
               ) : (
-                "Войти"
+                "Sign In"
               )}
             </Button>
           </form>
@@ -129,7 +129,7 @@ export default function LoginPage() {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-background px-2 text-muted-foreground">
-                    Или войти через
+                    Or sign in with
                   </span>
                 </div>
               </div>
@@ -179,24 +179,24 @@ export default function LoginPage() {
             </>
           )}
           <div className="mt-4 text-center text-sm text-muted-foreground">
-            <p>Демо данные для входа:</p>
+            <p>Demo credentials:</p>
             <p className="mt-1">
-              <strong>Админ:</strong> admin@demo.com / admin123
+              <strong>Admin:</strong> admin@demo.com / admin123
             </p>
             <p>
-              <strong>Агент:</strong> agent@demo.com / agent123
+              <strong>Agent:</strong> agent@demo.com / agent123
             </p>
             <p>
-              <strong>Пользователь:</strong> user@demo.com / user123
+              <strong>User:</strong> user@demo.com / user123
             </p>
             <div className="mt-4 pt-4 border-t">
-              <p>Нет аккаунта?</p>
+              <p>Don't have an account?</p>
               <Button
                 variant="link"
                 onClick={() => router.push("/register")}
                 className="p-0 h-auto"
               >
-                Создать организацию
+                Create organization
               </Button>
             </div>
           </div>

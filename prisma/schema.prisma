@@ -9,6 +9,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Модель для объединения тенантов (группы для админ-панели)
+model TenantGroup {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  tenants     Tenant[] // Тенанты в этой группе
+  
+  @@map("tenant_groups")
+}
+
 // Модель для организаций (tenants)
 model Tenant {
   id        String   @id @default(cuid())
@@ -21,6 +34,10 @@ model Tenant {
   customDomainVerified  Boolean  @default(false)
   dnsVerificationToken  String?  // Токен для верификации через TXT record
   sslEnabled            Boolean  @default(false)
+  
+  // Tenant grouping
+  groupId   String?  // Опциональная группа для объединения тенантов
+  group     TenantGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
   
   settings  Json?    @default("{\"ticketPrefix\": \"TICKET\", \"modules\": {\"queues\": true, \"sla\": false, \"knowledge\": false, \"automation\": false, \"cmdb\": false, \"reports\": true, \"webhooks\": false, \"ldap\": false}}") // Настройки модулей и конфигурация
   createdAt DateTime @default(now())
@@ -40,7 +57,9 @@ model Tenant {
   ldapConfigs LdapConfig[] // LDAP/SSO конфигурации
   subscription Subscription? // Подписка и биллинг
   telegramBots TelegramBot[] // Telegram боты
+  supportTickets SupportTicket[] // Support тикеты от админов организации
   
+  @@index([groupId])
   @@map("tenants")
 }
 
@@ -85,6 +104,7 @@ model User {
   sentInvitations UserInvitation[] // Приглашения, отправленные пользователем
   notificationSettings NotificationSettings? // Настройки уведомлений пользователя
   savedFilters SavedFilter[] // Сохранённые фильтры тикетов
+  supportComments SupportComment[] @relation("SupportCommentAuthor") // Комментарии в support тикетах
   
   @@index([tenantId])
   @@index([email])
@@ -182,6 +202,7 @@ model Ticket {
   updatedAt   DateTime       @updatedAt
   resolvedAt  DateTime?
   firstResponseAt DateTime?  // Время первого ответа
+  lastViewedByCreatorAt DateTime? @default(now()) // Для отслеживания непрочитанных комментариев
   
   tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   queue       Queue?         @relation(fields: [queueId], references: [id], onDelete: SetNull)
@@ -1042,5 +1063,84 @@ model TelegramMessage {
   @@index([telegramChatId])
   @@index([createdAt])
   @@map("telegram_messages")
+}
+
+// Support тикеты для общения Tenant Admin с Super Admin
+model SupportTicket {
+  id          String   @id @default(cuid())
+  number      Int      @default(autoincrement()) // Уникальный номер тикета
+  
+  title       String
+  description String   @db.Text
+  status      TicketStatus @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+  
+  // Связь с организацией (от кого тикет)
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  // Создатель (TENANT_ADMIN)
+  creatorId   String
+  
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  resolvedAt  DateTime?
+  closedAt    DateTime?
+  
+  // Отслеживание прочтения (когда тенант админ последний раз просматривал тикет)
+  lastViewedByCreatorAt DateTime? @default(now())
+  
+  // Отслеживание прочтения супер-админом (когда супер-админ последний раз просматривал тикет)
+  lastViewedByAdminAt DateTime? @default(now())
+  
+  // Комментарии
+  comments    SupportComment[]
+  
+  // Вложения
+  attachments SupportAttachment[]
+  
+  @@index([tenantId])
+  @@index([creatorId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("support_tickets")
+}
+
+// Комментарии к support тикетам
+model SupportComment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  ticketId  String
+  authorId  String   // ID пользователя (может быть TENANT_ADMIN или SUPER_ADMIN)
+  
+  isInternal Boolean @default(false) // Внутренний комментарий (только для супер-админа)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    User          @relation("SupportCommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  
+  @@index([ticketId])
+  @@index([authorId])
+  @@index([createdAt])
+  @@map("support_comments")
+}
+
+// Вложения к support тикетам
+model SupportAttachment {
+  id        String   @id @default(cuid())
+  filename  String
+  filepath  String
+  mimetype  String
+  size      Int
+  ticketId  String
+  createdAt DateTime @default(now())
+  
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  @@index([ticketId])
+  @@map("support_attachments")
 }
 

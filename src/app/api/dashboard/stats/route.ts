@@ -12,6 +12,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Супер-админ работает с support тикетами
+    const isSuperAdmin = session.user.role === "ADMIN" && !session.user.tenantId;
+
     const { searchParams } = new URL(request.url);
     const period = searchParams.get("period") || "7d"; // 7d, 30d, 90d
 
@@ -33,7 +36,86 @@ export async function GET(request: Request) {
         startDate.setDate(now.getDate() - 7);
     }
 
-    // Условие для фильтрации по ролям
+    // Если супер-админ, возвращаем статистику по support тикетам
+    if (isSuperAdmin) {
+      const supportTickets = await prisma.supportTicket.findMany({
+        where: {
+          createdAt: {
+            gte: startDate,
+          },
+        },
+        select: {
+          id: true,
+          status: true,
+          priority: true,
+          createdAt: true,
+          resolvedAt: true,
+        },
+      });
+
+      const totalTickets = supportTickets.length;
+      const openTickets = supportTickets.filter(t => t.status === "OPEN").length;
+      const inProgressTickets = supportTickets.filter(t => t.status === "IN_PROGRESS").length;
+      const resolvedTickets = supportTickets.filter(t => t.status === "RESOLVED" || t.status === "CLOSED").length;
+
+      const priorityStats = {
+        LOW: supportTickets.filter(t => t.priority === "LOW").length,
+        MEDIUM: supportTickets.filter(t => t.priority === "MEDIUM").length,
+        HIGH: supportTickets.filter(t => t.priority === "HIGH").length,
+        URGENT: supportTickets.filter(t => t.priority === "URGENT").length,
+      };
+
+      const daysInPeriod = period === "7d" ? 7 : period === "30d" ? 30 : 90;
+      const dailyTrend = [];
+      
+      for (let i = daysInPeriod - 1; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        date.setHours(0, 0, 0, 0);
+        
+        const nextDate = new Date(date);
+        nextDate.setDate(nextDate.getDate() + 1);
+        
+        const dayTickets = supportTickets.filter(t => {
+          const ticketDate = new Date(t.createdAt);
+          return ticketDate >= date && ticketDate < nextDate;
+        });
+        
+        dailyTrend.push({
+          date: date.toISOString().split('T')[0],
+          created: dayTickets.length,
+          resolved: dayTickets.filter(t => t.resolvedAt).length,
+        });
+      }
+
+      const resolvedTicketsWithTime = supportTickets.filter(t => t.resolvedAt && t.createdAt);
+      const avgResolutionTime = resolvedTicketsWithTime.length > 0
+        ? resolvedTicketsWithTime.reduce((sum, t) => {
+            const created = new Date(t.createdAt).getTime();
+            const resolved = new Date(t.resolvedAt!).getTime();
+            return sum + (resolved - created);
+          }, 0) / resolvedTicketsWithTime.length
+        : 0;
+
+      const avgResolutionHours = Math.round(avgResolutionTime / (1000 * 60 * 60));
+
+      return NextResponse.json({
+        overview: {
+          total: totalTickets,
+          open: openTickets,
+          inProgress: inProgressTickets,
+          resolved: resolvedTickets,
+          pending: 0,
+          avgResolutionHours,
+        },
+        priorities: priorityStats,
+        dailyTrend,
+        categories: [],
+        queues: [],
+      });
+    }
+
+    // Условие для фильтрации по ролям (для обычных пользователей)
     const whereCondition: any = {
       ...getTenantWhereClause(session),
       createdAt: {
@@ -105,7 +187,7 @@ export async function GET(request: Request) {
     }
 
     // Статистика по категориям (топ 5)
-    const categoryStats = await prisma.category.findMany({
+    const categoryStats = session.user.tenantId ? await prisma.category.findMany({
       where: {
         tenantId: session.user.tenantId,
       },
@@ -125,10 +207,10 @@ export async function GET(request: Request) {
         },
       },
       take: 5,
-    });
+    }) : [];
 
     // Статистика по очередям (топ 5)
-    const queueStats = await prisma.queue.findMany({
+    const queueStats = session.user.tenantId ? await prisma.queue.findMany({
       where: {
         tenantId: session.user.tenantId,
         isActive: true,
@@ -149,7 +231,7 @@ export async function GET(request: Request) {
         },
       },
       take: 5,
-    });
+    }) : [];
 
     // Среднее время решения
     const resolvedTicketsWithTime = tickets.filter(t => t.resolvedAt && t.createdAt);

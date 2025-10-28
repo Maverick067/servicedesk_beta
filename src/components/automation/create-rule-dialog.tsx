@@ -30,10 +30,10 @@ import { Loader2, Plus, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const ruleSchema = z.object({
-  name: z.string().min(1, "Название обязательно"),
+  name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   isActive: z.boolean().default(true),
-  triggerType: z.string().min(1, "Выберите триггер"),
+  triggerType: z.string().min(1, "Select a trigger"),
   priority: z.number().int().default(0),
 });
 
@@ -112,11 +112,11 @@ export function CreateRuleDialog({
 
   const onSubmit = async (data: RuleFormValues) => {
     if (conditions.length === 0) {
-      toast.error("Добавьте хотя бы одно условие");
+      toast.error("Add at least one condition");
       return;
     }
     if (actions.length === 0) {
-      toast.error("Добавьте хотя бы одно действие");
+      toast.error("Add at least one action");
       return;
     }
 
@@ -147,11 +147,11 @@ export function CreateRuleDialog({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Не удалось создать правило");
+        throw new Error(errorData.message || "Failed to create rule");
       }
 
-      toast.success("Правило создано", {
-        description: "Новое правило автоматизации было успешно добавлено.",
+      toast.success("Rule Created", {
+        description: "New automation rule was successfully added.",
       });
       reset();
       setConditions([]);
@@ -159,7 +159,7 @@ export function CreateRuleDialog({
       setIsOpen(false);
       onRuleCreated?.();
     } catch (e: any) {
-      toast.error("Ошибка при создании правила", {
+      toast.error("Error Creating Rule", {
         description: e.message,
       });
     } finally {
@@ -168,37 +168,37 @@ export function CreateRuleDialog({
   };
 
   const triggerOptions = [
-    { value: "TICKET_CREATED", label: "Тикет создан" },
-    { value: "TICKET_UPDATED", label: "Тикет обновлён" },
-    { value: "TICKET_ASSIGNED", label: "Тикет назначен" },
-    { value: "STATUS_CHANGED", label: "Статус изменён" },
-    { value: "PRIORITY_CHANGED", label: "Приоритет изменён" },
-    { value: "COMMENT_ADDED", label: "Добавлен комментарий" },
-    { value: "SLA_BREACH", label: "Нарушение SLA" },
-    { value: "TIME_BASED", label: "По расписанию" },
+    { value: "TICKET_CREATED", label: "Ticket Created" },
+    { value: "TICKET_UPDATED", label: "Ticket Updated" },
+    { value: "TICKET_ASSIGNED", label: "Ticket Assigned" },
+    { value: "STATUS_CHANGED", label: "Status Changed" },
+    { value: "PRIORITY_CHANGED", label: "Priority Changed" },
+    { value: "COMMENT_ADDED", label: "Comment Added" },
+    { value: "SLA_BREACH", label: "SLA Breach" },
+    { value: "TIME_BASED", label: "Scheduled" },
   ];
 
   const fieldOptions = [
-    { value: "priority", label: "Приоритет" },
-    { value: "status", label: "Статус" },
-    { value: "category", label: "Категория" },
-    { value: "assignee", label: "Исполнитель" },
+    { value: "priority", label: "Priority" },
+    { value: "status", label: "Status" },
+    { value: "category", label: "Category" },
+    { value: "assignee", label: "Assignee" },
   ];
 
   const operatorOptions = [
-    { value: "equals", label: "равно" },
-    { value: "not_equals", label: "не равно" },
-    { value: "contains", label: "содержит" },
-    { value: "not_contains", label: "не содержит" },
+    { value: "equals", label: "equals" },
+    { value: "not_equals", label: "not equals" },
+    { value: "contains", label: "contains" },
+    { value: "not_contains", label: "not contains" },
   ];
 
   const actionOptions = [
-    { value: "CHANGE_STATUS", label: "Изменить статус" },
-    { value: "CHANGE_PRIORITY", label: "Изменить приоритет" },
-    { value: "ASSIGN_TO_AGENT", label: "Назначить агенту" },
-    { value: "ADD_COMMENT", label: "Добавить комментарий" },
-    { value: "SEND_EMAIL", label: "Отправить email" },
-    { value: "SEND_NOTIFICATION", label: "Отправить уведомление" },
+    { value: "CHANGE_STATUS", label: "Change Status" },
+    { value: "CHANGE_PRIORITY", label: "Change Priority" },
+    { value: "ASSIGN_TO_AGENT", label: "Assign to Agent" },
+    { value: "ADD_COMMENT", label: "Add Comment" },
+    { value: "SEND_EMAIL", label: "Send Email" },
+    { value: "SEND_NOTIFICATION", label: "Send Notification" },
   ];
 
   return (
@@ -206,9 +206,9 @@ export function CreateRuleDialog({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Создать правило автоматизации</DialogTitle>
+          <DialogTitle>Create Automation Rule</DialogTitle>
           <DialogDescription>
-            Настройте условия и действия для автоматизации работы с тикетами.
+            Configure conditions and actions for ticket automation.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6 py-4">
@@ -216,13 +216,13 @@ export function CreateRuleDialog({
           <div className="space-y-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="name" className="text-right">
-                Название
+                Name
               </Label>
               <Input
                 id="name"
                 {...register("name")}
                 className="col-span-3"
-                placeholder="Автоназначение высокого приоритета"
+                placeholder="Auto-assign high priority"
               />
               {errors.name && (
                 <p className="col-span-4 text-right text-sm text-red-500">
@@ -233,20 +233,20 @@ export function CreateRuleDialog({
 
             <div className="grid grid-cols-4 items-start gap-4">
               <Label htmlFor="description" className="text-right pt-2">
-                Описание
+                Description
               </Label>
               <Textarea
                 id="description"
                 {...register("description")}
                 className="col-span-3"
-                placeholder="Описание правила..."
+                placeholder="Rule description..."
                 rows={2}
               />
             </div>
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="triggerType" className="text-right">
-                Триггер
+                Trigger
               </Label>
               <Controller
                 name="triggerType"
@@ -254,7 +254,7 @@ export function CreateRuleDialog({
                 render={({ field }) => (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Выберите событие" />
+                      <SelectValue placeholder="Select an event" />
                     </SelectTrigger>
                     <SelectContent>
                       {triggerOptions.map((opt) => (
@@ -275,7 +275,7 @@ export function CreateRuleDialog({
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="priority" className="text-right">
-                Приоритет
+                Priority
               </Label>
               <Input
                 id="priority"
@@ -288,7 +288,7 @@ export function CreateRuleDialog({
 
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="isActive" className="text-right">
-                Активно
+                Active
               </Label>
               <Controller
                 name="isActive"
@@ -308,10 +308,10 @@ export function CreateRuleDialog({
           {/* Conditions */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Условия (ЕСЛИ)</Label>
+              <Label>Conditions (IF)</Label>
               <Button type="button" size="sm" variant="outline" onClick={addCondition}>
                 <Plus className="h-4 w-4 mr-1" />
-                Добавить условие
+                Add Condition
               </Button>
             </div>
             <div className="space-y-2">
@@ -350,7 +350,7 @@ export function CreateRuleDialog({
                   <Input
                     value={condition.value}
                     onChange={(e) => updateCondition(index, "value", e.target.value)}
-                    placeholder="Значение"
+                    placeholder="Value"
                     className="flex-1"
                   />
                   <Button
@@ -365,7 +365,7 @@ export function CreateRuleDialog({
               ))}
               {conditions.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  Нет условий. Добавьте хотя бы одно условие.
+                  No conditions. Add at least one condition.
                 </p>
               )}
             </div>
@@ -374,10 +374,10 @@ export function CreateRuleDialog({
           {/* Actions */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>Действия (ТО)</Label>
+              <Label>Actions (THEN)</Label>
               <Button type="button" size="sm" variant="outline" onClick={addAction}>
                 <Plus className="h-4 w-4 mr-1" />
-                Добавить действие
+                Add Action
               </Button>
             </div>
             <div className="space-y-2">
@@ -401,7 +401,7 @@ export function CreateRuleDialog({
                   <Input
                     value={action.value}
                     onChange={(e) => updateAction(index, "value", e.target.value)}
-                    placeholder="Значение"
+                    placeholder="Value"
                     className="flex-1"
                   />
                   <Button
@@ -416,7 +416,7 @@ export function CreateRuleDialog({
               ))}
               {actions.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
-                  Нет действий. Добавьте хотя бы одно действие.
+                  No actions. Add at least one action.
                 </p>
               )}
             </div>
@@ -427,7 +427,7 @@ export function CreateRuleDialog({
               {isSubmitting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              Создать правило
+              Create Rule
             </Button>
           </div>
         </form>

@@ -23,9 +23,14 @@ export default withAuth(
       authorized: ({ token, req }) => {
         const path = req.nextUrl.pathname;
         
-        // Публичные страницы
-        if (path === "/login" || path === "/register") {
+        // Публичные страницы (включая главную)
+        if (path === "/" || path === "/login" || path === "/register") {
           return true;
+        }
+
+        // API routes для support tickets
+        if (path.startsWith("/api/support-tickets")) {
+          return !!token && (token.role === "ADMIN" || token.role === "TENANT_ADMIN");
         }
 
         // Все остальные страницы требуют авторизации
@@ -37,5 +42,6 @@ export default withAuth(
 
 export const config = {
   matcher: ["/dashboard/:path*", "/admin/:path*", "/tickets/:path*", "/login"],
+  // Главная страница (/) доступна без авторизации
 };
 
