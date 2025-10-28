@@ -1,0 +1,213 @@
+✅ 1. Цель проекта
+
+Создать коммерческую мультитенантную ServiceDesk-платформу, предоставляющую компаниям:
+
+управление IT-тикетами
+
+автоматизацию
+
+SLA-контроль
+
+интеграции
+
+аналитику
+
+self-service функции
+
+Система должна масштабироваться на тысячи компаний-клиентов и десятки тысяч пользователей.
+
+✅ 2. Основные пользователи
+Пользователь	Мотивация
+Глобальный Админ (OnPoints)	Управление SaaS, биллинг, поддержка
+Администратор Tenanta	Управление своей организацией
+Агент поддержки	Выполняет тикеты
+Пользователь	Создаёт запросы в поддержку
+✅ 3. Архитектура (Высокоуровневая)
+┌────────────────────────────────────┐
+│           Browser & Mobile         │
+└───────────────────┬────────────────┘
+                    │ HTTP/HTTPS
+┌───────────────────▼────────────────┐
+│    Next.js 14 + API Routes (BE)    │
+│   Authentication • RBAC • RLS Set  │
+└───────────────────┬────────────────┘
+                    │ Prisma ORM
+┌───────────────────▼────────────────┐
+│ PostgreSQL with RLS (Full Isolation)│
+└───────────────────┬────────────────┘
+                    │ S3/MinIO
+┌───────────────────▼────────────────┐
+│ Integrations: Telegram / Email     │
+│ SSO: OIDC + SAML + LDAP Connector  │
+│ Billing: Stripe / Paddle           │
+│ CI/CD: GitHub Actions              │
+│ Monitoring: Prometheus / Grafana   │
+└────────────────────────────────────┘
+
+✅ 4. Мультитенантность и безопасность
+
+Метод: одна база → общий schema → строгая изоляция через RLS
+Business requirement:
+Компания А никогда не видит данные компании Б
+
+RLS Policies
+
+Все сущности (Tickets, Comments, Categories, SLAs, Assets, KB…) содержат tenantId
+
+Перед каждым запросом:
+
+SET app.tenant_id = '<tenant-uuid>';
+SET app.is_admin = '<true/false>';
+
+
+📌 Глобальный ADMIN не видит тикеты других Tenants
+📌 Сервис-слой дополнительно валидирует tenantId
+
+✅ 5. Аутентификация и авторизация
+Primary
+
+Password auth (существует)
+
+JWT-сессии через NextAuth
+
+Enterprise
+
+✅ OIDC: Azure AD, Google Workspace, Okta
+
+✅ SAML 2.0: ADFS и др.
+
+✅ LDAP Connector (у клиента)
+
+Роли
+Роль	Scope
+GLOBAL_ADMIN	Управление SaaS
+TENANT_ADMIN	Настройки компании
+AGENT	Работа по тикетам
+USER	Автор тикетов
+Flexible permissions
+
+В поле permissions JSON, управляющее доступом вплоть до кнопок UI
+(у тебя уже реализовано этот механизм) 
+
+ПОЛНОЕ_РУКОВОДСТВО
+
+✅ 6. Billing и тарифные ограничения
+
+Платёжная система — Stripe
+
+План	Users	Agents	Storage	SSO	Модули
+FREE	10	2	1GB	❌	Tickets
+PRO	50	15	20GB	✅	SLA, KB, Assets, Automation
+ENTERPRISE	Unlimited	Unlimited	Custom	✅	Все
+Billing Features
+
+✅ Checkout Session
+✅ Subscription management
+✅ Webhooks для обновления плана
+✅ Лимиты применяются в:
+
+API middleware
+
+UI блоках (с Upsell-баннерами)
+
+✅ 7. Основные модули продукта
+Модуль	Статус
+Tickets	✅ Готово
+Comments	✅
+Categories & Queues	✅
+SLA	✅
+Automations	✅
+Knowledge Base	✅
+CMDB Assets	✅
+Custom Fields	✅
+Saved Filters	✅
+Webhooks	✅
+Notifications	✅
+Reports & Dashboard	✅
+SSO Integration	🔜
+Billing	🔜
+Multi-tenant Telegram	🔜
+
+Все реализованные модули подробно описаны в твоём документе 
+
+ПОЛНОЕ_РУКОВОДСТВО
+
+✅ 8. Telegram per-Tenant
+
+Каждый Tenant может подключить своего бота
+
+Webhook URL содержит tenant или botToken:
+
+POST https://api.onpoints.it/integrations/telegram/<secret>
+
+
+Возможности:
+
+Создание тикета
+
+Комментарии в тикет
+
+Уведомления в группах
+
+✅ 9. Маршрутизация доменов
+Доступ	Вид
+Основной сайт	https://onpoints.it
+
+Портал компании	https://<tenant>.onpoints.it
+Пользовательский портал Self-Service	https://help
+.<tenant>.onpoints.it optional
+Кастомный домен	подключаемый по DNS
+✅ 10. DevOps и эксплуатация
+Компонент	Статус/Задача
+Docker	✅ Full containerization
+CI/CD	🔜 GitHub Actions: tests→build→deploy
+Monitoring	🔜 Prometheus + Grafana
+Errors	✅ Sentry
+Logging	✅ JSON-логи с tenantId
+Backups	🔜 PITR + weekly restore tests
+SLA платформы	≥99.9% uptime
+✅ 11. Нефункциональные требования
+Требование	Значение
+Performance	95% API < 300ms
+Scaling	Horizontal
+Data retention	2+ года
+Security	OWASP top-10
+Availability	24×7
+Compliance	GDPR-готовность
+✅ 12. Roadmap реализации
+Sprint	Срок	Deliverables
+S1 — RLS	1 неделя	Полная изоляция + тесты
+S2 — OIDC/SAML SSO	2 недели	Корпоративный вход
+S3 — Billing	1.5 недели	Stripe + лимиты
+S4 — DevOps	1–2 недели	Мониторинг + SLA
+S5 — Telegram	1 неделя	Пер-tenant боты
+Go-Live	—	Пилот 2–5 компаний
+
+⏱ Общий срок: 6–8 недель до готового SaaS
+
+✅ 13. Acceptance Criteria (как проверяем успех 🚀)
+
+Пользователь из Tenant A не может получить доступ к данным Tenant B — даже прямым SQL
+
+Enterprise-клиент может войти через Azure AD/Okta
+
+По превышению лимитов UI и API корректно реагируют
+
+Автодеплой staging → prod с миграциями без простоя
+
+Дашборды показывают:
+
+QPS
+
+Ошибки
+
+SLA breaches
+
+Tenant health
+
+✅ 14. Риски и предотвращение
+Риск	Митигирование
+Ошибка в RLS → потеря видимости данных	Feature-flag rollout + rollback
+SAML/OIDC неспецифичен для разных IdP	Сертификаты/метаданные хранить per-tenant
+Telegram API rate limit	Per-bot scaling
+Billing проблемы	Grace period, webhooks retry

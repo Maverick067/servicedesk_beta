@@ -1,0 +1,1046 @@
+// Prisma schema для Service Desk с multi-tenancy
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Модель для организаций (tenants)
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  domain    String?  @unique
+  
+  // Custom domain support
+  customDomain          String?  @unique
+  customDomainVerified  Boolean  @default(false)
+  dnsVerificationToken  String?  // Токен для верификации через TXT record
+  sslEnabled            Boolean  @default(false)
+  
+  settings  Json?    @default("{\"ticketPrefix\": \"TICKET\", \"modules\": {\"queues\": true, \"sla\": false, \"knowledge\": false, \"automation\": false, \"cmdb\": false, \"reports\": true, \"webhooks\": false, \"ldap\": false}}") // Настройки модулей и конфигурация
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  users     User[]
+  tickets   Ticket[]
+  categories Category[]
+  invitations UserInvitation[]
+  queues    Queue[]
+  slaPolicies SlaPolicy[] // SLA политики
+  customFields CustomField[] // Кастомные поля
+  knowledgeArticles KnowledgeArticle[] // База знаний
+  automationRules AutomationRule[] // Правила автоматизации
+  assets Asset[] // IT-активы (CMDB)
+  webhooks Webhook[] // Webhooks
+  ldapConfigs LdapConfig[] // LDAP/SSO конфигурации
+  subscription Subscription? // Подписка и биллинг
+  telegramBots TelegramBot[] // Telegram боты
+  
+  @@map("tenants")
+}
+
+// Роли пользователей
+enum UserRole {
+  ADMIN       // Глобальный администратор (видит все tenant'ы)
+  TENANT_ADMIN // Администратор конкретной организации
+  AGENT       // Агент поддержки
+  USER        // Обычный пользователь
+}
+
+// Статусы агентов
+enum AgentStatus {
+  AVAILABLE   // Доступен
+  BUSY        // Занят
+  AWAY        // Не на работе
+  ON_LEAVE    // В отпуске
+}
+
+// Пользователи
+model User {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  name          String?
+  password      String
+  role          UserRole    @default(USER)
+  avatar        String?
+  isActive      Boolean     @default(true)
+  agentStatus   AgentStatus @default(AVAILABLE) // Статус агента (только для AGENT)
+  tenantId      String?     // Опционально: null для глобальных администраторов
+  permissions   Json?       // Модульные разрешения для агентов
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  tenant        Tenant?   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdTickets Ticket[] @relation("TicketCreator")
+  assignedTickets Ticket[] @relation("TicketAssignee")
+  comments      Comment[]
+  categoryAssignments CategoryAgentAssignment[]
+  notifications Notification[]
+  readComments CommentRead[] // Отслеживание прочитанных комментариев
+  sentInvitations UserInvitation[] // Приглашения, отправленные пользователем
+  notificationSettings NotificationSettings? // Настройки уведомлений пользователя
+  savedFilters SavedFilter[] // Сохранённые фильтры тикетов
+  
+  @@index([tenantId])
+  @@index([email])
+  @@map("users")
+}
+
+// Статусы тикетов
+enum TicketStatus {
+  OPEN        // Открыт
+  IN_PROGRESS // В работе
+  PENDING     // Ожидание
+  RESOLVED    // Решен
+  CLOSED      // Закрыт
+}
+
+// Приоритеты
+enum TicketPriority {
+  LOW         // Низкий
+  MEDIUM      // Средний
+  HIGH        // Высокий
+  URGENT      // Срочный
+}
+
+// Очереди для группировки тикетов
+model Queue {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  color       String   @default("#8b5cf6")
+  icon        String?  // Иконка для очереди
+  isActive    Boolean  @default(true)
+  priority    Int      @default(0) // Приоритет отображения
+  tenantId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tickets   Ticket[]
+  
+  @@index([tenantId])
+  @@index([isActive])
+  @@map("queues")
+}
+
+// Категории тикетов
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  color       String   @default("#3b82f6")
+  tenantId    String
+  createdAt   DateTime @default(now())
+  
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tickets   Ticket[]
+  agentAssignments CategoryAgentAssignment[]
+  
+  @@index([tenantId])
+  @@map("categories")
+}
+
+// Назначение категорий агентам
+model CategoryAgentAssignment {
+  id         String   @id @default(cuid())
+  categoryId String
+  agentId    String
+  createdAt  DateTime @default(now())
+  
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  agent      User     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  
+  @@unique([categoryId, agentId])
+  @@index([categoryId])
+  @@index([agentId])
+  @@map("category_agent_assignments")
+}
+
+// Тикеты
+model Ticket {
+  id          String         @id @default(cuid())
+  number      Int?           // Автоматический номер тикета (per-tenant), генерируется программно
+  title       String
+  description String         @db.Text
+  status      TicketStatus   @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+  tenantId    String
+  queueId     String?        // Очередь тикета
+  categoryId  String?
+  creatorId   String
+  assigneeId  String?
+  slaId       String?        // SLA политика
+  slaDueDate  DateTime?      // Срок по SLA
+  slaBreached Boolean        @default(false) // Нарушен ли SLA
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  resolvedAt  DateTime?
+  firstResponseAt DateTime?  // Время первого ответа
+  
+  tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  queue       Queue?         @relation(fields: [queueId], references: [id], onDelete: SetNull)
+  category    Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  creator     User           @relation("TicketCreator", fields: [creatorId], references: [id])
+  assignee    User?          @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  slaPolicy   SlaPolicy?     @relation(fields: [slaId], references: [id], onDelete: SetNull)
+  comments    Comment[]
+  attachments Attachment[]
+  notifications Notification[]
+  customFieldValues CustomFieldValue[] // Значения кастомных полей
+  
+  @@unique([tenantId, number]) // Уникальность номера в рамках tenant
+  @@index([tenantId])
+  @@index([queueId])
+  @@index([creatorId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([priority])
+  @@index([slaId])
+  @@index([slaDueDate])
+  @@index([slaBreached])
+  @@map("tickets")
+}
+
+// Комментарии к тикетам
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  ticketId  String
+  authorId  String
+  isInternal Boolean @default(false) // Внутренний комментарий (только для агентов)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id])
+  readBy    CommentRead[] // Кто прочитал комментарий
+  
+  @@index([ticketId])
+  @@index([authorId])
+  @@map("comments")
+}
+
+// Вложения
+model Attachment {
+  id        String   @id @default(cuid())
+  filename  String
+  filepath  String
+  mimetype  String
+  size      Int
+  ticketId  String
+  createdAt DateTime @default(now())
+  
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  @@index([ticketId])
+  @@map("attachments")
+}
+
+
+// Типы уведомлений
+enum NotificationType {
+  TICKET_CREATED    // Новый тикет
+  TICKET_ASSIGNED   // Тикет назначен
+  TICKET_UPDATED    // Тикет обновлен
+  COMMENT_ADDED     // Добавлен комментарий
+  TICKET_RESOLVED   // Тикет решен
+  TICKET_CLOSED     // Тикет закрыт
+}
+
+// Уведомления
+model Notification {
+  id              String           @id @default(cuid())
+  type            NotificationType
+  title           String
+  message         String
+  isRead          Boolean          @default(false)
+  userId          String
+  ticketId        String?
+  groupId         String?          // Группа уведомлений (для группировки)
+  priority        String           @default("normal") // low, normal, high, urgent
+  channels        String[]         @default(["IN_APP"]) // Каналы доставки
+  emailSent       Boolean          @default(false) // Отправлено ли email
+  metadata        Json?            // Дополнительные данные (для кастомных уведомлений)
+  createdAt       DateTime         @default(now())
+  
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticket          Ticket?          @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  group           NotificationGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  
+  @@index([userId])
+  @@index([ticketId])
+  @@index([groupId])
+  @@index([isRead])
+  @@index([priority])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// Отслеживание прочитанных комментариев
+model CommentRead {
+  id        String   @id @default(cuid())
+  userId    String
+  commentId String
+  readAt    DateTime @default(now())
+  
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, commentId])
+  @@index([userId])
+  @@index([commentId])
+  @@map("comment_reads")
+}
+
+// Приглашения пользователей
+model UserInvitation {
+  id        String   @id @default(cuid())
+  email     String
+  role      UserRole
+  tenantId  String
+  invitedBy String
+  token     String   @unique
+  expiresAt DateTime
+  isUsed    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  inviter   User     @relation(fields: [invitedBy], references: [id])
+  
+  @@index([tenantId])
+  @@index([email])
+  @@index([token])
+  @@map("user_invitations")
+}
+
+// SLA Политики (Service Level Agreement)
+model SlaPolicy {
+  id                    String   @id @default(cuid())
+  name                  String
+  description           String?
+  tenantId              String
+  isActive              Boolean  @default(true)
+  
+  // Время в минутах
+  responseTime          Int?     // Время первого ответа (в минутах)
+  resolutionTime        Int      // Время решения (в минутах)
+  
+  // Условия применения
+  priorities            String[] @default([]) // Приоритеты, к которым применяется
+  categoryIds           String[] @default([]) // Категории, к которым применяется
+  queueIds              String[] @default([]) // Очереди, к которым применяется
+  
+  // Рабочее время (опционально)
+  businessHoursOnly     Boolean  @default(false)
+  businessHoursStart    String?  // "09:00"
+  businessHoursEnd      String?  // "18:00"
+  businessDays          Int[]    @default([1, 2, 3, 4, 5]) // 1-7 (понедельник-воскресенье)
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  tenant                Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tickets               Ticket[]
+  
+  @@index([tenantId])
+  @@index([isActive])
+  @@map("sla_policies")
+}
+
+// Аудит лог (история всех действий)
+model AuditLog {
+  id            String   @id @default(cuid())
+  tenantId      String
+  userId        String?   // Может быть null для системных действий
+  action        String    // Тип действия: CREATE, UPDATE, DELETE, LOGIN, etc
+  resourceType  String    // Тип ресурса: TICKET, USER, CATEGORY, etc
+  resourceId    String?   // ID ресурса
+  metadata      Json?     // Дополнительные данные (что именно изменилось)
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime  @default(now())
+  
+  @@index([tenantId])
+  @@index([userId])
+  @@index([resourceType])
+  @@index([resourceId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// Типы кастомных полей
+enum CustomFieldType {
+  TEXT        // Текстовое поле
+  NUMBER      // Числовое поле
+  DATE        // Дата
+  CHECKBOX    // Чекбокс (Boolean)
+  SELECT      // Выбор из списка
+  MULTI_SELECT // Множественный выбор
+  URL         // Ссылка
+  EMAIL       // Email
+}
+
+// Определения кастомных полей (настраиваются на уровне tenant)
+model CustomField {
+  id          String          @id @default(cuid())
+  name        String          // Название поля (внутреннее)
+  label       String          // Отображаемое название
+  description String?         // Описание поля
+  type        CustomFieldType // Тип поля
+  options     Json?           // Опции для SELECT/MULTI_SELECT: ["Option1", "Option2"]
+  isRequired  Boolean         @default(false) // Обязательное ли поле
+  isActive    Boolean         @default(true)
+  order       Int             @default(0) // Порядок отображения
+  tenantId    String
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  
+  tenant      Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  values      CustomFieldValue[]
+  
+  @@unique([tenantId, name]) // Уникальное имя в рамках tenant
+  @@index([tenantId])
+  @@index([isActive])
+  @@map("custom_fields")
+}
+
+// Значения кастомных полей для тикетов
+model CustomFieldValue {
+  id            String      @id @default(cuid())
+  customFieldId String
+  ticketId      String
+  value         String      @db.Text // Хранится как строка, парсится по типу
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  customField   CustomField @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
+  ticket        Ticket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  @@unique([customFieldId, ticketId]) // Одно значение на поле на тикет
+  @@index([customFieldId])
+  @@index([ticketId])
+  @@map("custom_field_values")
+}
+
+// Каналы доставки уведомлений
+enum NotificationChannel {
+  IN_APP      // В приложении
+  EMAIL       // Email
+  PUSH        // Push-уведомления (для будущего)
+}
+
+// Настройки уведомлений пользователя
+model NotificationSettings {
+  id                        String   @id @default(cuid())
+  userId                    String   @unique
+  
+  // Каналы доставки
+  enableInApp               Boolean  @default(true)
+  enableEmail               Boolean  @default(true)
+  enablePush                Boolean  @default(false)
+  
+  // Группировка уведомлений
+  groupSimilar              Boolean  @default(true)    // Группировать похожие уведомления
+  groupingInterval          Int      @default(15)      // Интервал группировки в минутах
+  
+  // Частота email уведомлений
+  emailFrequency            String   @default("instant") // instant, hourly, daily, off
+  emailDigestTime           String?  @default("09:00")  // Время отправки дайджеста (HH:MM)
+  
+  // Типы уведомлений (включить/выключить)
+  notifyTicketCreated       Boolean  @default(true)
+  notifyTicketAssigned      Boolean  @default(true)
+  notifyTicketStatusChanged Boolean  @default(true)
+  notifyTicketCommented     Boolean  @default(true)
+  notifyTicketMentioned     Boolean  @default(true)
+  notifyTicketEscalated     Boolean  @default(true)
+  notifySlaBreach           Boolean  @default(true)
+  
+  // Приоритетные уведомления (всегда отправлять)
+  priorityOverride          Boolean  @default(true)    // Отправлять urgent тикеты всегда
+  
+  // Тихий режим
+  quietHoursEnabled         Boolean  @default(false)
+  quietHoursStart           String?  @default("22:00") // HH:MM
+  quietHoursEnd             String?  @default("08:00") // HH:MM
+  
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+  
+  user                      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@map("notification_settings")
+}
+
+// Группы уведомлений (для группировки похожих)
+model NotificationGroup {
+  id              String         @id @default(cuid())
+  userId          String
+  type            String         // Тип уведомлений в группе
+  resourceType    String?        // TICKET, COMMENT, etc
+  resourceId      String?        // ID ресурса (например, ticketId)
+  count           Int            @default(1)      // Количество уведомлений в группе
+  firstEventAt    DateTime       @default(now())  // Время первого события
+  lastEventAt     DateTime       @default(now())  // Время последнего события
+  isRead          Boolean        @default(false)
+  isDismissed     Boolean        @default(false)
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  notifications   Notification[]
+  
+  @@index([userId])
+  @@index([isRead])
+  @@index([type])
+  @@index([resourceType, resourceId])
+  @@index([lastEventAt])
+  @@map("notification_groups")
+}
+
+// Сохранённые фильтры тикетов
+model SavedFilter {
+  id              String   @id @default(cuid())
+  userId          String
+  tenantId        String
+  name            String          // Название фильтра
+  description     String?         // Описание
+  icon            String?         // Иконка (emoji или icon name)
+  color           String?         // Цвет метки
+  isDefault       Boolean  @default(false) // Фильтр по умолчанию
+  isPublic        Boolean  @default(false) // Общий фильтр для всей команды
+  sortOrder       Int      @default(0)     // Порядок отображения
+  
+  // Условия фильтра (JSON)
+  filters         Json     // { status: ["OPEN"], priority: ["HIGH"], assigneeId: "xxx", ... }
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([tenantId])
+  @@index([isPublic])
+  @@map("saved_filters")
+}
+
+// ====================
+// БАЗА ЗНАНИЙ (Knowledge Base)
+// ====================
+
+// Статусы статей
+enum ArticleStatus {
+  DRAFT       // Черновик
+  PUBLISHED   // Опубликовано
+  ARCHIVED    // В архиве
+}
+
+// Статьи базы знаний
+model KnowledgeArticle {
+  id              String        @id @default(cuid())
+  title           String
+  slug            String        // URL-friendly название
+  content         String        @db.Text
+  excerpt         String?       // Краткое описание
+  status          ArticleStatus @default(DRAFT)
+  tenantId        String
+  authorId        String
+  categoryId      String?       // Категория статьи (можно использовать Category)
+  views           Int           @default(0)
+  isPublic        Boolean       @default(false) // Доступна пользователям?
+  tags            String[]      @default([])
+  attachments     String[]      @default([]) // URL файлов
+  version         Int           @default(1)
+  publishedAt     DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  @@unique([tenantId, slug])
+  @@index([tenantId])
+  @@index([status])
+  @@index([authorId])
+  @@index([publishedAt])
+  @@map("knowledge_articles")
+}
+
+// ====================
+// АВТОМАТИЗАЦИЯ (Automation)
+// ====================
+
+// Типы триггеров
+enum TriggerType {
+  TICKET_CREATED      // При создании тикета
+  TICKET_UPDATED      // При обновлении тикета
+  TICKET_ASSIGNED     // При назначении тикета
+  STATUS_CHANGED      // При изменении статуса
+  PRIORITY_CHANGED    // При изменении приоритета
+  COMMENT_ADDED       // При добавлении комментария
+  SLA_BREACH          // При нарушении SLA
+  TIME_BASED          // По времени (cron)
+}
+
+// Типы действий
+enum ActionType {
+  ASSIGN_TO_AGENT     // Назначить агенту
+  CHANGE_STATUS       // Изменить статус
+  CHANGE_PRIORITY     // Изменить приоритет
+  ADD_COMMENT         // Добавить комментарий
+  SEND_EMAIL          // Отправить email
+  SEND_NOTIFICATION   // Отправить уведомление
+  ADD_TAG             // Добавить тег
+  CALL_WEBHOOK        // Вызвать webhook
+}
+
+// Правила автоматизации
+model AutomationRule {
+  id              String       @id @default(cuid())
+  name            String
+  description     String?
+  tenantId        String
+  isActive        Boolean      @default(true)
+  triggerType     TriggerType
+  conditions      Json         // Условия: { field: "priority", operator: "equals", value: "HIGH" }
+  actions         Json         // Действия: [{ type: "ASSIGN_TO_AGENT", agentId: "xxx" }]
+  priority        Int          @default(0) // Порядок выполнения (меньше = раньше)
+  executionCount  Int          @default(0) // Сколько раз выполнилось
+  lastExecutedAt  DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  
+  tenant          Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  @@index([tenantId])
+  @@index([isActive])
+  @@index([triggerType])
+  @@map("automation_rules")
+}
+
+// ====================
+// CMDB / АКТИВЫ (Assets/IT Infrastructure)
+// ====================
+
+// Типы активов
+enum AssetType {
+  COMPUTER        // Компьютер
+  LAPTOP          // Ноутбук
+  SERVER          // Сервер
+  NETWORK         // Сетевое оборудование
+  PRINTER         // Принтер
+  PHONE           // Телефон
+  MOBILE          // Мобильное устройство
+  SOFTWARE        // ПО
+  LICENSE         // Лицензия
+  OTHER           // Другое
+}
+
+// Статусы активов
+enum AssetStatus {
+  IN_USE          // В использовании
+  AVAILABLE       // Доступен
+  MAINTENANCE     // На обслуживании
+  RETIRED         // Списан
+  LOST            // Утерян
+}
+
+// IT-активы (CMDB)
+model Asset {
+  id              String       @id @default(cuid())
+  name            String
+  type            AssetType
+  status          AssetStatus  @default(AVAILABLE)
+  tenantId        String
+  assignedToId    String?      // Кому назначен (User)
+  locationId      String?      // Локация/офис
+  manufacturer    String?
+  model           String?
+  serialNumber    String?
+  inventoryNumber String?
+  purchaseDate    DateTime?
+  warrantyExpiry  DateTime?
+  notes           String?      @db.Text
+  customData      Json?        // Дополнительные поля (IP, MAC, etc)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  
+  tenant          Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  @@index([tenantId])
+  @@index([type])
+  @@index([status])
+  @@index([assignedToId])
+  @@index([serialNumber])
+  @@map("assets")
+}
+
+// ====================
+// WEBHOOKS
+// ====================
+
+// События webhook
+enum WebhookEvent {
+  TICKET_CREATED
+  TICKET_UPDATED
+  TICKET_RESOLVED
+  TICKET_CLOSED
+  COMMENT_ADDED
+  USER_CREATED
+  CATEGORY_CREATED
+  ALL                 // Все события
+}
+
+// Webhooks
+model Webhook {
+  id              String         @id @default(cuid())
+  name            String
+  url             String
+  secret          String?        // Secret для подписи
+  events          WebhookEvent[] @default([])
+  isActive        Boolean        @default(true)
+  tenantId        String
+  headers         Json?          // Дополнительные заголовки
+  successCount    Int            @default(0)
+  failureCount    Int            @default(0)
+  lastTriggeredAt DateTime?
+  lastError       String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  tenant          Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  deliveries      WebhookDelivery[]
+  
+  @@index([tenantId])
+  @@index([isActive])
+  @@map("webhooks")
+}
+
+// История доставки webhooks
+model WebhookDelivery {
+  id              String   @id @default(cuid())
+  webhookId       String
+  event           String
+  payload         Json
+  statusCode      Int?
+  response        String?  @db.Text
+  error           String?  @db.Text
+  duration        Int?     // Время выполнения в мс
+  retriesLeft     Int      @default(3)
+  createdAt       DateTime @default(now())
+  
+  webhook         Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  
+  @@index([webhookId])
+  @@index([createdAt])
+  @@map("webhook_deliveries")
+}
+
+// ====================
+// LDAP / SSO
+// ====================
+
+// Типы аутентификации
+enum AuthProviderType {
+  LDAP
+  ACTIVE_DIRECTORY
+  OAUTH2
+  SAML
+}
+
+// Конфигурации LDAP/SSO
+model LdapConfig {
+  id              String           @id @default(cuid())
+  name            String
+  type            AuthProviderType
+  tenantId        String
+  isActive        Boolean          @default(false)
+  
+  // LDAP/AD настройки
+  host            String?
+  port            Int?             @default(389)
+  useSSL          Boolean?         @default(false) // Использовать LDAPS (SSL/TLS)
+  baseDn          String?
+  bindDn          String?
+  bindPassword    String?
+  userSearchBase  String?
+  userSearchFilter String?
+  groupSearchBase String?
+  groupSearchFilter String?
+  
+  // OAuth2/SAML настройки
+  clientId        String?
+  clientSecret    String?
+  authorizationUrl String?
+  tokenUrl        String?
+  userInfoUrl     String?
+  callbackUrl     String?
+  
+  // Маппинг атрибутов
+  attributeMapping Json?           // { email: "mail", name: "cn", ... }
+  groupMapping     Json?           // { "CN=Admins": "TENANT_ADMIN" }
+  
+  // Настройки синхронизации
+  syncEnabled      Boolean         @default(false)
+  syncInterval     Int?            @default(3600) // В секундах
+  lastSyncAt       DateTime?
+  
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  
+  tenant           Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  
+  @@index([tenantId])
+  @@index([isActive])
+  @@map("ldap_configs")
+}
+
+// ==============================================
+// Billing & Subscriptions
+// ==============================================
+
+// Тарифные планы
+enum PlanType {
+  FREE        // Бесплатный: 10 users, 2 agents, 1GB storage
+  PRO         // PRO: 50 users, 15 agents, 20GB storage, SLA, KB, Assets
+  ENTERPRISE  // Enterprise: Unlimited, все модули, SSO, custom support
+}
+
+// Статусы подписки
+enum SubscriptionStatus {
+  ACTIVE        // Активна
+  TRIALING      // Пробный период
+  PAST_DUE      // Просрочен платеж
+  CANCELED      // Отменена
+  INCOMPLETE    // Платеж не завершен
+  UNPAID        // Не оплачена
+}
+
+// Модель подписки
+model Subscription {
+  id                      String              @id @default(cuid())
+  tenantId                String              @unique
+  plan                    PlanType            @default(FREE)
+  status                  SubscriptionStatus  @default(ACTIVE)
+  
+  // Stripe IDs
+  stripeCustomerId        String?             @unique
+  stripeSubscriptionId    String?             @unique
+  stripePriceId           String?
+  
+  // Период подписки
+  currentPeriodStart      DateTime?
+  currentPeriodEnd        DateTime?
+  cancelAtPeriodEnd       Boolean             @default(false)
+  canceledAt              DateTime?
+  trialStart              DateTime?
+  trialEnd                DateTime?
+  
+  // Лимиты тарифного плана
+  maxUsers                Int                 @default(10)      // Максимум пользователей
+  maxAgents               Int                 @default(2)       // Максимум агентов
+  maxStorageGB            Int                 @default(1)       // Максимум хранилища (GB)
+  maxTicketsPerMonth      Int?                // Лимит тикетов в месяц (null = unlimited)
+  
+  // Включенные функции
+  ssoEnabled              Boolean             @default(false)   // SSO доступен
+  customDomainEnabled     Boolean             @default(false)   // Кастомный домен
+  apiAccessEnabled        Boolean             @default(false)   // API доступ
+  prioritySupportEnabled  Boolean             @default(false)   // Приоритетная поддержка
+  customBrandingEnabled   Boolean             @default(false)   // Кастомный брендинг
+  
+  // Метаданные
+  metadata                Json?               // Дополнительные данные
+  
+  createdAt               DateTime            @default(now())
+  updatedAt               DateTime            @updatedAt
+  
+  tenant                  Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invoices                Invoice[]
+  usageRecords            UsageRecord[]
+  
+  @@index([status])
+  @@index([plan])
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+  @@map("subscriptions")
+}
+
+// Счета (Invoices)
+model Invoice {
+  id                    String   @id @default(cuid())
+  subscriptionId        String
+  
+  stripeInvoiceId       String?  @unique
+  amountDue             Int      // В центах
+  amountPaid            Int      @default(0)
+  currency              String   @default("usd")
+  status                String   // draft, open, paid, void, uncollectible
+  
+  // Период счета
+  periodStart           DateTime
+  periodEnd             DateTime
+  
+  // Даты
+  dueDate               DateTime?
+  paidAt                DateTime?
+  
+  // Ссылки
+  hostedInvoiceUrl      String?  // Stripe hosted page
+  invoicePdf            String?  // PDF URL
+  
+  metadata              Json?
+  
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  subscription          Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  
+  @@index([subscriptionId])
+  @@index([status])
+  @@index([stripeInvoiceId])
+  @@map("invoices")
+}
+
+// Записи использования (для метрик)
+model UsageRecord {
+  id                    String   @id @default(cuid())
+  subscriptionId        String
+  
+  // Метрика
+  metricType            String   // users, agents, storage, tickets, api_calls
+  metricValue           Int      // Текущее значение
+  maxValue              Int?     // Максимальное значение (лимит)
+  
+  // Период
+  periodStart           DateTime
+  periodEnd             DateTime
+  
+  metadata              Json?
+  
+  createdAt             DateTime @default(now())
+  
+  subscription          Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  
+  @@index([subscriptionId])
+  @@index([metricType])
+  @@index([periodStart])
+  @@map("usage_records")
+}
+
+// ============================================
+// TELEGRAM BOT INTEGRATION (per-tenant)
+// ============================================
+
+model TelegramBot {
+  id              String   @id @default(cuid())
+  tenantId        String
+  
+  // Bot credentials
+  botToken        String   // Telegram Bot API Token
+  botUsername     String   // @username бота
+  
+  // Настройки
+  isActive        Boolean  @default(true)
+  
+  // Группы для уведомлений
+  groupChatId     String?  // ID группы для уведомлений агентов
+  
+  // Настройки уведомлений
+  notifyOnNewTicket         Boolean @default(true)
+  notifyOnTicketUpdate      Boolean @default(true)
+  notifyOnNewComment        Boolean @default(true)
+  
+  // Разрешения
+  allowTicketCreation       Boolean @default(true)
+  allowTicketStatusChange   Boolean @default(false)
+  
+  // Webhook
+  webhookUrl      String?
+  lastWebhookUpdateAt DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  users           TelegramUser[] // Связи пользователей с Telegram аккаунтами
+  messages        TelegramMessage[] // История сообщений
+  
+  @@unique([tenantId]) // Один бот на tenant
+  @@index([botToken])
+  @@map("telegram_bots")
+}
+
+// Связь пользователей ServiceDesk с Telegram аккаунтами
+model TelegramUser {
+  id              String   @id @default(cuid())
+  botId           String
+  userId          String   // ID пользователя в ServiceDesk
+  
+  // Telegram данные
+  telegramId      String   // Telegram user ID (chat ID)
+  telegramUsername String?  // @username (если есть)
+  firstName       String?
+  lastName        String?
+  
+  // Статус
+  isVerified      Boolean  @default(false)
+  verificationCode String?
+  verifiedAt      DateTime?
+  
+  // Настройки
+  notificationsEnabled Boolean @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  bot             TelegramBot @relation(fields: [botId], references: [id], onDelete: Cascade)
+  
+  @@unique([botId, telegramId]) // Один Telegram аккаунт на бота
+  @@unique([botId, userId]) // Один пользователь может быть связан только с одним Telegram аккаунтом на бота
+  @@index([telegramId])
+  @@index([userId])
+  @@map("telegram_users")
+}
+
+// История сообщений Telegram
+model TelegramMessage {
+  id              String   @id @default(cuid())
+  botId           String
+  
+  // Telegram данные
+  telegramMessageId String // ID сообщения в Telegram
+  telegramChatId    String // ID чата
+  
+  // Связь с тикетом
+  ticketId        String?
+  
+  // Содержимое
+  messageType     String   // text, photo, document, command
+  text            String?
+  
+  // Направление
+  direction       String   // incoming (от пользователя) | outgoing (от бота)
+  
+  // Метаданные
+  metadata        Json?
+  
+  createdAt       DateTime @default(now())
+  
+  bot             TelegramBot @relation(fields: [botId], references: [id], onDelete: Cascade)
+  
+  @@index([botId])
+  @@index([ticketId])
+  @@index([telegramChatId])
+  @@index([createdAt])
+  @@map("telegram_messages")
+}
+
