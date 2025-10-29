@@ -38,7 +38,7 @@ export function SimpleADConfigDialog({
   const [isTesting, setIsTesting] = useState(false);
   const [testSuccess, setTestSuccess] = useState(false);
 
-  // Простые поля
+  // Simple fields
   const [name, setName] = useState("");
   const [serverAddress, setServerAddress] = useState("");
   const [domain, setDomain] = useState("");
@@ -46,12 +46,12 @@ export function SimpleADConfigDialog({
   const [adminPassword, setAdminPassword] = useState("");
   const [isActive, setIsActive] = useState(false);
 
-  // Продвинутые настройки (опционально)
+  // Advanced settings (optional)
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [customPort, setCustomPort] = useState("");
   const [useSSL, setUseSSL] = useState(false);
 
-  // Автоматически меняем порт при переключении SSL
+  // Automatically change port when SSL is toggled
   const effectivePort = customPort || (useSSL ? "636" : "389");
 
   const handleTestConnection = async () => {
@@ -134,7 +134,7 @@ export function SimpleADConfigDialog({
           userSearchBase,
           userSearchFilter,
           isActive,
-          useSSL, // Передаем флаг SSL
+          useSSL, // Pass SSL flag
         }),
       });
 

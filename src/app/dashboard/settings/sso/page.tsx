@@ -60,7 +60,7 @@ function SSOSettingsPageContent() {
         setSettings(data || settings);
       }
     } catch (error) {
-      toast.error("Ошибка загрузки настроек SSO");
+      toast.error("Error loading SSO settings");
     } finally {
       setLoading(false);
     }
@@ -76,14 +76,14 @@ function SSOSettingsPageContent() {
       });
 
       if (response.ok) {
-        toast.success("Настройки SSO сохранены");
+        toast.success("SSO settings saved");
         fetchSettings();
       } else {
         const error = await response.json();
-        toast.error(error.message || "Ошибка сохранения настроек");
+        toast.error(error.message || "Error saving settings");
       }
     } catch (error) {
-      toast.error("Ошибка сохранения настроек SSO");
+      toast.error("Error saving SSO settings");
     } finally {
       setSaving(false);
     }
@@ -94,7 +94,7 @@ function SSOSettingsPageContent() {
       <Alert>
         <Shield className="h-4 w-4" />
         <AlertDescription>
-          Только администраторы организации могут управлять настройками SSO.
+          Only organization administrators can manage SSO settings.
         </AlertDescription>
       </Alert>
     );
@@ -111,34 +111,34 @@ function SSOSettingsPageContent() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Настройки SSO</h1>
+        <h1 className="text-3xl font-bold">SSO Settings</h1>
         <p className="text-muted-foreground mt-2">
-          Настройте единый вход (Single Sign-On) для вашей организации
+          Configure Single Sign-On (SSO) for your organization
         </p>
       </div>
 
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          SSO доступен только для планов PRO и ENTERPRISE. После настройки
-          пользователи смогут входить через корпоративные аккаунты.
+          SSO is available only for PRO and ENTERPRISE plans. After configuration,
+          users will be able to sign in through corporate accounts.
         </AlertDescription>
       </Alert>
 
-      {/* Основные настройки */}
+      {/* Main settings */}
       <Card>
         <CardHeader>
-          <CardTitle>Основные настройки</CardTitle>
+          <CardTitle>Main Settings</CardTitle>
           <CardDescription>
-            Включите SSO и выберите провайдера аутентификации
+            Enable SSO and select authentication provider
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Включить SSO</Label>
+              <Label>Enable SSO</Label>
               <p className="text-sm text-muted-foreground">
-                Разрешить вход через внешние провайдеры
+                Allow sign in through external providers
               </p>
             </div>
             <Switch
@@ -151,7 +151,7 @@ function SSOSettingsPageContent() {
 
           {settings.ssoEnabled && (
             <div className="space-y-2">
-              <Label htmlFor="ssoProvider">Провайдер SSO</Label>
+              <Label htmlFor="ssoProvider">SSO Provider</Label>
               <Select
                 value={settings.ssoProvider}
                 onValueChange={(value) =>
@@ -159,7 +159,7 @@ function SSOSettingsPageContent() {
                 }
               >
                 <SelectTrigger id="ssoProvider">
-                  <SelectValue placeholder="Выберите провайдера" />
+                  <SelectValue placeholder="Select provider" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="google">Google Workspace</SelectItem>
@@ -176,9 +176,9 @@ function SSOSettingsPageContent() {
       {settings.ssoEnabled && settings.ssoProvider === "google" && (
         <Card>
           <CardHeader>
-            <CardTitle>Настройки Google Workspace</CardTitle>
+            <CardTitle>Google Workspace Settings</CardTitle>
             <CardDescription>
-              Настройте OAuth приложение в Google Cloud Console
+              Configure OAuth application in Google Cloud Console
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -224,9 +224,9 @@ function SSOSettingsPageContent() {
       {settings.ssoEnabled && settings.ssoProvider === "azure-ad" && (
         <Card>
           <CardHeader>
-            <CardTitle>Настройки Microsoft Azure AD</CardTitle>
+            <CardTitle>Microsoft Azure AD Settings</CardTitle>
             <CardDescription>
-              Настройте приложение в Azure Active Directory
+              Configure application in Azure Active Directory
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -284,7 +284,7 @@ function SSOSettingsPageContent() {
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saving}>
           {saving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Сохранить настройки
+          Save Settings
         </Button>
       </div>
     </div>

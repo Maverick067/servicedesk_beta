@@ -57,22 +57,22 @@ interface AgentPermissions {
 
 const statusConfig = {
   AVAILABLE: {
-    label: "Доступен",
+    label: "Available",
     color: "bg-green-100 text-green-800",
     icon: CheckCircle,
   },
   BUSY: {
-    label: "Занят",
+    label: "Busy",
     color: "bg-yellow-100 text-yellow-800",
     icon: Clock,
   },
   AWAY: {
-    label: "Не на работе",
+    label: "Away",
     color: "bg-orange-100 text-orange-800",
     icon: AlertCircle,
   },
   ON_LEAVE: {
-    label: "В отпуске",
+    label: "On Leave",
     color: "bg-red-100 text-red-800",
     icon: XCircle,
   },
@@ -96,7 +96,7 @@ export default function AgentsPage() {
     canEditAllTickets: false,
   });
 
-  // Проверяем доступ
+  // Check access
   useEffect(() => {
     if (status === "loading") return;
     
@@ -115,7 +115,7 @@ export default function AgentsPage() {
         setAgents(data);
       } catch (error) {
         console.error("Error fetching agents:", error);
-        toast.error("Ошибка загрузки агентов");
+        toast.error("Error loading agents");
       } finally {
         setIsLoading(false);
       }
@@ -144,9 +144,9 @@ export default function AgentsPage() {
       ));
       
       const statusLabel = statusConfig[newStatus].label;
-      toast.success(`Статус агента изменен на "${statusLabel}"`);
+      toast.success(`Agent status changed to "${statusLabel}"`);
     } catch (error: any) {
-      toast.error("Ошибка изменения статуса", { description: error.message });
+      toast.error("Error changing status", { description: error.message });
     }
   };
 
@@ -183,9 +183,9 @@ export default function AgentsPage() {
       ));
       
       setEditingPermissions(null);
-      toast.success("Разрешения агента обновлены");
+      toast.success("Agent permissions updated");
     } catch (error: any) {
-      toast.error("Ошибка обновления разрешений", { description: error.message });
+      toast.error("Error updating permissions", { description: error.message });
     }
   };
 
@@ -209,8 +209,8 @@ export default function AgentsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Агенты</h1>
-            <p className="text-muted-foreground mt-2">Загрузка...</p>
+            <h1 className="text-3xl font-bold">Agents</h1>
+            <p className="text-muted-foreground mt-2">Loading...</p>
           </div>
         </div>
       </div>
@@ -221,18 +221,18 @@ export default function AgentsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Агенты поддержки</h1>
+          <h1 className="text-3xl font-bold">Support Agents</h1>
           <p className="text-muted-foreground mt-2">
-            Управление агентами и их статусами
+            Manage agents and their statuses
           </p>
         </div>
       </div>
 
-      {/* Статистика */}
+      {/* Statistics */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Всего агентов</CardTitle>
+            <CardTitle className="text-sm font-medium">Total Agents</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -241,7 +241,7 @@ export default function AgentsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Доступны</CardTitle>
+            <CardTitle className="text-sm font-medium">Available</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
@@ -252,7 +252,7 @@ export default function AgentsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Заняты</CardTitle>
+            <CardTitle className="text-sm font-medium">Busy</CardTitle>
             <Clock className="h-4 w-4 text-yellow-600" />
           </CardHeader>
           <CardContent>
@@ -263,7 +263,7 @@ export default function AgentsPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Недоступны</CardTitle>
+            <CardTitle className="text-sm font-medium">Unavailable</CardTitle>
             <XCircle className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
@@ -274,14 +274,14 @@ export default function AgentsPage() {
         </Card>
       </div>
 
-      {/* Список агентов */}
+      {/* Agents list */}
       {agents.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Нет агентов</h3>
+            <h3 className="text-lg font-semibold mb-2">No Agents</h3>
             <p className="text-muted-foreground">
-              В вашей организации пока нет агентов поддержки
+              Your organization has no support agents yet
             </p>
           </CardContent>
         </Card>
@@ -320,45 +320,45 @@ export default function AgentsPage() {
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Назначенных тикетов:</span>
+                      <span className="text-muted-foreground">Assigned tickets:</span>
                       <span className="font-medium">{agent._count.assignedTickets}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Категорий:</span>
+                      <span className="text-muted-foreground">Categories:</span>
                       <span className="font-medium">{agent._count.categoryAssignments}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">В команде с:</span>
+                      <span className="text-muted-foreground">In team since:</span>
                       <span className="font-medium">
-                        {new Date(agent.createdAt).toLocaleDateString('ru-RU')}
+                        {new Date(agent.createdAt).toLocaleDateString('en-US')}
                       </span>
                     </div>
                   </div>
 
-                  {/* Разрешения агента */}
+                  {/* Agent permissions */}
                   {editingPermissions === agent.id ? (
                     <div className="mt-4 space-y-3">
                       <div className="flex items-center justify-between">
-                        <div className="text-sm font-medium">Разрешения агента</div>
+                        <div className="text-sm font-medium">Agent Permissions</div>
                         <div className="flex gap-2">
                           <Button
                             size="sm"
                             onClick={() => handleSavePermissions(agent.id)}
                           >
-                            Сохранить
+                            Save
                           </Button>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={handleCancelEditPermissions}
                           >
-                            Отмена
+                            Cancel
                           </Button>
                         </div>
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Создание категорий</Label>
+                          <Label className="text-sm">Create Categories</Label>
                           <Switch
                             checked={agentPermissions.canCreateCategories}
                             onCheckedChange={(checked) => 
@@ -367,7 +367,7 @@ export default function AgentsPage() {
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Редактирование категорий</Label>
+                          <Label className="text-sm">Edit Categories</Label>
                           <Switch
                             checked={agentPermissions.canEditCategories}
                             onCheckedChange={(checked) => 
@@ -376,7 +376,7 @@ export default function AgentsPage() {
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Удаление категорий</Label>
+                          <Label className="text-sm">Delete Categories</Label>
                           <Switch
                             checked={agentPermissions.canDeleteCategories}
                             onCheckedChange={(checked) => 
@@ -385,7 +385,7 @@ export default function AgentsPage() {
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Назначение агентов</Label>
+                          <Label className="text-sm">Assign Agents</Label>
                           <Switch
                             checked={agentPermissions.canAssignAgents}
                             onCheckedChange={(checked) => 
@@ -394,7 +394,7 @@ export default function AgentsPage() {
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Сброс паролей</Label>
+                          <Label className="text-sm">Reset Passwords</Label>
                           <Switch
                             checked={agentPermissions.canResetPasswords}
                             onCheckedChange={(checked) => 
@@ -403,7 +403,7 @@ export default function AgentsPage() {
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Приглашение пользователей</Label>
+                          <Label className="text-sm">Invite Users</Label>
                           <Switch
                             checked={agentPermissions.canInviteUsers}
                             onCheckedChange={(checked) => 
@@ -412,7 +412,7 @@ export default function AgentsPage() {
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Удаление пользователей</Label>
+                          <Label className="text-sm">Delete Users</Label>
                           <Switch
                             checked={agentPermissions.canDeleteUsers}
                             onCheckedChange={(checked) => 
@@ -421,7 +421,7 @@ export default function AgentsPage() {
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Просмотр всех тикетов</Label>
+                          <Label className="text-sm">View All Tickets</Label>
                           <Switch
                             checked={agentPermissions.canViewAllTickets}
                             onCheckedChange={(checked) => 
@@ -430,7 +430,7 @@ export default function AgentsPage() {
                           />
                         </div>
                         <div className="flex items-center justify-between">
-                          <Label className="text-sm">Редактирование всех тикетов</Label>
+                          <Label className="text-sm">Edit All Tickets</Label>
                           <Switch
                             checked={agentPermissions.canEditAllTickets}
                             onCheckedChange={(checked) => 
@@ -444,7 +444,7 @@ export default function AgentsPage() {
                     <div className="mt-4 space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="text-sm font-medium text-muted-foreground">
-                          Разрешения
+                          Permissions
                         </div>
                         <Button
                           variant="outline"
@@ -452,47 +452,47 @@ export default function AgentsPage() {
                           onClick={() => handleEditPermissions(agent)}
                         >
                           <Settings className="mr-1 h-3 w-3" />
-                          Настроить
+                          Configure
                         </Button>
                       </div>
                       {agent.permissions && (
                         <div className="grid grid-cols-2 gap-1 text-xs">
                           {agent.permissions.canCreateCategories && (
-                            <Badge variant="secondary" className="text-xs">Создание категорий</Badge>
+                            <Badge variant="secondary" className="text-xs">Create Categories</Badge>
                           )}
                           {agent.permissions.canEditCategories && (
-                            <Badge variant="secondary" className="text-xs">Редактирование категорий</Badge>
+                            <Badge variant="secondary" className="text-xs">Edit Categories</Badge>
                           )}
                           {agent.permissions.canDeleteCategories && (
-                            <Badge variant="secondary" className="text-xs">Удаление категорий</Badge>
+                            <Badge variant="secondary" className="text-xs">Delete Categories</Badge>
                           )}
                           {agent.permissions.canAssignAgents && (
-                            <Badge variant="secondary" className="text-xs">Назначение агентов</Badge>
+                            <Badge variant="secondary" className="text-xs">Assign Agents</Badge>
                           )}
                           {agent.permissions.canResetPasswords && (
-                            <Badge variant="secondary" className="text-xs">Сброс паролей</Badge>
+                            <Badge variant="secondary" className="text-xs">Reset Passwords</Badge>
                           )}
                           {agent.permissions.canInviteUsers && (
-                            <Badge variant="secondary" className="text-xs">Приглашение пользователей</Badge>
+                            <Badge variant="secondary" className="text-xs">Invite Users</Badge>
                           )}
                           {agent.permissions.canDeleteUsers && (
-                            <Badge variant="secondary" className="text-xs">Удаление пользователей</Badge>
+                            <Badge variant="secondary" className="text-xs">Delete Users</Badge>
                           )}
                           {agent.permissions.canViewAllTickets && (
-                            <Badge variant="secondary" className="text-xs">Просмотр всех тикетов</Badge>
+                            <Badge variant="secondary" className="text-xs">View All Tickets</Badge>
                           )}
                           {agent.permissions.canEditAllTickets && (
-                            <Badge variant="secondary" className="text-xs">Редактирование всех тикетов</Badge>
+                            <Badge variant="secondary" className="text-xs">Edit All Tickets</Badge>
                           )}
                         </div>
                       )}
                     </div>
                   )}
 
-                  {/* Кнопки изменения статуса */}
+                  {/* Status change buttons */}
                   <div className="mt-4 space-y-2">
                     <div className="text-sm font-medium text-muted-foreground mb-2">
-                      Изменить статус:
+                      Change Status:
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       <Button
@@ -501,7 +501,7 @@ export default function AgentsPage() {
                         onClick={() => handleStatusChange(agent.id, "AVAILABLE")}
                       >
                         <UserCheck className="mr-1 h-3 w-3" />
-                        Доступен
+                        Available
                       </Button>
                       <Button
                         variant={agent.agentStatus === "BUSY" ? "default" : "outline"}
@@ -509,7 +509,7 @@ export default function AgentsPage() {
                         onClick={() => handleStatusChange(agent.id, "BUSY")}
                       >
                         <Clock className="mr-1 h-3 w-3" />
-                        Занят
+                        Busy
                       </Button>
                       <Button
                         variant={agent.agentStatus === "AWAY" ? "default" : "outline"}
@@ -517,7 +517,7 @@ export default function AgentsPage() {
                         onClick={() => handleStatusChange(agent.id, "AWAY")}
                       >
                         <AlertCircle className="mr-1 h-3 w-3" />
-                        Не на работе
+                        Away
                       </Button>
                       <Button
                         variant={agent.agentStatus === "ON_LEAVE" ? "default" : "outline"}
@@ -525,7 +525,7 @@ export default function AgentsPage() {
                         onClick={() => handleStatusChange(agent.id, "ON_LEAVE")}
                       >
                         <UserX className="mr-1 h-3 w-3" />
-                        В отпуске
+                        On Leave
                       </Button>
                     </div>
                   </div>

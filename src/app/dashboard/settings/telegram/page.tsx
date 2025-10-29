@@ -56,7 +56,7 @@ export default function TelegramSettingsPage() {
     notifyOnNewComment: true,
   });
 
-  // Загрузка настроек бота
+  // Load bot settings
   useEffect(() => {
     fetchBot();
   }, []);
@@ -80,7 +80,7 @@ export default function TelegramSettingsPage() {
       }
     } catch (error) {
       console.error("Error fetching bot:", error);
-      toast.error("Ошибка загрузки настроек");
+      toast.error("Error loading settings");
     } finally {
       setLoading(false);
     }
@@ -88,7 +88,7 @@ export default function TelegramSettingsPage() {
 
   const handleSave = async () => {
     if (!formData.botToken) {
-      toast.error("Введите токен бота");
+      toast.error("Enter bot token");
       return;
     }
 
@@ -109,17 +109,17 @@ export default function TelegramSettingsPage() {
 
       const data = await response.json();
       setBot(data.bot);
-      toast.success("Настройки сохранены");
+      toast.success("Settings saved");
     } catch (error: any) {
       console.error("Error saving bot:", error);
-      toast.error(error.message || "Ошибка сохранения");
+      toast.error(error.message || "Error saving");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (!confirm("Вы уверены, что хотите удалить бота?")) {
+    if (!confirm("Are you sure you want to delete the bot?")) {
       return;
     }
 
@@ -139,10 +139,10 @@ export default function TelegramSettingsPage() {
         notifyOnTicketUpdate: true,
         notifyOnNewComment: true,
       });
-      toast.success("Бот удален");
+      toast.success("Bot deleted");
     } catch (error) {
       console.error("Error deleting bot:", error);
-      toast.error("Ошибка удаления");
+      toast.error("Error deleting");
     } finally {
       setDeleting(false);
     }
@@ -161,9 +161,9 @@ export default function TelegramSettingsPage() {
       <div className="flex items-center gap-3 mb-6">
         <MessageCircle className="w-8 h-8" />
         <div>
-          <h1 className="text-3xl font-bold">Настройки Telegram</h1>
+          <h1 className="text-3xl font-bold">Telegram Settings</h1>
           <p className="text-muted-foreground">
-            Интеграция с Telegram Bot для создания тикетов и уведомлений
+            Integration with Telegram Bot for ticket creation and notifications
           </p>
         </div>
       </div>
@@ -173,11 +173,11 @@ export default function TelegramSettingsPage() {
         <AlertDescription>
           <div className="space-y-2">
             <p>
-              <strong>Как настроить Telegram бота:</strong>
+              <strong>How to set up Telegram bot:</strong>
             </p>
             <ol className="list-decimal list-inside space-y-1">
               <li>
-                Создайте бота через{" "}
+                Create a bot via{" "}
                 <a
                   href="https://t.me/BotFather"
                   target="_blank"
@@ -188,12 +188,12 @@ export default function TelegramSettingsPage() {
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </li>
-              <li>Скопируйте токен бота и вставьте его ниже</li>
+              <li>Copy the bot token and paste it below</li>
               <li>
-                Для групповых уведомлений: добавьте бота в группу и получите Chat
+                For group notifications: add the bot to a group and get the Chat
                 ID
               </li>
-              <li>Пользователи могут привязать свой Telegram через команду /link</li>
+              <li>Users can link their Telegram via /link command</li>
             </ol>
           </div>
         </AlertDescription>
@@ -201,16 +201,16 @@ export default function TelegramSettingsPage() {
 
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Настройки бота</CardTitle>
+          <CardTitle>Bot Settings</CardTitle>
           <CardDescription>
             {bot
-              ? `Бот @${bot.botUsername} подключен`
-              : "Подключите Telegram бота для вашей организации"}
+              ? `Bot @${bot.botUsername} connected`
+              : "Connect Telegram bot for your organization"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <Label htmlFor="botToken">Токен бота *</Label>
+            <Label htmlFor="botToken">Bot Token *</Label>
             <Input
               id="botToken"
               type="text"
@@ -222,12 +222,12 @@ export default function TelegramSettingsPage() {
               className="font-mono"
             />
             <p className="text-sm text-muted-foreground mt-1">
-              Получите токен от @BotFather в Telegram
+              Get token from @BotFather in Telegram
             </p>
           </div>
 
           <div>
-            <Label htmlFor="groupChatId">ID группы для уведомлений (опционально)</Label>
+            <Label htmlFor="groupChatId">Group ID for notifications (optional)</Label>
             <Input
               id="groupChatId"
               type="text"
@@ -239,16 +239,16 @@ export default function TelegramSettingsPage() {
               className="font-mono"
             />
             <p className="text-sm text-muted-foreground mt-1">
-              ID группы для отправки уведомлений агентам (начинается с "-")
+              Group ID for sending notifications to agents (starts with "-")
             </p>
           </div>
 
           <div className="space-y-3 pt-4">
-            <Label>Настройки уведомлений</Label>
+            <Label>Notification Settings</Label>
             
             <div className="flex items-center justify-between">
               <Label htmlFor="notifyNewTicket" className="cursor-pointer">
-                Уведомлять о новых тикетах
+                Notify on new tickets
               </Label>
               <Switch
                 id="notifyNewTicket"
@@ -261,7 +261,7 @@ export default function TelegramSettingsPage() {
 
             <div className="flex items-center justify-between">
               <Label htmlFor="notifyTicketUpdate" className="cursor-pointer">
-                Уведомлять об обновлениях тикетов
+                Notify on ticket updates
               </Label>
               <Switch
                 id="notifyTicketUpdate"
@@ -274,7 +274,7 @@ export default function TelegramSettingsPage() {
 
             <div className="flex items-center justify-between">
               <Label htmlFor="notifyNewComment" className="cursor-pointer">
-                Уведомлять о новых комментариях
+                Notify on new comments
               </Label>
               <Switch
                 id="notifyNewComment"
@@ -291,10 +291,10 @@ export default function TelegramSettingsPage() {
               {saving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Сохранение...
+                  Saving...
                 </>
               ) : (
-                "Сохранить"
+                "Save"
               )}
             </Button>
             {bot && (
@@ -306,10 +306,10 @@ export default function TelegramSettingsPage() {
                 {deleting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Удаление...
+                    Deleting...
                   </>
                 ) : (
-                  "Удалить бота"
+                  "Delete Bot"
                 )}
               </Button>
             )}
@@ -320,9 +320,9 @@ export default function TelegramSettingsPage() {
       {bot && bot.users.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Привязанные пользователи</CardTitle>
+            <CardTitle>Linked Users</CardTitle>
             <CardDescription>
-              Пользователи, которые привязали свой Telegram к аккаунту
+              Users who linked their Telegram to their account
             </CardDescription>
           </CardHeader>
           <CardContent>

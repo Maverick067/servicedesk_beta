@@ -41,10 +41,10 @@ export function ModulesSettings() {
   const handleToggleModule = async (module: FeatureFlag, enabled: boolean) => {
     if (!session?.user.tenantId) return;
 
-    // Добавляем в список обновляемых
+    // Add to updating list
     setUpdatingModules(prev => new Set(prev).add(module));
 
-    // Оптимистичное обновление UI
+    // Optimistic UI update
     setModules(prev => ({ ...prev, [module]: enabled }));
 
     try {
@@ -116,6 +116,7 @@ export function ModulesSettings() {
           const isTenantAdmin = session?.user.role === "TENANT_ADMIN";
           
           // Tenant admin не может менять платные модули
+          // Tenant admin cannot change paid modules
           const isLocked = isTenantAdmin && !isFree;
 
           return (
