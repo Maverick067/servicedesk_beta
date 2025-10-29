@@ -24,19 +24,19 @@ export default function CreateTenantWithAdminPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState("");
   const [formData, setFormData] = useState({
-    // Данные организации
+    // Organization data
     tenantName: "",
     tenantSlug: "",
     tenantDomain: "",
-    // Данные админа
+    // Admin data
     adminName: "",
     adminEmail: "",
     adminPassword: "",
   });
 
-  // Проверяем, что пользователь - админ
+  // Check that user is admin
   useEffect(() => {
-    if (status === "loading") return; // Ждем загрузки сессии
+    if (status === "loading") return; // Wait for session load
     
     if (!session || session.user.role !== "ADMIN") {
       router.push("/dashboard");
@@ -95,14 +95,14 @@ export default function CreateTenantWithAdminPage() {
 
       const result = await response.json();
       
-      // Показываем уведомление с данными для входа
-      alert(`Организация "${result.tenant.name}" успешно создана!\n\nДанные администратора:\nEmail: ${result.credentials.email}\nПароль: ${result.credentials.password}\n\nСохраните эти данные!`);
+      // Show notification with login credentials
+      alert(`Organization "${result.tenant.name}" successfully created!\n\nAdministrator credentials:\nEmail: ${result.credentials.email}\nPassword: ${result.credentials.password}\n\nSave these credentials!`);
 
-      toast.success("Организация и администратор успешно созданы!");
+      toast.success("Organization and administrator successfully created!");
       router.push("/dashboard/tenants");
     } catch (error: any) {
       setError(error.message);
-      toast.error("Ошибка создания организации", { description: error.message });
+      toast.error("Error creating organization", { description: error.message });
     } finally {
       setIsLoading(false);
     }
@@ -116,23 +116,23 @@ export default function CreateTenantWithAdminPage() {
             <Building2 className="h-12 w-12 text-primary" />
           </div>
           <CardTitle className="text-3xl font-bold text-center">
-            Создать организацию
+            Create Organization
           </CardTitle>
           <CardDescription className="text-center">
-            Создайте новую организацию с автоматическим администратором
+            Create a new organization with automatic administrator
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Данные организации */}
+            {/* Organization data */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Данные организации</h3>
+              <h3 className="text-lg font-semibold">Organization Data</h3>
               
               <div className="space-y-2">
-                <Label htmlFor="tenantName">Название организации *</Label>
+                <Label htmlFor="tenantName">Organization Name *</Label>
                 <Input
                   id="tenantName"
-                  placeholder="Название вашей компании"
+                  placeholder="Your company name"
                   value={formData.tenantName}
                   onChange={(e) => handleTenantSlugChange(e.target.value)}
                   required
@@ -141,7 +141,7 @@ export default function CreateTenantWithAdminPage() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="tenantSlug">Идентификатор организации *</Label>
+                <Label htmlFor="tenantSlug">Organization Identifier *</Label>
                 <Input
                   id="tenantSlug"
                   placeholder="company-slug"
@@ -153,12 +153,12 @@ export default function CreateTenantWithAdminPage() {
                   disabled={isLoading}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Используется в URL. Только строчные буквы, цифры и дефисы
+                  Used in URL. Only lowercase letters, numbers and hyphens
                 </p>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="tenantDomain">Домен (опционально)</Label>
+                <Label htmlFor="tenantDomain">Domain (optional)</Label>
                 <Input
                   id="tenantDomain"
                   placeholder="company.com"
@@ -171,15 +171,15 @@ export default function CreateTenantWithAdminPage() {
               </div>
             </div>
 
-            {/* Данные администратора */}
+            {/* Administrator data */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Данные администратора</h3>
+              <h3 className="text-lg font-semibold">Administrator Data</h3>
               
               <div className="space-y-2">
-                <Label htmlFor="adminName">Имя администратора *</Label>
+                <Label htmlFor="adminName">Administrator Name *</Label>
                 <Input
                   id="adminName"
-                  placeholder="Имя Фамилия"
+                  placeholder="First Last"
                   value={formData.adminName}
                   onChange={(e) =>
                     setFormData({ ...formData, adminName: e.target.value })
@@ -190,7 +190,7 @@ export default function CreateTenantWithAdminPage() {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="adminEmail">Email администратора *</Label>
+                <Label htmlFor="adminEmail">Administrator Email *</Label>
                 <Input
                   id="adminEmail"
                   type="email"
@@ -206,7 +206,7 @@ export default function CreateTenantWithAdminPage() {
               
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="adminPassword">Пароль администратора *</Label>
+                  <Label htmlFor="adminPassword">Administrator Password *</Label>
                   <Button
                     type="button"
                     variant="outline"
@@ -215,7 +215,7 @@ export default function CreateTenantWithAdminPage() {
                     disabled={isLoading}
                   >
                     <RefreshCw className="mr-1 h-3 w-3" />
-                    Сгенерировать
+                    Generate
                   </Button>
                 </div>
                 <div className="relative">
@@ -246,7 +246,7 @@ export default function CreateTenantWithAdminPage() {
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Пароль будет автоматически сгенерирован. Вы можете изменить его или использовать сгенерированный.
+                  Password will be automatically generated. You can change it or use the generated one.
                 </p>
               </div>
             </div>
@@ -265,16 +265,16 @@ export default function CreateTenantWithAdminPage() {
                 disabled={isLoading}
                 className="flex-1"
               >
-                Отмена
+                Cancel
               </Button>
               <Button type="submit" disabled={isLoading} className="flex-1">
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Создание...
+                    Creating...
                   </>
                 ) : (
-                  "Создать организацию"
+                  "Create Organization"
                 )}
               </Button>
             </div>
