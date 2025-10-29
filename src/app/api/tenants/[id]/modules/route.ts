@@ -15,7 +15,7 @@ const updateModulesSchema = z.object({
   modules: z.record(z.boolean()),
 });
 
-// GET /api/tenants/[id]/modules - Получить настройки модулей
+// GET /api/tenants/[id]/modules - Get module settings
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -26,8 +26,8 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только TENANT_ADMIN может просматривать настройки своего tenant
-    // ADMIN может просматривать любой tenant
+    // Only TENANT_ADMIN can view settings of their tenant
+    // ADMIN can view any tenant
     if (session.user.role === "TENANT_ADMIN" && session.user.tenantId !== params.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -61,7 +61,7 @@ export async function GET(
   }
 }
 
-// PATCH /api/tenants/[id]/modules - Обновить настройки модулей
+// PATCH /api/tenants/[id]/modules - Update module settings
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
@@ -72,8 +72,8 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только TENANT_ADMIN может обновлять настройки своего tenant
-    // ADMIN (супер админ) может обновлять любой tenant
+    // Only TENANT_ADMIN can update settings of their tenant
+    // ADMIN (super admin) can update any tenant
     if (session.user.role === "TENANT_ADMIN" && session.user.tenantId !== params.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -102,37 +102,37 @@ export async function PATCH(
       return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
     }
 
-    // Определяем текущий план (если нет subscription, то FREE)
+    // Determine current plan (if no subscription, then FREE)
     const currentPlan = (tenant.subscription?.plan || "FREE") as SubscriptionPlan;
 
-    // Проверяем права на изменение модулей
+    // Check permissions to change modules
     const isGlobalAdmin = session.user.role === "ADMIN" && !session.user.tenantId;
     const isTenantAdmin = session.user.role === "TENANT_ADMIN";
 
-    // Если это tenant admin, проверяем, что он пытается изменить только бесплатные модули
+    // If this is tenant admin, check that they're trying to change only free modules
     if (isTenantAdmin) {
       for (const [module, enabled] of Object.entries(validatedData.modules)) {
         const requiredPlan = MODULE_PLAN_REQUIREMENTS[module as FeatureFlag];
         
-        // Tenant admin может включать/выключать только бесплатные модули
+        // Tenant admin can enable/disable only free modules
         if (requiredPlan !== "FREE" && enabled) {
           return NextResponse.json(
             { 
               error: "Forbidden", 
-              message: `Модуль "${module}" доступен только на плане ${requiredPlan}. Обновите подписку для его активации.`
+              message: `Module "${module}" is only available on ${requiredPlan} plan. Upgrade your subscription to activate it.`
             },
             { status: 403 }
           );
         }
 
-        // Tenant admin не может отключать платные модули, которые уже активны по подписке
+        // Tenant admin cannot disable paid modules that are already active by subscription
         if (requiredPlan !== "FREE" && !enabled) {
           const currentModules = (tenant.settings as any)?.modules || {};
           if (currentModules[module]) {
             return NextResponse.json(
               { 
                 error: "Forbidden", 
-                message: `Модуль "${module}" активен по вашей подписке и не может быть отключен вручную.`
+                message: `Module "${module}" is active through your subscription and cannot be disabled manually.`
               },
               { status: 403 }
             );
@@ -141,8 +141,8 @@ export async function PATCH(
       }
     }
 
-    // Если это глобальный админ, он может включать/выключать любые модули
-    // независимо от подписки tenant'а
+    // If this is global admin, they can enable/disable any modules
+    // regardless of tenant's subscription
 
     const currentSettings = (tenant.settings as any) || {};
     const updatedSettings = {
@@ -165,7 +165,7 @@ export async function PATCH(
       },
     });
 
-    // Логируем изменение модулей
+    // Log module changes
     await createAuditLog({
       tenantId: params.id,
       userId: session.user.id,

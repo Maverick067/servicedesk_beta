@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { randomBytes } from "crypto";
 
 /**
- * GET /api/tenants/[id]/custom-domain - Получить настройки custom domain
+ * GET /api/tenants/[id]/custom-domain - Get custom domain settings
  */
 export async function GET(
   req: NextRequest,
@@ -27,14 +27,14 @@ export async function GET(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Проверяем права доступа
+    // Check access rights
     if (user.role !== "TENANT_ADMIN" && user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const { id: tenantId } = params;
 
-    // Для TENANT_ADMIN проверяем, что это его tenant
+    // For TENANT_ADMIN check that this is their tenant
     if (user.role === "TENANT_ADMIN" && user.tenantId !== tenantId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -64,7 +64,7 @@ export async function GET(
 }
 
 /**
- * POST /api/tenants/[id]/custom-domain - Установить custom domain
+ * POST /api/tenants/[id]/custom-domain - Set custom domain
  */
 export async function POST(
   req: NextRequest,
@@ -106,7 +106,7 @@ export async function POST(
       );
     }
 
-    // Валидация домена
+    // Domain validation
     const domainRegex = /^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/;
     if (!domainRegex.test(customDomain)) {
       return NextResponse.json(
@@ -115,7 +115,7 @@ export async function POST(
       );
     }
 
-    // Проверяем, не занят ли домен
+    // Check if domain is already taken
     const existingTenant = await prisma.tenant.findFirst({
       where: {
         customDomain,
@@ -132,10 +132,10 @@ export async function POST(
       );
     }
 
-    // Генерируем токен для DNS верификации
+    // Generate token for DNS verification
     const verificationToken = `onpoints-verify=${randomBytes(16).toString("hex")}`;
 
-    // Обновляем tenant
+    // Update tenant
     const tenant = await prisma.tenant.update({
       where: { id: tenantId },
       data: {
@@ -163,7 +163,7 @@ export async function POST(
 }
 
 /**
- * PUT /api/tenants/[id]/custom-domain/verify - Проверить DNS верификацию
+ * PUT /api/tenants/[id]/custom-domain/verify - Verify DNS verification
  */
 export async function PUT(
   req: NextRequest,
@@ -214,7 +214,7 @@ export async function PUT(
       );
     }
 
-    // Проверяем DNS TXT запись
+    // Check DNS TXT record
     const dnsVerified = await verifyDnsRecord(
       tenant.customDomain,
       tenant.dnsVerificationToken
@@ -227,7 +227,7 @@ export async function PUT(
       );
     }
 
-    // Обновляем статус верификации
+    // Update verification status
     await prisma.tenant.update({
       where: { id: tenantId },
       data: {
@@ -246,7 +246,7 @@ export async function PUT(
 }
 
 /**
- * DELETE /api/tenants/[id]/custom-domain - Удалить custom domain
+ * DELETE /api/tenants/[id]/custom-domain - Delete custom domain
  */
 export async function DELETE(
   req: NextRequest,
@@ -299,18 +299,18 @@ export async function DELETE(
 }
 
 /**
- * Проверить DNS TXT запись для верификации домена
+ * Verify DNS TXT record for domain verification
  */
 async function verifyDnsRecord(
   domain: string,
   expectedToken: string
 ): Promise<boolean> {
   try {
-    // В production используйте библиотеку dns или внешний API
-    // Например: Google DNS API, Cloudflare DNS API, или Node.js dns.resolveTxt()
+    // In production use dns library or external API
+    // For example: Google DNS API, Cloudflare DNS API, or Node.js dns.resolveTxt()
     
-    // Для демо-версии просто возвращаем true
-    // В реальности нужно проверить TXT запись _onpoints-verify.domain
+    // For demo version just return true
+    // In reality need to check TXT record _onpoints-verify.domain
     console.log(`[DNS Verification] Checking TXT record for ${domain}`);
     console.log(`[DNS Verification] Expected: ${expectedToken}`);
     
