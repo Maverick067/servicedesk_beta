@@ -44,14 +44,14 @@ export function SavedFiltersList() {
       }
     } catch (error) {
       console.error("Error fetching filters:", error);
-      toast.error("Не удалось загрузить фильтры");
+      toast.error("Failed to load filters");
     } finally {
       setIsLoading(false);
     }
   }
 
   async function deleteFilter(id: string) {
-    if (!confirm("Удалить этот фильтр?")) return;
+    if (!confirm("Delete this filter?")) return;
 
     try {
       const response = await fetch(`/api/filters/${id}`, {
@@ -60,13 +60,13 @@ export function SavedFiltersList() {
 
       if (response.ok) {
         setFilters(filters.filter((f) => f.id !== id));
-        toast.success("Фильтр удалён");
+        toast.success("Filter deleted");
       } else {
-        toast.error("Не удалось удалить фильтр");
+        toast.error("Failed to delete filter");
       }
     } catch (error) {
       console.error("Error deleting filter:", error);
-      toast.error("Произошла ошибка");
+      toast.error("An error occurred");
     }
   }
 
@@ -84,14 +84,14 @@ export function SavedFiltersList() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Сохранённые фильтры</h2>
+          <h2 className="text-2xl font-bold">Saved Filters</h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Быстрый доступ к вашим любимым представлениям тикетов
+            Quick access to your favorite ticket views
           </p>
         </div>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
-          Создать фильтр
+          Create Filter
         </Button>
       </div>
 
@@ -99,9 +99,9 @@ export function SavedFiltersList() {
         <Card>
           <CardContent className="py-12 text-center">
             <Filter className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-lg font-semibold">Нет сохранённых фильтров</p>
+            <p className="text-lg font-semibold">No Saved Filters</p>
             <p className="text-sm text-muted-foreground mt-2">
-              Создайте первый фильтр для быстрого доступа к нужным тикетам
+              Create your first filter for quick access to specific tickets
             </p>
           </CardContent>
         </Card>
@@ -142,24 +142,24 @@ export function SavedFiltersList() {
                     {filter.isPublic ? (
                       <Badge variant="secondary" className="gap-1">
                         <Globe className="h-3 w-3" />
-                        Общий
+                        Public
                       </Badge>
                     ) : (
                       <Badge variant="outline" className="gap-1">
                         <Lock className="h-3 w-3" />
-                        Личный
+                        Private
                       </Badge>
                     )}
                     
                     {Object.keys(filter.filters).length > 0 && (
                       <Badge variant="outline">
-                        {Object.keys(filter.filters).length} условий
+                        {Object.keys(filter.filters).length} conditions
                       </Badge>
                     )}
                   </div>
 
                   <p className="text-xs text-muted-foreground">
-                    Создан: {filter.user.name || filter.user.email}
+                    Created by: {filter.user.name || filter.user.email}
                   </p>
 
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -170,7 +170,7 @@ export function SavedFiltersList() {
                       asChild
                     >
                       <Link href={`/dashboard/tickets?filter=${filter.id}`}>
-                        Применить
+                        Apply
                       </Link>
                     </Button>
                     <Button

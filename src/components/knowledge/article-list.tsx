@@ -33,7 +33,7 @@ import { EditArticleDialog } from "./edit-article-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 
 interface KnowledgeArticle {
   id: string;
@@ -80,7 +80,7 @@ export function KnowledgeArticleList() {
       setFilteredArticles(data);
     } catch (e: any) {
       setError(e.message);
-      toast.error("Ошибка при загрузке статей", {
+      toast.error("Error loading articles", {
         description: e.message,
       });
     } finally {
@@ -107,7 +107,7 @@ export function KnowledgeArticleList() {
   }, [searchQuery, articles]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Вы уверены, что хотите удалить эту статью?")) return;
+    if (!confirm("Are you sure you want to delete this article?")) return;
 
     try {
       const response = await fetch(`/api/knowledge/${id}`, {
@@ -119,15 +119,15 @@ export function KnowledgeArticleList() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Не удалось удалить статью");
+        throw new Error(errorData.message || "Failed to delete article");
       }
 
-      toast.success("Статья удалена", {
-        description: "Статья была успешно удалена из базы знаний.",
+      toast.success("Article deleted", {
+        description: "Article has been successfully removed from the knowledge base.",
       });
       fetchArticles();
     } catch (e: any) {
-      toast.error("Ошибка при удалении статьи", {
+      toast.error("Error deleting article", {
         description: e.message,
       });
     }
@@ -146,11 +146,11 @@ export function KnowledgeArticleList() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "PUBLISHED":
-        return <Badge variant="default">Опубликовано</Badge>;
+        return <Badge variant="default">Published</Badge>;
       case "DRAFT":
-        return <Badge variant="secondary">Черновик</Badge>;
+        return <Badge variant="secondary">Draft</Badge>;
       case "ARCHIVED":
-        return <Badge variant="outline">В архиве</Badge>;
+        return <Badge variant="outline">Archived</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -170,7 +170,7 @@ export function KnowledgeArticleList() {
     return (
       <Alert variant="destructive">
         <ExclamationTriangleIcon className="h-4 w-4" />
-        <AlertTitle>Ошибка</AlertTitle>
+        <AlertTitle>Error</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
@@ -182,7 +182,7 @@ export function KnowledgeArticleList() {
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Поиск по статьям, тегам..."
+            placeholder="Search articles, tags..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -190,13 +190,13 @@ export function KnowledgeArticleList() {
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Статус" />
+            <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Все статусы</SelectItem>
-            <SelectItem value="PUBLISHED">Опубликовано</SelectItem>
-            <SelectItem value="DRAFT">Черновик</SelectItem>
-            <SelectItem value="ARCHIVED">В архиве</SelectItem>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="PUBLISHED">Published</SelectItem>
+            <SelectItem value="DRAFT">Draft</SelectItem>
+            <SelectItem value="ARCHIVED">Archived</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -204,22 +204,22 @@ export function KnowledgeArticleList() {
       {filteredArticles.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           <BookOpen className="mx-auto h-12 w-12 mb-4" />
-          <h3 className="text-lg font-semibold">Статьи не найдены</h3>
+          <h3 className="text-lg font-semibold">No Articles Found</h3>
           <p className="text-sm">
-            {searchQuery ? "Попробуйте изменить поисковый запрос" : "Создайте первую статью для базы знаний"}
+            {searchQuery ? "Try modifying your search query" : "Create the first article for the knowledge base"}
           </p>
         </div>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Название</TableHead>
-              <TableHead>Статус</TableHead>
-              <TableHead>Доступ</TableHead>
-              <TableHead>Просмотры</TableHead>
-              <TableHead>Теги</TableHead>
-              <TableHead>Опубликовано</TableHead>
-              <TableHead className="text-right">Действия</TableHead>
+              <TableHead>Title</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Access</TableHead>
+              <TableHead>Views</TableHead>
+              <TableHead>Tags</TableHead>
+              <TableHead>Published</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -238,7 +238,7 @@ export function KnowledgeArticleList() {
                 <TableCell>{getStatusBadge(article.status)}</TableCell>
                 <TableCell>
                   <Badge variant={article.isPublic ? "default" : "secondary"}>
-                    {article.isPublic ? "Публичная" : "Внутренняя"}
+                    {article.isPublic ? "Public" : "Internal"}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -262,33 +262,33 @@ export function KnowledgeArticleList() {
                       )}
                     </div>
                   ) : (
-                    <span className="text-muted-foreground text-sm">Нет тегов</span>
+                    <span className="text-muted-foreground text-sm">No tags</span>
                   )}
                 </TableCell>
                 <TableCell>
                   {article.publishedAt
-                    ? format(new Date(article.publishedAt), "dd.MM.yyyy", { locale: ru })
+                    ? format(new Date(article.publishedAt), "MM/dd/yyyy", { locale: enUS })
                     : "—"}
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Открыть меню</span>
+                        <span className="sr-only">Open menu</span>
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => handleEdit(article)}>
                         <Edit className="mr-2 h-4 w-4" />
-                        Редактировать
+                        Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleDelete(article.id)}
                         className="text-red-600 focus:text-red-600"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
-                        Удалить
+                        Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
