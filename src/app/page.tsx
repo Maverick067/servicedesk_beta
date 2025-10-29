@@ -21,43 +21,43 @@ export default function Home() {
   const features = [
     {
       icon: <Shield className="h-8 w-8 text-blue-600" />,
-      title: "Полная изоляция данных",
-      description: "Multi-tenancy с PostgreSQL RLS обеспечивает 100% безопасность ваших данных"
+      title: "Complete Data Isolation",
+      description: "Multi-tenancy with PostgreSQL RLS ensures 100% security of your data"
     },
     {
       icon: <Zap className="h-8 w-8 text-yellow-600" />,
-      title: "Автоматизация",
-      description: "SLA политики, автоматическое назначение агентов и правила обработки тикетов"
+      title: "Automation",
+      description: "SLA policies, automatic agent assignment and ticket processing rules"
     },
     {
       icon: <Users className="h-8 w-8 text-green-600" />,
-      title: "Управление командой",
-      description: "Гибкая система ролей и прав доступа для эффективной работы"
+      title: "Team Management",
+      description: "Flexible role and permission system for efficient work"
     },
     {
       icon: <BarChart3 className="h-8 w-8 text-purple-600" />,
-      title: "Аналитика в реальном времени",
-      description: "Детальные отчёты и графики для принятия решений"
+      title: "Real-time Analytics",
+      description: "Detailed reports and charts for decision making"
     },
     {
       icon: <Clock className="h-8 w-8 text-orange-600" />,
-      title: "SLA мониторинг",
-      description: "Отслеживание времени реакции и решения с визуальными индикаторами"
+      title: "SLA Monitoring",
+      description: "Track response and resolution time with visual indicators"
     },
     {
       icon: <Bell className="h-8 w-8 text-red-600" />,
-      title: "Умные уведомления",
-      description: "Группировка похожих уведомлений и гибкие настройки доставки"
+      title: "Smart Notifications",
+      description: "Group similar notifications and flexible delivery settings"
     },
     {
       icon: <FileText className="h-8 w-8 text-indigo-600" />,
-      title: "База знаний",
-      description: "Создавайте статьи и документацию для быстрого решения типовых вопросов"
+      title: "Knowledge Base",
+      description: "Create articles and documentation for quick resolution of common questions"
     },
     {
       icon: <Building2 className="h-8 w-8 text-cyan-600" />,
       title: "LDAP/Active Directory",
-      description: "Интеграция с корпоративной инфраструктурой за 2 минуты"
+      description: "Integration with corporate infrastructure in 2 minutes"
     }
   ];
 
@@ -65,48 +65,48 @@ export default function Home() {
     {
       name: "FREE",
       price: "0",
-      period: "навсегда",
-      description: "Для небольших команд",
+      period: "forever",
+      description: "For small teams",
       features: [
-        "До 10 пользователей",
-        "2 агента поддержки",
-        "1GB хранилища",
-        "100 тикетов/месяц",
-        "Email поддержка"
+        "Up to 10 users",
+        "2 support agents",
+        "1GB storage",
+        "100 tickets/month",
+        "Email support"
       ],
       highlighted: false
     },
     {
       name: "PRO",
       price: "49",
-      period: "в месяц",
-      description: "Для растущих команд",
+      period: "per month",
+      description: "For growing teams",
       features: [
-        "До 50 пользователей",
-        "15 агентов",
-        "20GB хранилища",
-        "Неограниченно тикетов",
+        "Up to 50 users",
+        "15 agents",
+        "20GB storage",
+        "Unlimited tickets",
         "SLA policies",
-        "База знаний",
-        "IT активы (CMDB)",
-        "Приоритетная поддержка"
+        "Knowledge Base",
+        "IT Assets (CMDB)",
+        "Priority support"
       ],
       highlighted: true
     },
     {
       name: "ENTERPRISE",
       price: "199",
-      period: "в месяц",
-      description: "Для крупных компаний",
+      period: "per month",
+      description: "For large companies",
       features: [
-        "Неограниченно пользователей",
-        "Неограниченно агентов",
-        "Custom хранилище",
-        "Все модули PRO +",
+        "Unlimited users",
+        "Unlimited agents",
+        "Custom storage",
+        "All PRO modules +",
         "SSO (OIDC, SAML, LDAP)",
-        "Кастомный домен",
-        "API доступ",
-        "24/7 VIP поддержка"
+        "Custom domain",
+        "API access",
+        "24/7 VIP support"
       ],
       highlighted: false
     }
@@ -125,11 +125,11 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             <Link href="/login">
-              <Button variant="ghost">Войти</Button>
+              <Button variant="ghost">Sign In</Button>
             </Link>
             <Link href="/register">
               <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700">
-                Начать бесплатно
+                Start Free
               </Button>
             </Link>
           </div>
@@ -141,39 +141,39 @@ export default function Home() {
         <div className="mx-auto max-w-4xl space-y-8">
           <div className="inline-flex items-center gap-2 rounded-full bg-blue-100 px-4 py-2 text-sm font-medium text-blue-700">
             <Sparkles className="h-4 w-4" />
-            Multi-tenant SaaS платформа для IT-поддержки
+            Multi-tenant SaaS platform for IT support
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold leading-tight">
             <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              Управляйте поддержкой
+              Manage support
             </span>
             <br />
-            <span className="text-slate-800">как профессионал</span>
+            <span className="text-slate-800">like a professional</span>
           </h1>
           
           <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            Полнофункциональная система управления тикетами с multi-tenancy, SLA мониторингом, 
-            автоматизацией и интеграцией с Active Directory
+            Full-featured ticket management system with multi-tenancy, SLA monitoring, 
+            automation and Active Directory integration
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
             <Link href="/register">
               <Button size="lg" className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-lg px-8 h-14">
-                Создать организацию
+                Create Organization
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
             <Link href="/login">
               <Button size="lg" variant="outline" className="text-lg px-8 h-14">
-                Демо доступ
+                Demo Access
               </Button>
             </Link>
           </div>
 
           {/* Demo credentials hint */}
           <div className="pt-8 text-sm text-slate-500">
-            <p>💡 Попробуйте демо: <span className="font-mono bg-slate-100 px-2 py-1 rounded">admin@demo.com</span> / <span className="font-mono bg-slate-100 px-2 py-1 rounded">admin123</span></p>
+            <p>💡 Try demo: <span className="font-mono bg-slate-100 px-2 py-1 rounded">admin@demo.com</span> / <span className="font-mono bg-slate-100 px-2 py-1 rounded">admin123</span></p>
           </div>
         </div>
       </section>
@@ -182,10 +182,10 @@ export default function Home() {
       <section className="container mx-auto px-4 py-20">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-slate-800 mb-4">
-            Всё что нужно для IT-поддержки
+            Everything you need for IT support
           </h2>
           <p className="text-xl text-slate-600">
-            Современная платформа с продвинутыми функциями из коробки
+            Modern platform with advanced features out of the box
           </p>
         </div>
 
@@ -210,10 +210,10 @@ export default function Home() {
       <section className="container mx-auto px-4 py-20 bg-white/50 rounded-3xl">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-slate-800 mb-4">
-            Прозрачные тарифы
+            Transparent Pricing
           </h2>
           <p className="text-xl text-slate-600">
-            Выберите план, который подходит вашей команде
+            Choose the plan that fits your team
           </p>
         </div>
 
@@ -229,7 +229,7 @@ export default function Home() {
             >
               {plan.highlighted && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-1 rounded-full text-sm font-semibold">
-                  Популярный
+                  Popular
                 </div>
               )}
               <CardHeader className="text-center pb-8">
@@ -259,7 +259,7 @@ export default function Home() {
                     variant={plan.highlighted ? "default" : "outline"}
                     size="lg"
                   >
-                    {plan.name === "FREE" ? "Начать бесплатно" : "Выбрать план"}
+                    {plan.name === "FREE" ? "Start Free" : "Choose Plan"}
                   </Button>
                 </Link>
               </CardContent>
@@ -273,14 +273,14 @@ export default function Home() {
         <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0 shadow-2xl">
           <CardContent className="py-16 text-center">
             <h2 className="text-4xl font-bold mb-4">
-              Готовы начать?
+              Ready to start?
             </h2>
             <p className="text-xl mb-8 text-blue-100 max-w-2xl mx-auto">
-              Создайте свою организацию за 2 минуты и получите полный доступ к платформе
+              Create your organization in 2 minutes and get full access to the platform
             </p>
             <Link href="/register">
               <Button size="lg" variant="secondary" className="text-lg px-8 h-14">
-                Создать организацию бесплатно
+                Create Organization Free
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
@@ -297,7 +297,7 @@ export default function Home() {
               <span className="font-semibold text-slate-800">OnPoints.it ServiceDesk</span>
             </div>
             <p className="text-sm text-slate-600">
-              © 2025 ServiceDesk. Сделано с ❤️ для IT команд
+              © 2025 ServiceDesk. Made with ❤️ for IT teams
             </p>
           </div>
         </div>
