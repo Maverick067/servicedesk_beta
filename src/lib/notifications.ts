@@ -36,7 +36,7 @@ export async function createTicketNotifications(
   assigneeId?: string
 ) {
   try {
-    // Получаем информацию о тикете
+    // Get ticket information
     const ticket = await prisma.ticket.findUnique({
       where: { id: ticketId },
       include: {
@@ -52,31 +52,31 @@ export async function createTicketNotifications(
 
     const notifications = [];
 
-    // Уведомляем создателя тикета (если это не он сам создал уведомление)
+    // Notify ticket creator (if not the one who created the notification)
     if (type !== "TICKET_CREATED" && creatorId) {
       const creatorNotification = await createNotification({
         type,
-        title: `Тикет "${ticketTitle}" обновлен`,
-        message: `Статус тикета "${ticketTitle}" был изменен`,
+        title: `Ticket "${ticketTitle}" updated`,
+        message: `Status of ticket "${ticketTitle}" has been changed`,
         userId: creatorId,
         ticketId,
       });
       notifications.push(creatorNotification);
     }
 
-    // Уведомляем назначенного агента (если есть и это не он сам)
+    // Notify assigned agent (if exists and not the same person)
     if (assigneeId && assigneeId !== creatorId) {
       const assigneeNotification = await createNotification({
         type,
-        title: `Тикет "${ticketTitle}" назначен вам`,
-        message: `Вам назначен тикет "${ticketTitle}" в категории "${ticket.category?.name || 'Без категории'}"`,
+        title: `Ticket "${ticketTitle}" assigned to you`,
+        message: `Ticket "${ticketTitle}" has been assigned to you in category "${ticket.category?.name || 'No category'}"`,
         userId: assigneeId,
         ticketId,
       });
       notifications.push(assigneeNotification);
     }
 
-    // Уведомляем всех агентов организации о новом тикете
+    // Notify all organization agents about new ticket
     if (type === "TICKET_CREATED") {
       const agents = await prisma.user.findMany({
         where: {
@@ -91,8 +91,8 @@ export async function createTicketNotifications(
         if (agent.id !== creatorId) {
           const agentNotification = await createNotification({
             type: "TICKET_CREATED",
-            title: `Новый тикет "${ticketTitle}"`,
-            message: `Создан новый тикет "${ticketTitle}" в категории "${ticket.category?.name || 'Без категории'}"`,
+            title: `New ticket "${ticketTitle}"`,
+            message: `New ticket "${ticketTitle}" has been created in category "${ticket.category?.name || 'No category'}"`,
             userId: agent.id,
             ticketId,
           });
@@ -114,7 +114,7 @@ export async function createCommentNotification(
   commentContent: string
 ) {
   try {
-    // Получаем информацию о тикете и комментарии
+    // Get ticket and comment information
     const ticket = await prisma.ticket.findUnique({
       where: { id: ticketId },
       include: {
@@ -133,24 +133,24 @@ export async function createCommentNotification(
       select: { name: true },
     });
 
-    // Уведомляем создателя тикета (если это не он сам комментирует)
+    // Notify ticket creator (if not the one commenting)
     if (ticket.creatorId !== commentAuthorId) {
       const creatorNotification = await createNotification({
         type: "COMMENT_ADDED",
-        title: `Новый комментарий к тикету "${ticket.title}"`,
-        message: `${commentAuthor?.name || 'Пользователь'} добавил комментарий: "${commentContent.substring(0, 100)}${commentContent.length > 100 ? '...' : ''}"`,
+        title: `New comment on ticket "${ticket.title}"`,
+        message: `${commentAuthor?.name || 'User'} added a comment: "${commentContent.substring(0, 100)}${commentContent.length > 100 ? '...' : ''}"`,
         userId: ticket.creatorId,
         ticketId,
       });
       notifications.push(creatorNotification);
     }
 
-    // Уведомляем назначенного агента (если есть и это не он сам комментирует)
+    // Notify assigned agent (if exists and not the one commenting)
     if (ticket.assigneeId && ticket.assigneeId !== commentAuthorId && ticket.assigneeId !== ticket.creatorId) {
       const assigneeNotification = await createNotification({
         type: "COMMENT_ADDED",
-        title: `Новый комментарий к тикету "${ticket.title}"`,
-        message: `${commentAuthor?.name || 'Пользователь'} добавил комментарий: "${commentContent.substring(0, 100)}${commentContent.length > 100 ? '...' : ''}"`,
+        title: `New comment on ticket "${ticket.title}"`,
+        message: `${commentAuthor?.name || 'User'} added a comment: "${commentContent.substring(0, 100)}${commentContent.length > 100 ? '...' : ''}"`,
         userId: ticket.assigneeId,
         ticketId,
       });
