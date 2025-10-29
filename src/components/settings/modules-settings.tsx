@@ -29,7 +29,7 @@ export function ModulesSettings() {
         setModules(data.modules || {});
       } catch (error) {
         console.error("Error fetching modules:", error);
-        toast.error("Не удалось загрузить настройки модулей");
+        toast.error("Failed to load module settings");
       } finally {
         setIsLoading(false);
       }
@@ -67,16 +67,16 @@ export function ModulesSettings() {
       
       toast.success(
         enabled 
-          ? `Модуль "${MODULE_METADATA[module].name}" включен`
-          : `Модуль "${MODULE_METADATA[module].name}" отключен`
+          ? `Module "${MODULE_METADATA[module].name}" enabled`
+          : `Module "${MODULE_METADATA[module].name}" disabled`
       );
     } catch (error: any) {
       console.error("Error updating module:", error);
-      // Откатываем изменение при ошибке
+      // Rollback change on error
       setModules(prev => ({ ...prev, [module]: !enabled }));
-      toast.error(error.message || "Не удалось обновить модуль");
+      toast.error(error.message || "Failed to update module");
     } finally {
-      // Убираем из списка обновляемых
+      // Remove from updating list
       setUpdatingModules(prev => {
         const newSet = new Set(prev);
         newSet.delete(module);
@@ -100,9 +100,9 @@ export function ModulesSettings() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold">Модули системы</h2>
+        <h2 className="text-2xl font-bold">System Modules</h2>
         <p className="text-muted-foreground mt-2">
-          Включайте и отключайте функциональность для вашей организации
+          Enable and disable functionality for your organization
         </p>
       </div>
 
@@ -160,7 +160,7 @@ export function ModulesSettings() {
                           <CardTitle className="text-lg">{module.name}</CardTitle>
                           {isFree ? (
                             <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                              Бесплатно
+                              Free
                             </Badge>
                           ) : (
                             <Badge 
@@ -177,12 +177,12 @@ export function ModulesSettings() {
                           )}
                           {module.comingSoon && (
                             <Badge variant="outline" className="text-xs">
-                              Скоро
+                              Coming Soon
                             </Badge>
                           )}
                           {isLocked && isEnabled && (
                             <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200">
-                              Активен по подписке
+                              Active on Subscription
                             </Badge>
                           )}
                         </div>
@@ -191,8 +191,8 @@ export function ModulesSettings() {
                           {isLocked && (
                             <span className="block mt-1 text-xs text-muted-foreground">
                               {isEnabled 
-                                ? "Модуль активирован по вашей подписке"
-                                : "Доступен на тарифе " + requiredPlan}
+                                ? "Module activated via your subscription"
+                                : "Available on " + requiredPlan + " plan"}
                             </span>
                           )}
                         </CardDescription>
@@ -223,18 +223,18 @@ export function ModulesSettings() {
             <div className="text-2xl">ℹ️</div>
             <div>
               <p className="font-medium text-blue-900 dark:text-blue-100">
-                О модулях
+                About Modules
               </p>
               <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                <strong>Бесплатные модули</strong> вы можете включать и отключать самостоятельно.{" "}
-                <strong>Платные модули</strong> (PRO и ENTERPRISE) становятся доступны автоматически
-                после оформления соответствующей подписки.
+                <strong>Free modules</strong> can be enabled and disabled independently.{" "}
+                <strong>Paid modules</strong> (PRO and ENTERPRISE) become available automatically
+                after subscribing to the corresponding plan.
               </p>
               {session?.user.role === "TENANT_ADMIN" && (
                 <p className="text-sm text-blue-700 dark:text-blue-300 mt-2">
-                  💡 Для активации платных модулей перейдите в раздел{" "}
+                  💡 To activate paid modules, go to{" "}
                   <a href="/dashboard/billing" className="underline font-medium">
-                    Тарифы и оплата
+                    Plans & Billing
                   </a>
                   .
                 </p>

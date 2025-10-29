@@ -31,13 +31,13 @@ interface SyncSettingsDialogProps {
 }
 
 const intervalOptions = [
-  { value: "900", label: "Каждые 15 минут" },
-  { value: "1800", label: "Каждые 30 минут" },
-  { value: "3600", label: "Каждый час" },
-  { value: "7200", label: "Каждые 2 часа" },
-  { value: "14400", label: "Каждые 4 часа" },
-  { value: "28800", label: "Каждые 8 часов" },
-  { value: "86400", label: "Каждый день" },
+  { value: "900", label: "Every 15 minutes" },
+  { value: "1800", label: "Every 30 minutes" },
+  { value: "3600", label: "Every hour" },
+  { value: "7200", label: "Every 2 hours" },
+  { value: "14400", label: "Every 4 hours" },
+  { value: "28800", label: "Every 8 hours" },
+  { value: "86400", label: "Daily" },
 ];
 
 export function SyncSettingsDialog({
@@ -78,18 +78,18 @@ export function SyncSettingsDialog({
         throw new Error(error.error || "Failed to update sync settings");
       }
 
-      toast.success("Настройки синхронизации обновлены", {
+      toast.success("Sync settings updated", {
         description: syncEnabled
-          ? `Автоматическая синхронизация: ${
+          ? `Automatic synchronization: ${
               intervalOptions.find((opt) => opt.value === syncInterval)?.label
             }`
-          : "Автоматическая синхронизация отключена",
+          : "Automatic synchronization disabled",
       });
 
       setIsOpen(false);
       onSettingsUpdated?.();
     } catch (error: any) {
-      toast.error("Ошибка", {
+      toast.error("Error", {
         description: error.message,
       });
     } finally {
@@ -106,20 +106,20 @@ export function SyncSettingsDialog({
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Настройки синхронизации</DialogTitle>
+          <DialogTitle>Sync Settings</DialogTitle>
           <DialogDescription>{configName}</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           <div className="space-y-4">
-            {/* Включить автосинхронизацию */}
+            {/* Enable auto-sync */}
             <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
               <div className="space-y-0.5">
                 <Label htmlFor="syncEnabled">
-                  Автоматическая синхронизация
+                  Automatic Synchronization
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Периодически обновлять пользователей из AD
+                  Periodically update users from AD
                 </p>
               </div>
               <Switch
@@ -129,16 +129,16 @@ export function SyncSettingsDialog({
               />
             </div>
 
-            {/* Интервал синхронизации */}
+            {/* Sync interval */}
             {syncEnabled && (
               <div className="space-y-2">
-                <Label htmlFor="syncInterval">Интервал синхронизации</Label>
+                <Label htmlFor="syncInterval">Sync Interval</Label>
                 <Select
                   value={syncInterval}
                   onValueChange={setSyncInterval}
                 >
                   <SelectTrigger id="syncInterval">
-                    <SelectValue placeholder="Выберите интервал" />
+                    <SelectValue placeholder="Select interval" />
                   </SelectTrigger>
                   <SelectContent>
                     {intervalOptions.map((option) => (
@@ -149,7 +149,7 @@ export function SyncSettingsDialog({
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Как часто обновлять список пользователей из Active Directory
+                  How often to update the user list from Active Directory
                 </p>
               </div>
             )}
@@ -157,8 +157,8 @@ export function SyncSettingsDialog({
             {syncEnabled && (
               <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
                 <p className="text-sm text-blue-900 dark:text-blue-100">
-                  ℹ️ <strong>Важно:</strong> Для работы автоматической
-                  синхронизации необходимо настроить cron job на сервере:
+                  ℹ️ <strong>Important:</strong> To enable automatic
+                  synchronization, you need to configure a cron job on the server:
                 </p>
                 <code className="block mt-2 p-2 bg-muted text-xs rounded">
                   0 * * * * curl -H "Authorization: Bearer YOUR_CRON_SECRET"
@@ -168,7 +168,7 @@ export function SyncSettingsDialog({
             )}
           </div>
 
-          {/* Кнопки */}
+          {/* Buttons */}
           <div className="flex justify-end gap-3">
             <Button
               type="button"
@@ -176,16 +176,16 @@ export function SyncSettingsDialog({
               onClick={() => setIsOpen(false)}
               disabled={isSubmitting}
             >
-              Отмена
+              Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Сохранение...
+                  Saving...
                 </>
               ) : (
-                "Сохранить"
+                "Save"
               )}
             </Button>
           </div>

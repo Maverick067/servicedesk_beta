@@ -10,7 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, Download, Loader2 } from "lucide-react";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 
 export function ExportDialog({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -38,7 +38,7 @@ export function ExportDialog({ children }: { children: React.ReactNode }) {
       const response = await fetch(`/api/reports/export?${params.toString()}`);
       
       if (!response.ok) {
-        throw new Error("Ошибка при экспорте данных");
+        throw new Error("Error exporting data");
       }
 
       if (exportFormat === "csv") {
@@ -64,10 +64,10 @@ export function ExportDialog({ children }: { children: React.ReactNode }) {
         window.URL.revokeObjectURL(url);
       }
 
-      toast.success("Данные экспортированы");
+      toast.success("Data exported");
       setIsOpen(false);
     } catch (e: any) {
-      toast.error("Ошибка при экспорте", { description: e.message });
+      toast.error("Export error", { description: e.message });
     } finally {
       setIsExporting(false);
     }
@@ -78,22 +78,22 @@ export function ExportDialog({ children }: { children: React.ReactNode }) {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Экспорт данных</DialogTitle>
-          <DialogDescription>Выберите параметры экспорта и скачайте данные.</DialogDescription>
+          <DialogTitle>Export Data</DialogTitle>
+          <DialogDescription>Select export parameters and download data.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="type" className="text-right">Тип данных</Label>
+            <Label htmlFor="type" className="text-right">Data Type</Label>
             <Select value={exportType} onValueChange={setExportType}>
               <SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="tickets">Тикеты</SelectItem>
-                <SelectItem value="users">Пользователи</SelectItem>
+                <SelectItem value="tickets">Tickets</SelectItem>
+                <SelectItem value="users">Users</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="format" className="text-right">Формат</Label>
+            <Label htmlFor="format" className="text-right">Format</Label>
             <Select value={exportFormat} onValueChange={setExportFormat}>
               <SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -103,24 +103,24 @@ export function ExportDialog({ children }: { children: React.ReactNode }) {
             </Select>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Дата начала</Label>
+            <Label className="text-right">Start Date</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="col-span-3 justify-start text-left font-normal">
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {startDate ? format(startDate, "PPP", { locale: ru }) : "Выберите дату"}
+                  {startDate ? format(startDate, "PPP", { locale: enUS }) : "Select date"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={startDate} onSelect={setStartDate} /></PopoverContent>
             </Popover>
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label className="text-right">Дата окончания</Label>
+            <Label className="text-right">End Date</Label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="col-span-3 justify-start text-left font-normal">
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {endDate ? format(endDate, "PPP", { locale: ru }) : "Выберите дату"}
+                  {endDate ? format(endDate, "PPP", { locale: enUS }) : "Select date"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={endDate} onSelect={setEndDate} /></PopoverContent>
@@ -128,10 +128,10 @@ export function ExportDialog({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <div className="flex justify-end gap-2">
-          <Button variant="outline" onClick={() => setIsOpen(false)}>Отмена</Button>
+          <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
           <Button onClick={handleExport} disabled={isExporting}>
             {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-            Экспортировать
+            Export
           </Button>
         </div>
       </DialogContent>
