@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// GET /api/notifications - Получить уведомления с группировкой
+// GET /api/notifications - Get notifications with grouping
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -17,7 +17,7 @@ export async function GET(request: Request) {
     const unreadOnly = searchParams.get("unreadOnly") === "true";
 
     if (grouped) {
-      // Получить сгруппированные уведомления
+      // Get grouped notifications
       const groups = await prisma.notificationGroup.findMany({
         where: {
           userId: session.user.id,
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
         },
         include: {
           notifications: {
-            take: 3, // Показать первые 3 уведомления в группе
+            take: 3, // Show first 3 notifications in group
             orderBy: { createdAt: "desc" },
             include: {
               ticket: {
@@ -52,12 +52,12 @@ export async function GET(request: Request) {
 
       return NextResponse.json(groups);
     } else {
-      // Получить несгруппированные уведомления
+      // Get ungrouped notifications
       const notifications = await prisma.notification.findMany({
         where: {
           userId: session.user.id,
           ...(unreadOnly && { isRead: false }),
-          groupId: null, // Только уведомления вне групп
+          groupId: null, // Only notifications outside groups
         },
         include: {
           ticket: {
@@ -85,7 +85,7 @@ export async function GET(request: Request) {
   }
 }
 
-// GET /api/notifications/count - Получить количество непрочитанных
+// GET /api/notifications/count - Get unread count
 export async function HEAD(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -124,7 +124,7 @@ export async function HEAD(request: Request) {
   }
 }
 
-// PATCH /api/notifications/mark-read - Пометить как прочитанное
+// PATCH /api/notifications/mark-read - Mark as read
 export async function PATCH(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -136,7 +136,7 @@ export async function PATCH(request: Request) {
     const { notificationId, groupId, markAll } = body;
 
     if (markAll) {
-      // Пометить все как прочитанное
+      // Mark all as read
       await Promise.all([
         prisma.notification.updateMany({
           where: {
@@ -158,7 +158,7 @@ export async function PATCH(request: Request) {
     }
 
     if (groupId) {
-      // Пометить группу как прочитанную
+      // Mark group as read
       await Promise.all([
         prisma.notificationGroup.update({
           where: { id: groupId, userId: session.user.id },
@@ -170,7 +170,7 @@ export async function PATCH(request: Request) {
         }),
       ]);
     } else if (notificationId) {
-      // Пометить одно уведомление как прочитанное
+      // Mark single notification as read
       await prisma.notification.update({
         where: { id: notificationId, userId: session.user.id },
         data: { isRead: true },
@@ -187,7 +187,7 @@ export async function PATCH(request: Request) {
   }
 }
 
-// DELETE /api/notifications - Удалить/скрыть уведомления
+// DELETE /api/notifications - Delete/dismiss notifications
 export async function DELETE(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -200,13 +200,13 @@ export async function DELETE(request: Request) {
     const notificationId = searchParams.get("notificationId");
 
     if (groupId) {
-      // Скрыть группу
+      // Dismiss group
       await prisma.notificationGroup.update({
         where: { id: groupId, userId: session.user.id },
         data: { isDismissed: true },
       });
     } else if (notificationId) {
-      // Удалить уведомление
+      // Delete notification
       await prisma.notification.delete({
         where: { id: notificationId, userId: session.user.id },
       });

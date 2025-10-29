@@ -85,7 +85,7 @@ export async function PATCH(
       data: validatedData,
     });
 
-    // Логируем обновление
+    // Log update
     await createAuditLog({
       tenantId: session.user.tenantId,
       userId: session.user.id,
@@ -136,7 +136,7 @@ export async function DELETE(
       },
     });
 
-    // Логируем удаление
+    // Log deletion
     await createAuditLog({
       tenantId: session.user.tenantId,
       userId: session.user.id,

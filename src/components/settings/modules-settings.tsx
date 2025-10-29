@@ -115,7 +115,6 @@ export function ModulesSettings() {
           const isFree = requiredPlan === "FREE";
           const isTenantAdmin = session?.user.role === "TENANT_ADMIN";
           
-          // Tenant admin не может менять платные модули
           // Tenant admin cannot change paid modules
           const isLocked = isTenantAdmin && !isFree;
 

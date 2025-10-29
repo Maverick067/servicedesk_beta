@@ -18,7 +18,7 @@ const updateAgentPermissionsSchema = z.object({
   }),
 });
 
-// PATCH /api/agents/[id]/permissions - Обновить разрешения агента
+// PATCH /api/agents/[id]/permissions - Update agent permissions
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
@@ -29,7 +29,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только админы и tenant админы могут управлять разрешениями агентов
+    // Only admins and tenant admins can manage agent permissions
     if (session.user.role !== "ADMIN" && session.user.role !== "TENANT_ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -37,7 +37,7 @@ export async function PATCH(
     const body = await request.json();
     const validatedData = updateAgentPermissionsSchema.parse(body);
 
-    // Проверяем, что агент существует и принадлежит к той же организации
+    // Check that agent exists and belongs to the same organization
     const agent = await prisma.user.findFirst({
       where: {
         id: params.id,
@@ -54,7 +54,7 @@ export async function PATCH(
       );
     }
 
-    // Обновляем разрешения агента
+    // Update agent permissions
     const updatedAgent = await prisma.user.update({
       where: { id: params.id },
       data: { permissions: validatedData.permissions },
