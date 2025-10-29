@@ -5,8 +5,8 @@ import { sendTelegramMessage, TelegramUpdate } from "@/lib/telegram";
 /**
  * POST /api/telegram/webhook/[tenantId] - Telegram Bot Webhook
  * 
- * Этот endpoint получает обновления от Telegram Bot API.
- * Каждый tenant имеет свой уникальный webhook URL.
+ * This endpoint receives updates from Telegram Bot API.
+ * Each tenant has its own unique webhook URL.
  */
 export async function POST(
   req: NextRequest,
@@ -15,7 +15,7 @@ export async function POST(
   try {
     const { tenantId } = params;
 
-    // Получаем настройки бота для этого tenant
+    // Get bot settings for this tenant
     const bot = await prisma.telegramBot.findFirst({
       where: {
         tenantId,
@@ -30,10 +30,10 @@ export async function POST(
       );
     }
 
-    // Парсим update от Telegram
+    // Parse update from Telegram
     const update: TelegramUpdate = await req.json();
 
-    // Обрабатываем только текстовые сообщения
+    // Process only text messages
     if (!update.message?.text) {
       return NextResponse.json({ ok: true });
     }
@@ -43,7 +43,7 @@ export async function POST(
     const text = message.text;
     const userId = message.from.id;
 
-    // Сохраняем пользователя Telegram, если его еще нет
+    // Save Telegram user if not exists
     await prisma.telegramUser.upsert({
       where: {
         telegramId_botId: {
@@ -67,7 +67,7 @@ export async function POST(
       },
     });
 
-    // Сохраняем сообщение
+    // Save message
     await prisma.telegramMessage.create({
       data: {
         botId: bot.id,
@@ -79,16 +79,16 @@ export async function POST(
       },
     });
 
-    // Обработка команд
+    // Handle commands
     if (text.startsWith("/")) {
       return await handleCommand(bot.id, bot.botToken, chatId, text, message);
     }
 
-    // Если сообщение не команда, показываем help
+    // If message is not a command, show help
     await sendTelegramMessage(
       bot.botToken,
       chatId,
-      "Используйте /help для списка доступных команд."
+      "Use /help for a list of available commands."
     );
 
     return NextResponse.json({ ok: true });
@@ -102,7 +102,7 @@ export async function POST(
 }
 
 /**
- * Обработка команд Telegram
+ * Handle Telegram commands
  */
 async function handleCommand(
   botId: string,
@@ -118,7 +118,7 @@ async function handleCommand(
       await sendTelegramMessage(
         botToken,
         chatId,
-        `Привет, ${message.from.first_name}! 👋\n\nЯ бот для управления тикетами.\n\nДоступные команды:\n/help - Список команд\n/ticket - Создать тикет\n/link - Привязать аккаунт`
+        `Hello, ${message.from.first_name}! 👋\n\nI'm a ticket management bot.\n\nAvailable commands:\n/help - List commands\n/ticket - Create ticket\n/link - Link account`
       );
       break;
 
@@ -126,20 +126,20 @@ async function handleCommand(
       await sendTelegramMessage(
         botToken,
         chatId,
-        `📋 *Доступные команды:*\n\n/start - Начать работу\n/ticket - Создать новый тикет\n/link - Привязать Telegram к аккаунту\n/status - Проверить статус\n/help - Показать эту справку`,
+        `📋 *Available commands:*\n\n/start - Start working\n/ticket - Create new ticket\n/link - Link Telegram to account\n/status - Check status\n/help - Show this help`,
         { parse_mode: "Markdown" }
       );
       break;
 
     case "/ticket":
-      // Парсим команду: /ticket Название - Описание
+      // Parse command: /ticket Title - Description
       const ticketMatch = text.match(/^\/ticket\s+(.+?)\s+-\s+(.+)$/s);
       
       if (!ticketMatch) {
         await sendTelegramMessage(
           botToken,
           chatId,
-          "🎫 *Создание тикета*\n\nДля создания тикета через Telegram, отправьте сообщение в формате:\n\n`/ticket [Название] - [Описание]`\n\nПример:\n`/ticket Не работает почта - Не могу отправить письмо`",
+          "🎫 *Create Ticket*\n\nTo create a ticket via Telegram, send a message in the format:\n\n`/ticket [Title] - [Description]`\n\nExample:\n`/ticket Email not working - Cannot send email`",
           { parse_mode: "Markdown" }
         );
         break;
@@ -147,7 +147,7 @@ async function handleCommand(
 
       const [, ticketTitle, ticketDescription] = ticketMatch;
 
-      // Проверяем, привязан ли Telegram к пользователю
+      // Check if Telegram is linked to user
       const telegramUser = await prisma.telegramUser.findFirst({
         where: {
           telegramId: message.from.id.toString(),
@@ -167,13 +167,13 @@ async function handleCommand(
         await sendTelegramMessage(
           botToken,
           chatId,
-          `❌ Ваш Telegram не привязан к аккаунту.\n\nИспользуйте /link для получения инструкций.`,
+          `❌ Your Telegram is not linked to an account.\n\nUse /link for instructions.`,
           { parse_mode: "Markdown" }
         );
         break;
       }
 
-      // Получаем tenant для генерации номера тикета
+      // Get tenant for ticket number generation
       const tenant = await prisma.tenant.findUnique({
         where: { id: telegramUser.user!.tenantId! },
         select: { slug: true, name: true },
@@ -183,18 +183,18 @@ async function handleCommand(
         await sendTelegramMessage(
           botToken,
           chatId,
-          "❌ Ошибка: организация не найдена."
+          "❌ Error: organization not found."
         );
         break;
       }
 
-      // Генерируем номер тикета
+      // Generate ticket number
       const ticketCount = await prisma.ticket.count({
         where: { tenantId: telegramUser.user!.tenantId! },
       });
       const ticketNumber = `${tenant.slug.toUpperCase()}-${String(ticketCount + 1).padStart(3, "0")}`;
 
-      // Создаем тикет
+      // Create ticket
       const newTicket = await prisma.ticket.create({
         data: {
           number: ticketNumber,
@@ -210,11 +210,11 @@ async function handleCommand(
       await sendTelegramMessage(
         botToken,
         chatId,
-        `✅ Тикет успешно создан!\n\n*Номер:* ${ticketNumber}\n*Название:* ${ticketTitle.trim()}\n*Статус:* Открыт`,
+        `✅ Ticket created successfully!\n\n*Number:* ${ticketNumber}\n*Title:* ${ticketTitle.trim()}\n*Status:* Open`,
         { parse_mode: "Markdown" }
       );
 
-      // Если настроена группа для уведомлений агентов, отправляем туда
+      // If agent notification group is configured, send there
       const bot = await prisma.telegramBot.findUnique({
         where: { id: botId },
         select: { groupChatId: true, notifyOnNewTicket: true },
@@ -224,7 +224,7 @@ async function handleCommand(
         await sendTelegramMessage(
           botToken,
           bot.groupChatId,
-          `🎫 *Новый тикет: ${ticketNumber}*\n\n*Название:* ${ticketTitle.trim()}\n*Описание:* ${ticketDescription.trim()}\n*Создатель:* ${message.from.first_name}`,
+          `🎫 *New Ticket: ${ticketNumber}*\n\n*Title:* ${ticketTitle.trim()}\n*Description:* ${ticketDescription.trim()}\n*Creator:* ${message.from.first_name}`,
           { parse_mode: "Markdown" }
         );
       }
@@ -250,14 +250,14 @@ async function handleCommand(
         await sendTelegramMessage(
           botToken,
           chatId,
-          `✅ Ваш Telegram уже привязан к аккаунту:\n*${linkTelegramUser.user?.name}* (${linkTelegramUser.user?.email})`,
+          `✅ Your Telegram is already linked to account:\n*${linkTelegramUser.user?.name}* (${linkTelegramUser.user?.email})`,
           { parse_mode: "Markdown" }
         );
       } else {
         await sendTelegramMessage(
           botToken,
           chatId,
-          `🔗 Для привязки Telegram к аккаунту:\n\n1. Зайдите в веб-интерфейс\n2. Перейдите в Настройки → Telegram\n3. Введите ваш Telegram ID: \`${message.from.id}\``,
+          `🔗 To link Telegram to account:\n\n1. Go to web interface\n2. Navigate to Settings → Telegram\n3. Enter your Telegram ID: \`${message.from.id}\``,
           { parse_mode: "Markdown" }
         );
       }
@@ -267,7 +267,7 @@ async function handleCommand(
       await sendTelegramMessage(
         botToken,
         chatId,
-        "✅ Бот работает нормально!"
+        "✅ Bot is working normally!"
       );
       break;
 
@@ -275,7 +275,7 @@ async function handleCommand(
       await sendTelegramMessage(
         botToken,
         chatId,
-        "❌ Неизвестная команда. Используйте /help для списка доступных команд."
+        "❌ Unknown command. Use /help for a list of available commands."
       );
   }
 
