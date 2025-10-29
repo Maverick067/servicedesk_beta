@@ -9,7 +9,7 @@ import {
 } from "@/lib/telegram";
 
 /**
- * GET /api/telegram/bot - Получить настройки Telegram бота
+ * GET /api/telegram/bot - Get Telegram bot settings
  */
 export async function GET(req: NextRequest) {
   try {
@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Только TENANT_ADMIN и ADMIN могут управлять ботом
+    // Only TENANT_ADMIN and ADMIN can manage bot
     if (user.role !== "TENANT_ADMIN" && user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Для global ADMIN без tenantId - возвращаем пустой результат
+    // For global ADMIN without tenantId - return empty result
     if (!tenantId) {
       return NextResponse.json({ bot: null });
     }
@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * POST /api/telegram/bot - Создать/обновить Telegram бота
+ * POST /api/telegram/bot - Create/update Telegram bot
  */
 export async function POST(req: NextRequest) {
   try {
@@ -122,7 +122,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Проверяем токен и получаем информацию о боте
+    // Check token and get bot information
     let botInfo;
     try {
       botInfo = await getTelegramBotInfo(botToken);
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Устанавливаем webhook
+    // Set webhook
     const webhookUrl = `${process.env.NEXTAUTH_URL}/api/telegram/webhook/${tenantId}`;
     try {
       await setTelegramWebhook(botToken, webhookUrl);
@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Создаем или обновляем бота в БД
+    // Create or update bot in database
     const bot = await prisma.telegramBot.upsert({
       where: {
         tenantId,
@@ -181,7 +181,7 @@ export async function POST(req: NextRequest) {
 }
 
 /**
- * DELETE /api/telegram/bot - Удалить Telegram бота
+ * DELETE /api/telegram/bot - Delete Telegram bot
  */
 export async function DELETE(req: NextRequest) {
   try {
@@ -221,14 +221,14 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Bot not found" }, { status: 404 });
     }
 
-    // Удаляем webhook
+    // Delete webhook
     try {
       await deleteTelegramWebhook(bot.botToken);
     } catch (error) {
       console.error("[Telegram Webhook Delete Error]", error);
     }
 
-    // Удаляем бота из БД
+    // Delete bot from database
     await prisma.telegramBot.delete({
       where: { id: bot.id },
     });
