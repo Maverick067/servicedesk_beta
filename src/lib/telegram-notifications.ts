@@ -1,7 +1,7 @@
 /**
  * Telegram Notifications Helper
  * 
- * Этот модуль отвечает за отправку уведомлений в Telegram при событиях с тикетами.
+ * This module handles sending notifications to Telegram for ticket events.
  */
 
 import { prisma } from "./prisma";
@@ -13,7 +13,7 @@ import {
 } from "./telegram";
 
 /**
- * Отправить уведомление о новом тикете
+ * Send notification about new ticket
  */
 export async function notifyTelegramNewTicket(ticketId: string): Promise<void> {
   try {
@@ -40,7 +40,7 @@ export async function notifyTelegramNewTicket(ticketId: string): Promise<void> {
       return;
     }
 
-    // Получаем бота для этого tenant
+    // Get bot for this tenant
     const bot = await prisma.telegramBot.findFirst({
       where: {
         tenantId: ticket.tenantId,
@@ -50,7 +50,7 @@ export async function notifyTelegramNewTicket(ticketId: string): Promise<void> {
     });
 
     if (!bot || !bot.groupChatId) {
-      // Нет бота или не настроена группа для уведомлений
+      // No bot or notification group not configured
       return;
     }
 
@@ -60,7 +60,7 @@ export async function notifyTelegramNewTicket(ticketId: string): Promise<void> {
       description: ticket.description,
       priority: ticket.priority,
       creator: {
-        name: ticket.creator.name || "Неизвестный",
+        name: ticket.creator.name || "Unknown",
         email: ticket.creator.email,
       },
       tenant: {
@@ -77,7 +77,7 @@ export async function notifyTelegramNewTicket(ticketId: string): Promise<void> {
 }
 
 /**
- * Отправить уведомление об обновлении тикета
+ * Send notification about ticket update
  */
 export async function notifyTelegramTicketUpdate(ticketId: string): Promise<void> {
   try {
@@ -125,7 +125,7 @@ export async function notifyTelegramTicketUpdate(ticketId: string): Promise<void
 }
 
 /**
- * Отправить уведомление о новом комментарии
+ * Send notification about new comment
  */
 export async function notifyTelegramNewComment(commentId: string): Promise<void> {
   try {
@@ -170,7 +170,7 @@ export async function notifyTelegramNewComment(commentId: string): Promise<void>
         title: comment.ticket.title,
       },
       author: {
-        name: comment.author.name || "Неизвестный",
+        name: comment.author.name || "Unknown",
       },
       content: comment.content,
     });

@@ -1,10 +1,10 @@
 /**
- * Prometheus metrics для мониторинга
+ * Prometheus metrics for monitoring
  */
 
 import client from 'prom-client';
 
-// Register для хранения всех метрик
+// Register to store all metrics
 export const register = new client.Registry();
 
 // Default metrics (CPU, memory, etc.)

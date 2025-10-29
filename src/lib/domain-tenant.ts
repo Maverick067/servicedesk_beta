@@ -1,30 +1,30 @@
 /**
  * Domain-based Tenant Resolution
  * 
- * Этот модуль определяет tenant по subdomain или custom domain.
+ * This module determines tenant by subdomain or custom domain.
  */
 
 import { prisma } from "./prisma";
 import { headers } from "next/headers";
 
 /**
- * Получить tenant slug из subdomain или custom domain
+ * Get tenant slug from subdomain or custom domain
  */
 export async function getTenantFromDomain(): Promise<string | null> {
   const headersList = headers();
   
-  // X-Tenant header устанавливается Nginx для subdomain routing
+  // X-Tenant header is set by Nginx for subdomain routing
   const tenantSlug = headersList.get("x-tenant");
   
-  // X-Custom-Domain header устанавливается Nginx для custom domains
+  // X-Custom-Domain header is set by Nginx for custom domains
   const customDomain = headersList.get("x-custom-domain");
 
-  // Если есть tenant slug (subdomain), используем его
+  // If tenant slug (subdomain) exists, use it
   if (tenantSlug && tenantSlug !== "") {
     return tenantSlug;
   }
 
-  // Если есть custom domain, ищем tenant по нему
+  // If custom domain exists, find tenant by it
   if (customDomain) {
     const tenant = await prisma.tenant.findFirst({
       where: {
@@ -43,7 +43,7 @@ export async function getTenantFromDomain(): Promise<string | null> {
 }
 
 /**
- * Проверить, является ли запрос subdomain запросом
+ * Check if request is subdomain request
  */
 export function isSubdomainRequest(): boolean {
   const headersList = headers();
@@ -52,7 +52,7 @@ export function isSubdomainRequest(): boolean {
 }
 
 /**
- * Проверить, является ли запрос custom domain запросом
+ * Check if request is custom domain request
  */
 export function isCustomDomainRequest(): boolean {
   const headersList = headers();
@@ -61,7 +61,7 @@ export function isCustomDomainRequest(): boolean {
 }
 
 /**
- * Получить tenant ID по slug
+ * Get tenant ID by slug
  */
 export async function getTenantIdBySlug(slug: string): Promise<string | null> {
   const tenant = await prisma.tenant.findUnique({
@@ -73,7 +73,7 @@ export async function getTenantIdBySlug(slug: string): Promise<string | null> {
 }
 
 /**
- * Middleware helper: redirect если tenant не найден
+ * Middleware helper: redirect if tenant not found
  */
 export async function requireTenant(): Promise<{
   tenantSlug: string;

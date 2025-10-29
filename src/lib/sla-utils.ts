@@ -246,7 +246,7 @@ export async function getSlaStat(tenantId: string) {
         slaBreached: false,
         slaDueDate: {
           gte: new Date(),
-          lte: new Date(Date.now() + 60 * 60 * 1000), // +1 час
+          lte: new Date(Date.now() + 60 * 60 * 1000), // +1 hour
         },
         status: { notIn: ["RESOLVED", "CLOSED"] },
       },
