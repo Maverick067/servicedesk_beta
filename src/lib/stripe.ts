@@ -1,5 +1,5 @@
 /**
- * Stripe integration для billing
+ * Stripe integration for billing
  */
 
 import Stripe from 'stripe';
@@ -14,7 +14,7 @@ export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 });
 
 /**
- * ID цен Stripe для каждого плана
+ * Stripe price IDs for each plan
  */
 export const STRIPE_PLANS = {
   FREE: {
@@ -24,11 +24,11 @@ export const STRIPE_PLANS = {
     currency: 'usd',
     interval: 'month',
     features: [
-      '10 пользователей',
-      '2 агента',
-      '1GB хранилища',
-      'Базовые тикеты',
-      'Email поддержка',
+      '10 users',
+      '2 agents',
+      '1GB storage',
+      'Basic tickets',
+      'Email support',
     ],
     limits: {
       maxUsers: 10,
@@ -44,14 +44,14 @@ export const STRIPE_PLANS = {
     currency: 'usd',
     interval: 'month',
     features: [
-      '50 пользователей',
-      '15 агентов',
-      '20GB хранилища',
+      '50 users',
+      '15 agents',
+      '20GB storage',
       'SLA policies',
-      'База знаний',
-      'IT активы (CMDB)',
-      'Автоматизация',
-      'Приоритетная поддержка',
+      'Knowledge base',
+      'IT assets (CMDB)',
+      'Automation',
+      'Priority support',
     ],
     limits: {
       maxUsers: 50,
@@ -67,15 +67,15 @@ export const STRIPE_PLANS = {
     currency: 'usd',
     interval: 'month',
     features: [
-      'Неограниченно пользователей',
-      'Неограниченно агентов',
-      'Custom хранилище',
-      'Все модули',
+      'Unlimited users',
+      'Unlimited agents',
+      'Custom storage',
+      'All modules',
       'SSO (OIDC, SAML, LDAP)',
-      'Кастомный домен',
-      'API доступ',
-      'Кастомный брендинг',
-      '24/7 поддержка',
+      'Custom domain',
+      'API access',
+      'Custom branding',
+      '24/7 support',
       'SLA 99.9%',
     ],
     limits: {
@@ -88,21 +88,21 @@ export const STRIPE_PLANS = {
 } as const;
 
 /**
- * Получить лимиты для плана
+ * Get plan limits
  */
 export function getPlanLimits(plan: 'FREE' | 'PRO' | 'ENTERPRISE') {
   return STRIPE_PLANS[plan].limits;
 }
 
 /**
- * Получить информацию о плане
+ * Get plan information
  */
 export function getPlanInfo(plan: 'FREE' | 'PRO' | 'ENTERPRISE') {
   return STRIPE_PLANS[plan];
 }
 
 /**
- * Создать Stripe Checkout Session
+ * Create Stripe Checkout Session
  */
 export async function createCheckoutSession({
   tenantId,
@@ -144,7 +144,7 @@ export async function createCheckoutSession({
         tenantId,
         plan,
       },
-      trial_period_days: 14, // 14 дней триала
+      trial_period_days: 14, // 14 days trial
     },
   });
 
@@ -152,7 +152,7 @@ export async function createCheckoutSession({
 }
 
 /**
- * Создать Stripe Portal Session (для управления подпиской)
+ * Create Stripe Portal Session (for subscription management)
  */
 export async function createPortalSession({
   customerId,
@@ -170,7 +170,7 @@ export async function createPortalSession({
 }
 
 /**
- * Получить информацию о подписке из Stripe
+ * Get subscription information from Stripe
  */
 export async function getStripeSubscription(subscriptionId: string) {
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
@@ -178,7 +178,7 @@ export async function getStripeSubscription(subscriptionId: string) {
 }
 
 /**
- * Отменить подписку
+ * Cancel subscription
  */
 export async function cancelSubscription(subscriptionId: string) {
   const subscription = await stripe.subscriptions.update(subscriptionId, {
@@ -189,7 +189,7 @@ export async function cancelSubscription(subscriptionId: string) {
 }
 
 /**
- * Возобновить подписку
+ * Resume subscription
  */
 export async function resumeSubscription(subscriptionId: string) {
   const subscription = await stripe.subscriptions.update(subscriptionId, {
@@ -200,7 +200,7 @@ export async function resumeSubscription(subscriptionId: string) {
 }
 
 /**
- * Получить список счетов
+ * Get list of invoices
  */
 export async function getInvoices(customerId: string, limit = 10) {
   const invoices = await stripe.invoices.list({
@@ -212,7 +212,7 @@ export async function getInvoices(customerId: string, limit = 10) {
 }
 
 /**
- * Создать usage record (для метрик)
+ * Create usage record (for metrics)
  */
 export async function createUsageRecord({
   subscriptionItemId,
@@ -236,7 +236,7 @@ export async function createUsageRecord({
 }
 
 /**
- * Проверить, что webhook от Stripe
+ * Verify that webhook is from Stripe
  */
 export function constructWebhookEvent(body: string, signature: string) {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
