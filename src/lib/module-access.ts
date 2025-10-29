@@ -4,7 +4,7 @@ import { prisma } from "./prisma";
 import type { FeatureFlag } from "./feature-flags";
 
 /**
- * Проверяет, имеет ли пользователь доступ к модулю на сервере
+ * Checks if user has access to module on server
  */
 export async function checkModuleAccess(module: FeatureFlag): Promise<boolean> {
   const session = await getServerSession(authOptions);
@@ -13,18 +13,18 @@ export async function checkModuleAccess(module: FeatureFlag): Promise<boolean> {
     return false;
   }
 
-  // Глобальный ADMIN имеет доступ ко всем модулям
+  // Global ADMIN has access to all modules
   if (session.user.role === "ADMIN" && !session.user.tenantId) {
     return true;
   }
 
-  // Если нет tenantId, доступа нет
+  // If no tenantId, no access
   if (!session.user.tenantId) {
     return false;
   }
 
   try {
-    // Получаем настройки модулей tenant'а
+    // Get tenant module settings
     const tenant = await prisma.tenant.findUnique({
       where: { id: session.user.tenantId },
       select: {
@@ -45,7 +45,7 @@ export async function checkModuleAccess(module: FeatureFlag): Promise<boolean> {
 }
 
 /**
- * Маппинг путей к модулям
+ * Mapping of paths to modules
  */
 export const MODULE_PATHS: Record<FeatureFlag, string[]> = {
   queues: ["/dashboard/queues"],
@@ -61,7 +61,7 @@ export const MODULE_PATHS: Record<FeatureFlag, string[]> = {
 };
 
 /**
- * Определяет, какой модуль требуется для данного пути
+ * Determines which module is required for the given path
  */
 export function getRequiredModuleForPath(path: string): FeatureFlag | null {
   for (const [module, paths] of Object.entries(MODULE_PATHS)) {

@@ -1,5 +1,5 @@
 /**
- * Helper функции для API routes с поддержкой RLS
+ * Helper functions for API routes with RLS support
  */
 
 import { NextResponse } from 'next/server';
@@ -9,8 +9,8 @@ import { prisma } from './prisma';
 import { setRLSContext, getRLSContextFromSession, validateTenantAccess } from './prisma-rls';
 
 /**
- * Получить авторизованную сессию для API route
- * Автоматически устанавливает RLS контекст
+ * Get authenticated session for API route
+ * Automatically sets RLS context
  */
 export async function getAuthenticatedSession() {
   const session = await getServerSession(authOptions);
@@ -19,7 +19,7 @@ export async function getAuthenticatedSession() {
     throw new Error('UNAUTHORIZED');
   }
 
-  // Устанавливаем RLS контекст
+  // Set RLS context
   try {
     const rlsContext = getRLSContextFromSession(session);
     await setRLSContext(prisma, rlsContext);
@@ -32,7 +32,7 @@ export async function getAuthenticatedSession() {
 }
 
 /**
- * Проверить доступ к tenant
+ * Check access to tenant
  */
 export function checkTenantAccess(session: any, tenantId: string): void {
   if (!validateTenantAccess(session, tenantId)) {
@@ -41,7 +41,7 @@ export function checkTenantAccess(session: any, tenantId: string): void {
 }
 
 /**
- * Обработчик ошибок для API routes
+ * Error handler for API routes
  */
 export function handleApiError(error: any) {
   console.error('[API Error]:', error);
@@ -99,14 +99,14 @@ export function handleApiError(error: any) {
 }
 
 /**
- * Wrapper для API route handler с автоматическим RLS и error handling
+ * Wrapper for API route handler with automatic RLS and error handling
  */
 export function withApiHandler<T = any>(
   handler: (request: Request, context?: any) => Promise<NextResponse<T>>
 ) {
   return async (request: Request, context?: any) => {
     try {
-      // Устанавливаем RLS контекст
+      // Set RLS context
       try {
         await getAuthenticatedSession();
       } catch (error: any) {
@@ -119,7 +119,7 @@ export function withApiHandler<T = any>(
         throw error;
       }
 
-      // Выполняем handler
+      // Execute handler
       return await handler(request, context);
     } catch (error) {
       return handleApiError(error);
@@ -128,7 +128,7 @@ export function withApiHandler<T = any>(
 }
 
 /**
- * Проверить роль пользователя
+ * Check user role
  */
 export function requireRole(session: any, allowedRoles: string[]): void {
   if (!allowedRoles.includes(session.user.role)) {
@@ -137,28 +137,28 @@ export function requireRole(session: any, allowedRoles: string[]): void {
 }
 
 /**
- * Проверить конкретное permission для agent
+ * Check specific permission for agent
  */
 export function requirePermission(session: any, permission: string): void {
-  // ADMIN и TENANT_ADMIN имеют все права
+  // ADMIN and TENANT_ADMIN have all permissions
   if (session.user.role === 'ADMIN' || session.user.role === 'TENANT_ADMIN') {
     return;
   }
 
-  // Проверяем модульные permissions для AGENT
+  // Check module permissions for AGENT
   if (session.user.role === 'AGENT') {
     const permissions = session.user.permissions || {};
     if (!permissions[permission]) {
       throw new Error('FORBIDDEN');
     }
   } else {
-    // USER не имеет расширенных permissions
+    // USER does not have extended permissions
     throw new Error('FORBIDDEN');
   }
 }
 
 /**
- * Логирование API запросов
+ * API request logging
  */
 export function logApiRequest(
   method: string,

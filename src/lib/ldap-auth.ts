@@ -7,20 +7,20 @@ interface LdapAuthResult {
     email: string;
     name: string;
     username: string;
-    tenantId: string; // Добавляем tenantId
+    tenantId: string; // Add tenantId
   };
   error?: string;
 }
 
 /**
- * Пытается аутентифицировать пользователя через активные LDAP конфигурации
+ * Attempts to authenticate user through active LDAP configurations
  */
 export async function authenticateWithLdap(
   email: string,
   password: string
 ): Promise<LdapAuthResult> {
   try {
-    // Получаем все активные LDAP конфигурации
+    // Get all active LDAP configurations
     const ldapConfigs = await prisma.ldapConfig.findMany({
       where: {
         isActive: true,
@@ -42,7 +42,7 @@ export async function authenticateWithLdap(
       return { success: false, error: "No active LDAP configurations" };
     }
 
-    // Пробуем каждую конфигурацию
+    // Try each configuration
     for (const config of ldapConfigs) {
       const result = await tryLdapAuth(config, email, password);
       if (result.success) {
@@ -58,7 +58,7 @@ export async function authenticateWithLdap(
 }
 
 /**
- * Пытается аутентифицировать пользователя через конкретную LDAP конфигурацию
+ * Attempts to authenticate user through specific LDAP configuration
  */
 async function tryLdapAuth(
   config: any,
@@ -99,15 +99,15 @@ async function tryLdapAuth(
       resolve({ success: false, error: err.message });
     });
 
-    // Извлекаем username из email (до @)
+    // Extract username from email (before @)
     const username = email.split("@")[0];
     
-    // Формируем User Principal Name (UPN) для AD
+    // Form User Principal Name (UPN) for AD
     const userDn = email.includes("@") ? email : `${username}@${config.baseDn?.replace(/DC=/g, "").replace(/,/g, ".")}`;
 
     console.log(`[LDAP Auth] Trying to authenticate ${userDn} against ${ldapUrl}`);
 
-    // Пытаемся авторизоваться как пользователь
+    // Attempt to authenticate as user
     client.bind(userDn, password, (bindErr) => {
       if (hasResolved) return;
 
@@ -125,7 +125,7 @@ async function tryLdapAuth(
 
       console.log(`[LDAP Auth] Bind successful for ${userDn}, fetching user info...`);
 
-      // Успешная аутентификация! Теперь получаем информацию о пользователе
+      // Successful authentication! Now get user information
       const searchFilter = `(|(sAMAccountName=${username})(userPrincipalName=${email})(mail=${email}))`;
       const searchOptions = {
         filter: searchFilter,
@@ -174,7 +174,7 @@ async function tryLdapAuth(
               email: userEmail,
               name: userName,
               username: obj.sAMAccountName || username,
-              tenantId: config.tenantId, // Привязываем к организации
+              tenantId: config.tenantId, // Bind to organization
             },
           });
         });
@@ -182,7 +182,7 @@ async function tryLdapAuth(
         searchRes.on("error", (err) => {
           if (hasResolved) return;
           
-          // Игнорируем "Size Limit Exceeded" если мы уже нашли пользователя
+          // Ignore "Size Limit Exceeded" if we already found user
           if (userFound) return;
 
           hasResolved = true;
@@ -213,7 +213,7 @@ async function tryLdapAuth(
       });
     });
 
-    // Таймаут
+    // Timeout
     setTimeout(() => {
       if (hasResolved) return;
       hasResolved = true;
