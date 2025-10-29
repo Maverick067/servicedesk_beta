@@ -68,13 +68,13 @@ export function CreateCategoryDialog({ onCategoryCreated }: CreateCategoryDialog
 
   const handleCreateCategory = async () => {
     if (!newCategory.name.trim()) {
-      toast.error("Введите название категории");
+      toast.error("Enter category name");
       return;
     }
 
     setIsCreating(true);
     try {
-      // Создаем категорию
+      // Create category
       const response = await fetch("/api/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -88,7 +88,7 @@ export function CreateCategoryDialog({ onCategoryCreated }: CreateCategoryDialog
 
       const category = await response.json();
 
-      // Назначаем выбранных агентов на категорию
+      // Assign selected agents to category
       if (selectedAgents.length > 0) {
         for (const agentId of selectedAgents) {
           await fetch(`/api/categories/${category.id}/agents`, {
@@ -99,13 +99,13 @@ export function CreateCategoryDialog({ onCategoryCreated }: CreateCategoryDialog
         }
       }
 
-      toast.success("Категория успешно создана!");
+      toast.success("Category created successfully!");
       setNewCategory({ name: "", description: "", color: "#3b82f6" });
       setSelectedAgents([]);
       setOpen(false);
       onCategoryCreated();
     } catch (error: any) {
-      toast.error("Ошибка создания категории", { description: error.message });
+      toast.error("Error creating category", { description: error.message });
     } finally {
       setIsCreating(false);
     }
@@ -128,22 +128,22 @@ export function CreateCategoryDialog({ onCategoryCreated }: CreateCategoryDialog
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
-          Создать категорию
+          Create Category
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[525px]">
         <DialogHeader>
-          <DialogTitle>Создать новую категорию</DialogTitle>
+          <DialogTitle>Create New Category</DialogTitle>
           <DialogDescription>
-            Добавьте новую категорию и назначьте на нее агентов
+            Add a new category and assign agents to it
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Название категории *</Label>
+            <Label htmlFor="name">Category Name *</Label>
             <Input
               id="name"
-              placeholder="Например: Техническая поддержка"
+              placeholder="e.g. Technical Support"
               value={newCategory.name}
               onChange={(e) =>
                 setNewCategory({ ...newCategory, name: e.target.value })
@@ -152,10 +152,10 @@ export function CreateCategoryDialog({ onCategoryCreated }: CreateCategoryDialog
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Описание</Label>
+            <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              placeholder="Описание категории"
+              placeholder="Category description"
               value={newCategory.description}
               onChange={(e) =>
                 setNewCategory({ ...newCategory, description: e.target.value })
@@ -165,7 +165,7 @@ export function CreateCategoryDialog({ onCategoryCreated }: CreateCategoryDialog
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="color">Цвет</Label>
+            <Label htmlFor="color">Color</Label>
             <div className="flex items-center gap-2">
               <Input
                 id="color"
@@ -188,15 +188,15 @@ export function CreateCategoryDialog({ onCategoryCreated }: CreateCategoryDialog
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Назначить агентов</Label>
+            <Label>Assign Agents</Label>
             <Select onValueChange={handleAddAgent} disabled={isCreating} value="">
               <SelectTrigger>
-                <SelectValue placeholder="Выберите агента" />
+                <SelectValue placeholder="Select agent" />
               </SelectTrigger>
               <SelectContent>
                 {agents.length === 0 ? (
                   <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                    Нет доступных агентов
+                    No available agents
                   </div>
                 ) : (
                   agents
@@ -230,7 +230,7 @@ export function CreateCategoryDialog({ onCategoryCreated }: CreateCategoryDialog
               </div>
             )}
             <p className="text-sm text-muted-foreground">
-              Тикеты этой категории будут автоматически назначаться выбранным агентам
+              Tickets in this category will be automatically assigned to selected agents
             </p>
           </div>
         </div>
@@ -240,10 +240,10 @@ export function CreateCategoryDialog({ onCategoryCreated }: CreateCategoryDialog
             onClick={() => setOpen(false)}
             disabled={isCreating}
           >
-            Отмена
+            Cancel
           </Button>
           <Button onClick={handleCreateCategory} disabled={isCreating || !newCategory.name}>
-            {isCreating ? "Создание..." : "Создать"}
+            {isCreating ? "Creating..." : "Create"}
           </Button>
         </DialogFooter>
       </DialogContent>

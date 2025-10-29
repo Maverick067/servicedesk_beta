@@ -63,7 +63,7 @@ export function AutomationRuleList() {
       setRules(data);
     } catch (e: any) {
       setError(e.message);
-      toast.error("Ошибка при загрузке правил автоматизации", {
+      toast.error("Error loading automation rules", {
         description: e.message,
       });
     } finally {
@@ -87,20 +87,20 @@ export function AutomationRuleList() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Не удалось изменить статус правила");
+        throw new Error(errorData.message || "Failed to change rule status");
       }
 
-      toast.success(rule.isActive ? "Правило деактивировано" : "Правило активировано");
+      toast.success(rule.isActive ? "Rule deactivated" : "Rule activated");
       fetchRules();
     } catch (e: any) {
-      toast.error("Ошибка", {
+      toast.error("Error", {
         description: e.message,
       });
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Вы уверены, что хотите удалить это правило автоматизации?")) return;
+    if (!confirm("Are you sure you want to delete this automation rule?")) return;
 
     try {
       const response = await fetch(`/api/automation/${id}`, {
@@ -112,13 +112,13 @@ export function AutomationRuleList() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Не удалось удалить правило");
+        throw new Error(errorData.message || "Failed to delete rule");
       }
 
-      toast.success("Правило удалено");
+      toast.success("Rule deleted");
       fetchRules();
     } catch (e: any) {
-      toast.error("Ошибка при удалении правила", {
+      toast.error("Error deleting rule", {
         description: e.message,
       });
     }
@@ -136,14 +136,14 @@ export function AutomationRuleList() {
 
   const getTriggerName = (trigger: string) => {
     const names: Record<string, string> = {
-      TICKET_CREATED: "Тикет создан",
-      TICKET_UPDATED: "Тикет обновлён",
-      TICKET_ASSIGNED: "Тикет назначен",
-      STATUS_CHANGED: "Статус изменён",
-      PRIORITY_CHANGED: "Приоритет изменён",
-      COMMENT_ADDED: "Добавлен комментарий",
-      SLA_BREACH: "Нарушение SLA",
-      TIME_BASED: "По расписанию",
+      TICKET_CREATED: "Ticket Created",
+      TICKET_UPDATED: "Ticket Updated",
+      TICKET_ASSIGNED: "Ticket Assigned",
+      STATUS_CHANGED: "Status Changed",
+      PRIORITY_CHANGED: "Priority Changed",
+      COMMENT_ADDED: "Comment Added",
+      SLA_BREACH: "SLA Breach",
+      TIME_BASED: "Scheduled",
     };
     return names[trigger] || trigger;
   };

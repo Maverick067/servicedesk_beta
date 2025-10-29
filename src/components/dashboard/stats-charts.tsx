@@ -83,28 +83,28 @@ export function StatsCharts() {
     return (
       <Card>
         <CardContent className="py-12 text-center text-muted-foreground">
-          Не удалось загрузить статистику
+          Failed to load statistics
         </CardContent>
       </Card>
     );
   }
 
-  // Подготовка данных для графика приоритетов
+  // Prepare data for priority chart
   const priorityData = [
-    { name: "Низкий", value: stats.priorities.LOW, color: PRIORITY_COLORS.LOW },
-    { name: "Средний", value: stats.priorities.MEDIUM, color: PRIORITY_COLORS.MEDIUM },
-    { name: "Высокий", value: stats.priorities.HIGH, color: PRIORITY_COLORS.HIGH },
-    { name: "Срочный", value: stats.priorities.URGENT, color: PRIORITY_COLORS.URGENT },
+    { name: "Low", value: stats.priorities.LOW, color: PRIORITY_COLORS.LOW },
+    { name: "Medium", value: stats.priorities.MEDIUM, color: PRIORITY_COLORS.MEDIUM },
+    { name: "High", value: stats.priorities.HIGH, color: PRIORITY_COLORS.HIGH },
+    { name: "Urgent", value: stats.priorities.URGENT, color: PRIORITY_COLORS.URGENT },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Селектор периода */}
+      {/* Period selector */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Аналитика и отчеты</h2>
+          <h2 className="text-2xl font-bold">Analytics & Reports</h2>
           <p className="text-muted-foreground mt-1">
-            Визуализация данных по тикетам
+            Ticket data visualization
           </p>
         </div>
         <Select value={period} onValueChange={setPeriod}>
