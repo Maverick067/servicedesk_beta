@@ -5,7 +5,7 @@ import ldap from "ldapjs";
 
 /**
  * POST /api/ldap/test-connection
- * Тестирование подключения к Active Directory
+ * Test connection to Active Directory
  */
 export async function POST(req: NextRequest) {
   try {
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Только ADMIN и TENANT_ADMIN могут тестировать подключения
+    // Only ADMIN and TENANT_ADMIN can test connections
     if (
       session.user.role !== "ADMIN" &&
       session.user.role !== "TENANT_ADMIN"
@@ -41,22 +41,22 @@ export async function POST(req: NextRequest) {
 
     if (!serverAddress || !domain || !adminUsername || !adminPassword) {
       return NextResponse.json(
-        { error: "Все поля обязательны для заполнения" },
+        { error: "All fields are required" },
         { status: 400 }
       );
     }
 
-    // Формируем URL для LDAP
+    // Build LDAP URL
     const protocol = useSSL ? "ldaps" : "ldap";
     const ldapUrl = `${protocol}://${serverAddress}:${port}`;
 
-    // Формируем Base DN из домена
+    // Build Base DN from domain
     const baseDn = `DC=${domain.split('.').join(',DC=')}`;
     
-    // Формируем Bind DN (полный логин администратора)
+    // Build Bind DN (full admin login)
     const bindDn = `${adminUsername}@${domain}`;
 
-    // Логируем попытку подключения
+    // Log connection attempt
     console.log(`[LDAP Test] Attempting to connect to ${ldapUrl}`);
     console.log(`[LDAP Test] Base DN: ${baseDn}`);
     console.log(`[LDAP Test] Bind DN: ${bindDn}`);
@@ -69,10 +69,10 @@ export async function POST(req: NextRequest) {
         reconnect: false,
       };
 
-      // Если используется SSL, добавляем опции TLS
+      // If SSL is used, add TLS options
       if (useSSL) {
         clientOptions.tlsOptions = {
-          rejectUnauthorized: false, // Разрешаем самоподписанные сертификаты
+          rejectUnauthorized: false, // Allow self-signed certificates
           requestCert: true,
           agent: false,
         };
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
 
       let hasResolved = false;
 
-      // Обработчик ошибок подключения
+      // Connection error handler
       client.on("error", (err) => {
         if (hasResolved) return;
         hasResolved = true;
@@ -95,16 +95,16 @@ export async function POST(req: NextRequest) {
           // ignore
         }
 
-        let errorMessage = "Не удалось подключиться к серверу";
+        let errorMessage = "Failed to connect to server";
         
         if (err.message.includes("ENOTFOUND")) {
-          errorMessage = `Сервер не найден. Проверьте адрес: ${serverAddress}`;
+          errorMessage = `Server not found. Check address: ${serverAddress}`;
         } else if (err.message.includes("ETIMEDOUT") || err.message.includes("ECONNREFUSED")) {
-          errorMessage = `Сервер недоступен. Проверьте адрес и порт: ${serverAddress}:${port}`;
+          errorMessage = `Server unavailable. Check address and port: ${serverAddress}:${port}`;
         } else if (err.message.includes("ECONNRESET")) {
-          errorMessage = "Соединение разорвано. Попробуйте использовать другой порт (636 для SSL)";
+          errorMessage = "Connection reset. Try using a different port (636 for SSL)";
         } else {
-          errorMessage = `Ошибка подключения: ${err.message}`;
+          errorMessage = `Connection error: ${err.message}`;
         }
 
         resolve(
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
         );
       });
 
-      // Пытаемся подключиться с учетными данными администратора
+      // Try to connect with admin credentials
       client.bind(bindDn, adminPassword, (bindErr) => {
         if (hasResolved) return;
 
@@ -132,14 +132,14 @@ export async function POST(req: NextRequest) {
             // ignore
           }
 
-          let errorMessage = "Неверный логин или пароль";
+          let errorMessage = "Invalid username or password";
           
           if (bindErr.message.includes("InvalidCredentials")) {
-            errorMessage = "Неверный логин или пароль. Проверьте учетные данные администратора";
+            errorMessage = "Invalid username or password. Check admin credentials";
           } else if (bindErr.message.includes("timeout")) {
-            errorMessage = "Превышено время ожидания. Проверьте адрес сервера и порт";
+            errorMessage = "Timeout exceeded. Check server address and port";
           } else {
-            errorMessage = `Ошибка аутентификации: ${bindErr.message}`;
+            errorMessage = `Authentication error: ${bindErr.message}`;
           }
 
           resolve(
@@ -156,13 +156,13 @@ export async function POST(req: NextRequest) {
 
         console.log("[LDAP Test] Bind successful, searching for users...");
 
-        // Успешная аутентификация! Теперь попробуем найти пользователей
+        // Successful authentication! Now try to find users
         const searchOptions = {
-          filter: "(&(objectClass=user)(objectCategory=person)(!(objectClass=computer))(!(userAccountControl:1.2.840.113556.1.4.803:=2)))", // Исключаем компьютеры и отключенных пользователей
+          filter: "(&(objectClass=user)(objectCategory=person)(!(objectClass=computer))(!(userAccountControl:1.2.840.113556.1.4.803:=2)))", // Exclude computers and disabled users
           scope: "sub" as const,
-          sizeLimit: 5, // Уменьшаем лимит для теста
+          sizeLimit: 5, // Reduce limit for test
           paged: {
-            pageSize: 5, // Используем пагинацию
+            pageSize: 5, // Use pagination
           },
         };
 
@@ -183,7 +183,7 @@ export async function POST(req: NextRequest) {
               NextResponse.json(
                 {
                   success: false,
-                  error: `Ошибка поиска пользователей: ${searchErr.message}`,
+                  error: `User search error: ${searchErr.message}`,
                 },
                 { status: 400 }
               )
@@ -199,7 +199,7 @@ export async function POST(req: NextRequest) {
             
             if (sampleUsers.length < 5) {
               try {
-                // Извлекаем атрибуты из entry
+                // Extract attributes from entry
                 const attributes: any = {};
                 if (entry.attributes) {
                   entry.attributes.forEach((attr: any) => {
@@ -227,10 +227,10 @@ export async function POST(req: NextRequest) {
 
             console.error("[LDAP Test] Search result error:", err.message);
             
-            // "Size Limit Exceeded" - это нормально для теста, мы всё равно нашли пользователей
+            // "Size Limit Exceeded" - normal for test, we still found users
             if (err.message && err.message.includes("Size Limit Exceeded")) {
               console.log("[LDAP Test] Size limit exceeded (OK for test), found users:", usersCount);
-              // Не помечаем как resolved, пусть продолжит и завершится в 'end'
+              // Don't mark as resolved, let it continue and finish in 'end'
               return;
             }
 
@@ -246,7 +246,7 @@ export async function POST(req: NextRequest) {
               NextResponse.json(
                 {
                   success: false,
-                  error: `Ошибка при получении результатов: ${err.message}`,
+                  error: `Error getting results: ${err.message}`,
                 },
                 { status: 400 }
               )
@@ -266,13 +266,13 @@ export async function POST(req: NextRequest) {
             console.log(`[LDAP Test] Search completed. Found ${usersCount} users`);
 
             if (result?.status === 0) {
-              // Успех!
+              // Success!
               resolve(
                 NextResponse.json({
                   success: true,
-                  message: "Подключение успешно установлено",
+                  message: "Connection successfully established",
                   usersCount,
-                  sampleUsers: sampleUsers.slice(0, 3), // Показываем первых 3
+                  sampleUsers: sampleUsers.slice(0, 3), // Show first 3
                   config: {
                     baseDn,
                     bindDn,
@@ -285,7 +285,7 @@ export async function POST(req: NextRequest) {
                 NextResponse.json(
                   {
                     success: false,
-                    error: `Поиск завершился с ошибкой (код: ${result?.status})`,
+                    error: `Search completed with error (code: ${result?.status})`,
                   },
                   { status: 400 }
                 )
@@ -295,7 +295,7 @@ export async function POST(req: NextRequest) {
         });
       });
 
-      // Таймаут на случай зависания (уменьшили до 5 сек)
+      // Timeout in case of hanging (reduced to 5 sec)
       setTimeout(() => {
         if (hasResolved) return;
         hasResolved = true;
@@ -312,7 +312,7 @@ export async function POST(req: NextRequest) {
           NextResponse.json(
             {
               success: false,
-              error: "Превышено время ожидания подключения (5 сек). Проверьте адрес сервера и доступность порта.",
+              error: "Connection timeout (5 sec). Check server address and port availability.",
             },
             { status: 408 }
           )

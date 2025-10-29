@@ -14,7 +14,7 @@ const updateLdapConfigSchema = z.object({
 
 /**
  * PATCH /api/ldap/[id]
- * Обновить LDAP конфигурацию
+ * Update LDAP configuration
  */
 export async function PATCH(
   req: NextRequest,
@@ -34,7 +34,7 @@ export async function PATCH(
     const body = await req.json();
     const validatedData = updateLdapConfigSchema.parse(body);
 
-    // Получаем текущую конфигурацию
+    // Get current configuration
     const existingConfig = await prisma.ldapConfig.findUnique({
       where: { id: params.id },
       select: {
@@ -50,7 +50,7 @@ export async function PATCH(
       );
     }
 
-    // Проверяем права доступа
+    // Check access rights
     if (
       session.user.role === "TENANT_ADMIN" &&
       session.user.tenantId !== existingConfig.tenantId
@@ -58,13 +58,13 @@ export async function PATCH(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Обновляем конфигурацию
+    // Update configuration
     const updatedConfig = await prisma.ldapConfig.update({
       where: { id: params.id },
       data: validatedData,
     });
 
-    // Логируем действие
+    // Log action
     await createAuditLog({
       tenantId: existingConfig.tenantId,
       userId: session.user.id,
@@ -98,7 +98,7 @@ export async function PATCH(
 
 /**
  * DELETE /api/ldap/[id]
- * Удалить LDAP конфигурацию
+ * Delete LDAP configuration
  */
 export async function DELETE(
   req: NextRequest,
@@ -115,7 +115,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Получаем конфигурацию
+    // Get configuration
     const existingConfig = await prisma.ldapConfig.findUnique({
       where: { id: params.id },
       select: {
@@ -132,7 +132,7 @@ export async function DELETE(
       );
     }
 
-    // Проверяем права доступа
+    // Check access rights
     if (
       session.user.role === "TENANT_ADMIN" &&
       session.user.tenantId !== existingConfig.tenantId
@@ -140,12 +140,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Удаляем конфигурацию
+    // Delete configuration
     await prisma.ldapConfig.delete({
       where: { id: params.id },
     });
 
-    // Логируем действие
+    // Log action
     await createAuditLog({
       tenantId: existingConfig.tenantId,
       userId: session.user.id,

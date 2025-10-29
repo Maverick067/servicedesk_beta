@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Для глобального ADMIN разрешаем, если он управляет через UI tenant'ом
+    // For global ADMIN allow, if he manages through UI tenant
     if (!session.user.tenantId && session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Unauthorized: No tenant" }, { status: 401 });
     }
@@ -57,12 +57,12 @@ export async function POST(request: Request) {
     const json = await request.json();
     const data = ldapConfigSchema.parse(json);
 
-    // Если нет tenantId в сессии, это ошибка
+    // If no tenantId in session, it's an error
     if (!session.user.tenantId) {
       return NextResponse.json(
         { 
-          error: "Невозможно создать LDAP подключение без контекста организации. Войдите как TENANT_ADMIN конкретной организации.",
-          message: "Глобальный администратор не может создавать LDAP конфигурации. Переключитесь на учетную запись администратора организации."
+          error: "Cannot create LDAP connection without organization context. Please log in as TENANT_ADMIN of a specific organization.",
+          message: "Global administrator cannot create LDAP configurations. Switch to an organization administrator account."
         },
         { status: 400 }
       );
