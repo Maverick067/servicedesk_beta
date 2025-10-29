@@ -36,7 +36,7 @@ export function AssetList() {
         setAssets(data);
       }
     } catch (e: any) {
-      toast.error("Ошибка при загрузке активов");
+      toast.error("Error loading assets");
     } finally {
       setIsLoading(false);
     }
@@ -47,15 +47,15 @@ export function AssetList() {
   }, [session]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Удалить актив?")) return;
+    if (!confirm("Delete asset?")) return;
     try {
       const response = await fetch(`/api/assets/${id}`, { method: "DELETE" });
       if (response.ok) {
-        toast.success("Актив удалён");
+        toast.success("Asset deleted");
         fetchAssets();
       }
     } catch (e: any) {
-      toast.error("Ошибка при удалении");
+      toast.error("Error deleting asset");
     }
   };
 
@@ -65,7 +65,7 @@ export function AssetList() {
     return (
       <div className="text-center py-8">
         <HardDrive className="mx-auto h-12 w-12 mb-4 text-muted-foreground" />
-        <h3 className="text-lg font-semibold">Активы не найдены</h3>
+        <h3 className="text-lg font-semibold">No Assets Found</h3>
       </div>
     );
   }
@@ -74,14 +74,14 @@ export function AssetList() {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Название</TableHead>
-          <TableHead>Тип</TableHead>
-          <TableHead>Производитель</TableHead>
-          <TableHead>Модель</TableHead>
+          <TableHead>Name</TableHead>
+          <TableHead>Type</TableHead>
+          <TableHead>Manufacturer</TableHead>
+          <TableHead>Model</TableHead>
           <TableHead>S/N</TableHead>
-          <TableHead>Инв. №</TableHead>
-          <TableHead>Статус</TableHead>
-          <TableHead className="text-right">Действия</TableHead>
+          <TableHead>Inv. #</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -102,9 +102,9 @@ export function AssetList() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem><Edit className="mr-2 h-4 w-4" />Редактировать</DropdownMenuItem>
+                  <DropdownMenuItem><Edit className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleDelete(asset.id)} className="text-red-600">
-                    <Trash2 className="mr-2 h-4 w-4" />Удалить
+                    <Trash2 className="mr-2 h-4 w-4" />Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
