@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { formatDistanceToNow } from "date-fns";
-import { ru } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -141,7 +141,7 @@ export function NotificationList() {
 
   return (
     <div className="space-y-4">
-      {/* Фильтры */}
+      {/* Filters */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Button
@@ -149,19 +149,19 @@ export function NotificationList() {
             size="sm"
             onClick={() => setUnreadOnly(false)}
           >
-            Все
+            All
           </Button>
           <Button
             variant={unreadOnly ? "default" : "outline"}
             size="sm"
             onClick={() => setUnreadOnly(true)}
           >
-            Непрочитанные
+            Unread
           </Button>
         </div>
         <Button variant="ghost" size="sm" onClick={() => markAsRead(undefined, undefined, true)}>
           <CheckCheck className="h-4 w-4 mr-2" />
-          Отметить все как прочитанные
+          Mark All as Read
         </Button>
       </div>
 
@@ -169,9 +169,9 @@ export function NotificationList() {
         <Card>
           <CardContent className="py-12 text-center">
             <Bell className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-lg font-semibold">Нет уведомлений</p>
+            <p className="text-lg font-semibold">No Notifications</p>
             <p className="text-sm text-muted-foreground mt-2">
-              {unreadOnly ? "Все уведомления прочитаны" : "У вас пока нет уведомлений"}
+              {unreadOnly ? "All notifications read" : "You have no notifications yet"}
             </p>
           </CardContent>
         </Card>
@@ -224,32 +224,32 @@ export function NotificationList() {
                             )}
                           </div>
 
-                          {/* Тикет */}
+                          {/* Ticket */}
                           {latestNotification.ticket && (
                             <Link
                               href={`/dashboard/tickets/${latestNotification.ticket.id}`}
                               className="inline-flex items-center gap-2 text-sm text-blue-600 hover:underline"
                             >
                               <TicketIcon className="h-4 w-4" />
-                              Тикет #{latestNotification.ticket.number}: {latestNotification.ticket.title}
+                              Ticket #{latestNotification.ticket.number}: {latestNotification.ticket.title}
                             </Link>
                           )}
 
-                          {/* Группа */}
+                          {/* Group */}
                           {group.count > 1 && (
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <Badge variant="secondary">
-                                +{group.count - 1} еще
+                                +{group.count - 1} more
                               </Badge>
                               <span>
                                 {formatDistanceToNow(new Date(group.firstEventAt), {
                                   addSuffix: true,
-                                  locale: ru,
+                                  locale: enUS,
                                 })}
                                 {" - "}
                                 {formatDistanceToNow(new Date(group.lastEventAt), {
                                   addSuffix: true,
-                                  locale: ru,
+                                  locale: enUS,
                                 })}
                               </span>
                             </div>
@@ -259,12 +259,12 @@ export function NotificationList() {
                             <p className="text-xs text-muted-foreground">
                               {formatDistanceToNow(new Date(latestNotification.createdAt), {
                                 addSuffix: true,
-                                locale: ru,
+                                locale: enUS,
                               })}
                             </p>
                           )}
 
-                          {/* Действия */}
+                          {/* Actions */}
                           <div className="flex items-center gap-2 pt-2">
                             {!group.isRead && (
                               <Button
@@ -273,7 +273,7 @@ export function NotificationList() {
                                 onClick={() => markAsRead(group.id)}
                               >
                                 <CheckCheck className="h-4 w-4 mr-1" />
-                                Прочитано
+                                Read
                               </Button>
                             )}
                             <Button
@@ -282,7 +282,7 @@ export function NotificationList() {
                               onClick={() => dismissGroup(group.id)}
                             >
                               <Trash2 className="h-4 w-4 mr-1" />
-                              Скрыть
+                              Dismiss
                             </Button>
                           </div>
                         </div>

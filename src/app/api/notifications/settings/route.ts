@@ -5,12 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const updateSettingsSchema = z.object({
-  // Каналы доставки
+  // Delivery channels
   enableInApp: z.boolean().optional(),
   enableEmail: z.boolean().optional(),
   enablePush: z.boolean().optional(),
   
-  // Группировка
+  // Grouping
   groupSimilar: z.boolean().optional(),
   groupingInterval: z.number().min(5).max(60).optional(),
   
@@ -18,7 +18,7 @@ const updateSettingsSchema = z.object({
   emailFrequency: z.enum(["instant", "hourly", "daily", "off"]).optional(),
   emailDigestTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/).optional(),
   
-  // Типы уведомлений
+  // Notification types
   notifyTicketCreated: z.boolean().optional(),
   notifyTicketAssigned: z.boolean().optional(),
   notifyTicketStatusChanged: z.boolean().optional(),
@@ -27,14 +27,14 @@ const updateSettingsSchema = z.object({
   notifyTicketEscalated: z.boolean().optional(),
   notifySlaBreach: z.boolean().optional(),
   
-  // Приоритет и тихий режим
+  // Priority and quiet hours
   priorityOverride: z.boolean().optional(),
   quietHoursEnabled: z.boolean().optional(),
   quietHoursStart: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/).optional(),
   quietHoursEnd: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/).optional(),
 });
 
-// GET /api/notifications/settings - Получить настройки уведомлений
+// GET /api/notifications/settings - Get notification settings
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
       where: { userId: session.user.id },
     });
 
-    // Если настроек нет, создать с дефолтными значениями
+    // If no settings exist, create with default values
     if (!settings) {
       settings = await prisma.notificationSettings.create({
         data: {
@@ -66,7 +66,7 @@ export async function GET(request: Request) {
   }
 }
 
-// PATCH /api/notifications/settings - Обновить настройки уведомлений
+// PATCH /api/notifications/settings - Update notification settings
 export async function PATCH(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -83,13 +83,13 @@ export async function PATCH(request: Request) {
     });
 
     if (settings) {
-      // Обновить существующие настройки
+      // Update existing settings
       settings = await prisma.notificationSettings.update({
         where: { userId: session.user.id },
         data: validatedData,
       });
     } else {
-      // Создать новые настройки
+      // Create new settings
       settings = await prisma.notificationSettings.create({
         data: {
           userId: session.user.id,
