@@ -3,7 +3,7 @@ import { ModuleGuard } from "@/components/module-guard";
 
 export default function FiltersPage() {
   return (
-    <ModuleGuard module="savedFilters" moduleName="Сохраненные фильтры">
+    <ModuleGuard module="savedFilters" moduleName="Saved Filters">
       <div className="container mx-auto py-8">
         <SavedFiltersList />
       </div>

@@ -3,7 +3,7 @@ import { ModuleGuard } from "@/components/module-guard";
 
 export default function CustomFieldsPage() {
   return (
-    <ModuleGuard module="customFields" moduleName="Кастомные поля">
+    <ModuleGuard module="customFields" moduleName="Custom Fields">
       <div className="p-8">
         <CustomFieldList />
       </div>

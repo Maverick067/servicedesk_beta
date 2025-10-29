@@ -11,12 +11,12 @@ import { ModuleGuard } from "@/components/module-guard";
 
 export default function AssetsPage() {
   return (
-    <ModuleGuard module="assets" moduleName="IT-Активы (CMDB)">
+    <ModuleGuard module="assets" moduleName="IT Assets (CMDB)">
       <div className="container relative">
       <PageHeader>
-        <PageHeaderHeading>IT-Активы (CMDB)</PageHeaderHeading>
+        <PageHeaderHeading>IT Assets (CMDB)</PageHeaderHeading>
         <PageHeaderDescription>
-          Управляйте IT-активами и оборудованием вашей организации.
+          Manage IT assets and equipment for your organization.
         </PageHeaderDescription>
       </PageHeader>
       <div className="flex justify-end mb-4">
@@ -26,7 +26,7 @@ export default function AssetsPage() {
             className={cn(buttonVariants({ variant: "default" }))}
           >
             <PlusCircle className="mr-2 h-4 w-4" />
-            Добавить актив
+            Add Asset
           </Link>
         </CreateAssetDialog>
       </div>

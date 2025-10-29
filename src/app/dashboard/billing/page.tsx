@@ -22,25 +22,25 @@ export default function BillingPage() {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [usage, setUsage] = useState<any>(null);
 
-  // Redirect global ADMIN (без tenantId) на страницу tenants
+  // Redirect global ADMIN (without tenantId) to tenants page
   useEffect(() => {
     if (session?.user.role === "ADMIN" && !session?.user.tenantId) {
       router.push("/dashboard/tenants");
     }
   }, [session, router]);
 
-  // Проверяем success/canceled query params
+  // Check success/canceled query params
   const success = searchParams.get("success");
   const canceled = searchParams.get("canceled");
 
   useEffect(() => {
     if (success === "true") {
-      toast.success("Подписка успешно оформлена!");
-      // Очищаем query params
+      toast.success("Subscription successfully created!");
+      // Clear query params
       router.replace("/dashboard/billing");
       fetchData();
     } else if (canceled === "true") {
-      toast.error("Оформление подписки отменено");
+      toast.error("Subscription checkout canceled");
       router.replace("/dashboard/billing");
     }
   }, [success, canceled, router]);
@@ -64,7 +64,7 @@ export default function BillingPage() {
       }
     } catch (error) {
       console.error("Error fetching billing data:", error);
-      toast.error("Ошибка загрузки данных");
+      toast.error("Error loading data");
     } finally {
       setLoading(false);
     }
@@ -93,7 +93,7 @@ export default function BillingPage() {
       window.location.href = url;
     } catch (error) {
       console.error("Error creating checkout:", error);
-      toast.error("Ошибка создания сессии оплаты");
+      toast.error("Error creating checkout session");
       setCheckoutLoading(false);
     }
   };
@@ -113,7 +113,7 @@ export default function BillingPage() {
       window.location.href = url;
     } catch (error) {
       console.error("Error creating portal:", error);
-      toast.error("Ошибка создания портала");
+      toast.error("Error creating portal");
       setPortalLoading(false);
     }
   };
@@ -122,8 +122,8 @@ export default function BillingPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">Тарифы и оплата</h1>
-          <p className="text-muted-foreground">Управление подпиской и тарифным планом</p>
+          <h1 className="text-3xl font-bold">Pricing & Billing</h1>
+          <p className="text-muted-foreground">Manage subscription and billing plan</p>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Skeleton className="h-[300px]" />
@@ -143,8 +143,8 @@ export default function BillingPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold">Тарифы и оплата</h1>
-        <p className="text-muted-foreground">Управление подпиской и тарифным планом</p>
+        <h1 className="text-3xl font-bold">Pricing & Billing</h1>
+        <p className="text-muted-foreground">Manage subscription and billing plan</p>
       </div>
 
       {/* Current subscription and usage */}
@@ -159,7 +159,7 @@ export default function BillingPage() {
 
       {/* Available plans */}
       <div>
-        <h2 className="text-2xl font-bold mb-6">Доступные тарифы</h2>
+        <h2 className="text-2xl font-bold mb-6">Available Plans</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <PlanCard
             plan={PlanType.FREE}
@@ -184,24 +184,24 @@ export default function BillingPage() {
 
       {/* FAQ */}
       <div className="mt-12">
-        <h2 className="text-2xl font-bold mb-6">Часто задаваемые вопросы</h2>
+        <h2 className="text-2xl font-bold mb-6">Frequently Asked Questions</h2>
         <div className="space-y-4">
           <Alert>
-            <AlertTitle>Как изменить тарифный план?</AlertTitle>
+            <AlertTitle>How to change the plan?</AlertTitle>
             <AlertDescription>
-              Вы можете в любой момент перейти на более высокий тариф. При переходе вы будете платить пропорционально оставшемуся времени подписки.
+              You can upgrade to a higher plan at any time. When upgrading, you will be charged proportionally for the remaining subscription time.
             </AlertDescription>
           </Alert>
           <Alert>
-            <AlertTitle>Что происходит при отмене подписки?</AlertTitle>
+            <AlertTitle>What happens when I cancel my subscription?</AlertTitle>
             <AlertDescription>
-              При отмене подписка остается активной до конца оплаченного периода. После этого вы автоматически переходите на план FREE.
+              When canceled, the subscription remains active until the end of the paid period. After that, you automatically switch to the FREE plan.
             </AlertDescription>
           </Alert>
           <Alert>
-            <AlertTitle>Возможен ли возврат средств?</AlertTitle>
+            <AlertTitle>Is a refund possible?</AlertTitle>
             <AlertDescription>
-              Мы предлагаем возврат средств в течение 14 дней с момента покупки. Свяжитесь с нашей поддержкой для оформления возврата.
+              We offer refunds within 14 days of purchase. Contact our support to request a refund.
             </AlertDescription>
           </Alert>
         </div>

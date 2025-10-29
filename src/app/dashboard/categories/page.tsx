@@ -60,7 +60,7 @@ export default function CategoriesPage() {
     color: "#3b82f6",
   });
 
-  // Проверяем, что пользователь - админ, tenant админ или агент
+  // Check that user is admin, tenant admin or agent
   useEffect(() => {
     if (status === "loading") return;
     
@@ -72,13 +72,13 @@ export default function CategoriesPage() {
 
   const fetchData = async () => {
     try {
-      // Загружаем категории
+      // Load categories
       const categoriesResponse = await fetch("/api/categories");
       if (!categoriesResponse.ok) throw new Error("Failed to fetch categories");
       const categoriesData = await categoriesResponse.json();
       setCategories(categoriesData);
 
-      // Загружаем агентов (только для админов и tenant админов)
+      // Load agents (only for admins and tenant admins)
       if (permissions.canAssignAgents) {
         const agentsResponse = await fetch("/api/agents");
         if (agentsResponse.ok) {
@@ -88,7 +88,7 @@ export default function CategoriesPage() {
       }
     } catch (error) {
       console.error("Error fetching data:", error);
-      toast.error("Ошибка загрузки данных");
+      toast.error("Error loading data");
     } finally {
       setIsLoading(false);
     }
@@ -127,9 +127,9 @@ export default function CategoriesPage() {
         cat.id === categoryId ? { ...cat, ...updatedCategory } : cat
       ));
       setEditingCategory(null);
-      toast.success("Категория успешно обновлена!");
+      toast.success("Category successfully updated!");
     } catch (error: any) {
-      toast.error("Ошибка обновления категории", { description: error.message });
+      toast.error("Error updating category", { description: error.message });
     }
   };
 
@@ -151,16 +151,16 @@ export default function CategoriesPage() {
         throw new Error(data.error || "Failed to assign agent");
       }
 
-      // Обновляем список категорий
+      // Update categories list
       const updatedResponse = await fetch("/api/categories");
       if (updatedResponse.ok) {
         const updatedCategories = await updatedResponse.json();
         setCategories(updatedCategories);
       }
       
-      toast.success("Агент успешно назначен!");
+      toast.success("Agent successfully assigned!");
     } catch (error: any) {
-      toast.error("Ошибка назначения агента", { description: error.message });
+      toast.error("Error assigning agent", { description: error.message });
     }
   };
 
@@ -177,21 +177,21 @@ export default function CategoriesPage() {
         throw new Error(data.error || "Failed to unassign agent");
       }
 
-      // Обновляем список категорий
+      // Update categories list
       const updatedResponse = await fetch("/api/categories");
       if (updatedResponse.ok) {
         const updatedCategories = await updatedResponse.json();
         setCategories(updatedCategories);
       }
       
-      toast.success("Агент успешно отозван!");
+      toast.success("Agent successfully unassigned!");
     } catch (error: any) {
-      toast.error("Ошибка отзыва агента", { description: error.message });
+      toast.error("Error unassigning agent", { description: error.message });
     }
   };
 
   const handleDeleteCategory = async (categoryId: string, categoryName: string) => {
-    if (!confirm(`Вы уверены, что хотите удалить категорию "${categoryName}"?`)) {
+    if (!confirm(`Are you sure you want to delete category "${categoryName}"?`)) {
       return;
     }
 
@@ -206,9 +206,9 @@ export default function CategoriesPage() {
       }
 
       setCategories(categories.filter(cat => cat.id !== categoryId));
-      toast.success("Категория успешно удалена!");
+      toast.success("Category successfully deleted!");
     } catch (error: any) {
-      toast.error("Ошибка удаления категории", { description: error.message });
+      toast.error("Error deleting category", { description: error.message });
     }
   };
 
@@ -217,8 +217,8 @@ export default function CategoriesPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Категории</h1>
-            <p className="text-muted-foreground mt-2">Загрузка...</p>
+            <h1 className="text-3xl font-bold">Categories</h1>
+            <p className="text-muted-foreground mt-2">Loading...</p>
           </div>
         </div>
       </div>
@@ -229,25 +229,25 @@ export default function CategoriesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Категории</h1>
+          <h1 className="text-3xl font-bold">Categories</h1>
           <p className="text-muted-foreground mt-2">
-            Управление категориями тикетов
+            Manage ticket categories
           </p>
         </div>
-        {/* Кнопка создания категории - для пользователей с правами */}
+        {/* Create category button - for users with permissions */}
         {permissions.canCreateCategories && (
           <CreateCategoryDialog onCategoryCreated={() => fetchData()} />
         )}
       </div>
 
-      {/* Список категорий */}
+      {/* Categories list */}
       {categories.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <FolderKanban className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Нет категорий</h3>
+            <h3 className="text-lg font-semibold mb-2">No Categories</h3>
             <p className="text-muted-foreground">
-              Создайте первую категорию для тикетов
+              Create the first category for tickets
             </p>
           </CardContent>
         </Card>
@@ -273,7 +273,7 @@ export default function CategoriesPage() {
                           <Textarea
                             value={editCategory.description}
                             onChange={(e) => setEditCategory({ ...editCategory, description: e.target.value })}
-                            placeholder="Описание категории"
+                            placeholder="Category description"
                             rows={2}
                           />
                           <div className="flex items-center gap-2">
@@ -303,22 +303,22 @@ export default function CategoriesPage() {
                     </div>
                   </div>
                   <Badge variant="outline">
-                    {category._count.tickets} тикетов
+                    {category._count.tickets} tickets
                   </Badge>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                  <span>Создана:</span>
-                  <span>{new Date(category.createdAt).toLocaleDateString('ru-RU')}</span>
+                  <span>Created:</span>
+                  <span>{new Date(category.createdAt).toLocaleDateString('en-US')}</span>
                 </div>
 
-                {/* Назначенные агенты */}
+                {/* Assigned agents */}
                 {category.agentAssignments && category.agentAssignments.length > 0 && (
                   <div className="mb-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">Назначенные агенты:</span>
+                      <span className="text-sm font-medium">Assigned Agents:</span>
                     </div>
                     <div className="space-y-1">
                       {category.agentAssignments.map((assignment) => (
@@ -339,12 +339,12 @@ export default function CategoriesPage() {
                   </div>
                 )}
 
-                {/* Доступные агенты для назначения */}
+                {/* Available agents for assignment */}
                 {permissions.canAssignAgents && agents.length > 0 && (
                   <div className="mb-4">
                     <div className="flex items-center gap-2 mb-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">Доступные агенты:</span>
+                      <span className="text-sm font-medium">Available Agents:</span>
                     </div>
                     <div className="space-y-1">
                       {agents
@@ -365,7 +365,7 @@ export default function CategoriesPage() {
                   </div>
                 )}
 
-                {/* Кнопки управления - для пользователей с правами */}
+                {/* Management buttons - for users with permissions */}
                 {(permissions.canEditCategories || permissions.canDeleteCategories) && (
                   <div className="flex gap-2">
                     {editingCategory === category.id ? (
@@ -377,7 +377,7 @@ export default function CategoriesPage() {
                           onClick={() => handleSaveEdit(category.id)}
                         >
                           <Save className="mr-1 h-3 w-3" />
-                          Сохранить
+                          Save
                         </Button>
                         <Button 
                           variant="outline" 
@@ -386,7 +386,7 @@ export default function CategoriesPage() {
                           onClick={handleCancelEdit}
                         >
                           <X className="mr-1 h-3 w-3" />
-                          Отмена
+                          Cancel
                         </Button>
                       </>
                     ) : (
@@ -399,7 +399,7 @@ export default function CategoriesPage() {
                             onClick={() => handleEditCategory(category)}
                           >
                             <Edit className="mr-1 h-3 w-3" />
-                            Редактировать
+                            Edit
                           </Button>
                         )}
                         {permissions.canDeleteCategories && (
@@ -410,7 +410,7 @@ export default function CategoriesPage() {
                             onClick={() => handleDeleteCategory(category.id, category.name)}
                           >
                             <Trash2 className="mr-1 h-3 w-3" />
-                            Удалить
+                            Delete
                           </Button>
                         )}
                       </>

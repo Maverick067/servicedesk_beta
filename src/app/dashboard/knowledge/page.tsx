@@ -11,12 +11,12 @@ import { ModuleGuard } from "@/components/module-guard";
 
 export default function KnowledgeBasePage() {
   return (
-    <ModuleGuard module="knowledge" moduleName="База знаний">
+    <ModuleGuard module="knowledge" moduleName="Knowledge Base">
       <div className="container relative">
         <PageHeader>
-          <PageHeaderHeading>База знаний</PageHeaderHeading>
+          <PageHeaderHeading>Knowledge Base</PageHeaderHeading>
           <PageHeaderDescription>
-            Управляйте статьями базы знаний для самообслуживания пользователей.
+            Manage knowledge base articles for user self-service.
           </PageHeaderDescription>
         </PageHeader>
         <div className="flex justify-end mb-4">
@@ -26,7 +26,7 @@ export default function KnowledgeBasePage() {
               className={cn(buttonVariants({ variant: "default" }))}
             >
               <PlusCircle className="mr-2 h-4 w-4" />
-              Создать статью
+              Create Article
             </Link>
           </CreateArticleDialog>
         </div>
