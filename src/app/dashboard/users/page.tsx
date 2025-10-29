@@ -45,10 +45,10 @@ interface User {
 }
 
 const roleLabels = {
-  ADMIN: "Глобальный админ",
-  TENANT_ADMIN: "Админ организации",
-  AGENT: "Агент",
-  USER: "Пользователь",
+  ADMIN: "Global Admin",
+  TENANT_ADMIN: "Organization Admin",
+  AGENT: "Agent",
+  USER: "User",
 };
 
 const roleColors = {
@@ -75,7 +75,7 @@ export default function UsersPage() {
       return;
     }
 
-    // Только админы, tenant админы и агенты с правами могут видеть пользователей
+    // Only admins, tenant admins and agents with permissions can see users
     if (
       session.user.role !== "ADMIN" && 
       session.user.role !== "TENANT_ADMIN" && 
@@ -98,7 +98,7 @@ export default function UsersPage() {
       setFilteredUsers(data);
     } catch (error) {
       console.error("Error fetching users:", error);
-      toast.error("Ошибка загрузки пользователей");
+      toast.error("Error loading users");
     } finally {
       setIsLoading(false);
     }
@@ -125,11 +125,11 @@ export default function UsersPage() {
 
   const handleResetPassword = async (userId: string, userName: string) => {
     if (!permissions.canResetPasswords) {
-      toast.error("У вас нет прав на сброс паролей");
+      toast.error("You don't have permission to reset passwords");
       return;
     }
 
-    if (!confirm(`Сбросить пароль для ${userName}?`)) {
+    if (!confirm(`Reset password for ${userName}?`)) {
       return;
     }
 
@@ -145,25 +145,25 @@ export default function UsersPage() {
 
       const { temporaryPassword } = await response.json();
       
-      // Копируем пароль в буфер обмена
+      // Copy password to clipboard
       if (navigator.clipboard) {
         await navigator.clipboard.writeText(temporaryPassword);
-        toast.success(`Пароль сброшен! Новый пароль скопирован в буфер обмена: ${temporaryPassword}`);
+        toast.success(`Password reset! New password copied to clipboard: ${temporaryPassword}`);
       } else {
-        toast.success(`Пароль сброшен! Новый пароль: ${temporaryPassword}`);
+        toast.success(`Password reset! New password: ${temporaryPassword}`);
       }
     } catch (error: any) {
-      toast.error("Ошибка сброса пароля", { description: error.message });
+      toast.error("Error resetting password", { description: error.message });
     }
   };
 
   const handleDeleteUser = async (userId: string, userName: string) => {
     if (!permissions.canDeleteUsers) {
-      toast.error("У вас нет прав на удаление пользователей");
+      toast.error("You don't have permission to delete users");
       return;
     }
 
-    if (!confirm(`Вы уверены, что хотите удалить пользователя "${userName}"?`)) {
+    if (!confirm(`Are you sure you want to delete user "${userName}"?`)) {
       return;
     }
 
@@ -178,9 +178,9 @@ export default function UsersPage() {
       }
 
       setUsers(users.filter((u) => u.id !== userId));
-      toast.success("Пользователь успешно удален!");
+      toast.success("User successfully deleted!");
     } catch (error: any) {
-      toast.error("Ошибка удаления пользователя", { description: error.message });
+      toast.error("Error deleting user", { description: error.message });
     }
   };
 
@@ -189,8 +189,8 @@ export default function UsersPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Пользователи</h1>
-            <p className="text-muted-foreground mt-2">Загрузка...</p>
+            <h1 className="text-3xl font-bold">Users</h1>
+            <p className="text-muted-foreground mt-2">Loading...</p>
           </div>
         </div>
       </div>
@@ -201,48 +201,48 @@ export default function UsersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Пользователи</h1>
+          <h1 className="text-3xl font-bold">Users</h1>
           <p className="text-muted-foreground mt-2">
-            Управление пользователями вашей организации
+            Manage users in your organization
           </p>
         </div>
         {permissions.canInviteUsers && (
           <Button onClick={() => router.push(`/dashboard/tenants/${session?.user.tenantId}/users/new`)}>
             <UserPlus className="mr-2 h-4 w-4" />
-            Добавить пользователя
+            Add User
           </Button>
         )}
       </div>
 
-      {/* Поиск */}
+      {/* Search */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Search className="h-5 w-5" />
-            Поиск пользователей
+            Search Users
           </CardTitle>
         </CardHeader>
         <CardContent>
           <Input
-            placeholder="Поиск по имени или email..."
+            placeholder="Search by name or email..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </CardContent>
       </Card>
 
-      {/* Список пользователей */}
+      {/* Users list */}
       {filteredUsers.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <UsersIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">
-              {searchQuery ? "Пользователи не найдены" : "Нет пользователей"}
+              {searchQuery ? "No Users Found" : "No Users"}
             </h3>
             <p className="text-muted-foreground">
               {searchQuery
-                ? "Попробуйте изменить поисковый запрос"
-                : "В вашей организации пока нет пользователей."}
+                ? "Try modifying your search query"
+                : "Your organization has no users yet."}
             </p>
           </CardContent>
         </Card>
@@ -269,21 +269,21 @@ export default function UsersPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>Создал тикетов:</span>
+                  <span>Created tickets:</span>
                   <Badge variant="outline">{user._count.createdTickets}</Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>Назначено тикетов:</span>
+                  <span>Assigned tickets:</span>
                   <Badge variant="outline">{user._count.assignedTickets}</Badge>
                 </div>
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>Статус:</span>
+                  <span>Status:</span>
                   <Badge variant={user.isActive ? "default" : "destructive"}>
-                    {user.isActive ? "Активен" : "Неактивен"}
+                    {user.isActive ? "Active" : "Inactive"}
                   </Badge>
                 </div>
 
-                {/* Кнопки управления */}
+                {/* Management buttons */}
                 <div className="flex gap-2 pt-2">
                   {(session?.user.role === "ADMIN" || session?.user.role === "TENANT_ADMIN") && (
                     <EditUserDialog user={user} onUserUpdated={fetchUsers}>
@@ -293,7 +293,7 @@ export default function UsersPage() {
                         className="flex-1"
                       >
                         <Edit className="mr-1 h-3 w-3" />
-                        Редактировать
+                        Edit
                       </Button>
                     </EditUserDialog>
                   )}
@@ -305,7 +305,7 @@ export default function UsersPage() {
                       onClick={() => handleResetPassword(user.id, user.name || user.email)}
                     >
                       <KeyRound className="mr-1 h-3 w-3" />
-                      Сбросить пароль
+                      Reset Password
                     </Button>
                   )}
                   {permissions.canDeleteUsers && user.id !== session?.user.id && (

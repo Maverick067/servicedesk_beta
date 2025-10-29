@@ -11,7 +11,7 @@ export default function QueuesPage() {
   const canManage = session?.user.role === "TENANT_ADMIN" || session?.user.role === "ADMIN";
 
   return (
-    <ModuleGuard module="queues" moduleName="Очереди">
+    <ModuleGuard module="queues" moduleName="Queues">
       <div className="space-y-6">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -21,10 +21,10 @@ export default function QueuesPage() {
       >
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-400 dark:to-indigo-400 bg-clip-text text-transparent">
-            Очереди
+            Queues
           </h1>
           <p className="text-muted-foreground mt-2">
-            Организация и группировка тикетов
+            Organize and group tickets
           </p>
         </div>
         {canManage && <CreateQueueDialog />}

@@ -55,7 +55,7 @@ function SlaPageContent() {
       setPolicies(data);
     } catch (error) {
       console.error("Error fetching SLA policies:", error);
-      toast.error("Ошибка при загрузке SLA политик");
+      toast.error("Error loading SLA policies");
     } finally {
       setIsLoading(false);
     }
@@ -66,24 +66,24 @@ function SlaPageContent() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Вы уверены, что хотите удалить эту SLA политику?")) return;
+    if (!confirm("Are you sure you want to delete this SLA policy?")) return;
 
     try {
       const res = await fetch(`/api/sla-policies/${id}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete SLA policy");
-      toast.success("SLA политика удалена");
+      toast.success("SLA policy deleted");
       fetchPolicies();
     } catch (error) {
       console.error("Error deleting SLA policy:", error);
-      toast.error("Ошибка при удалении SLA политики");
+      toast.error("Error deleting SLA policy");
     }
   };
 
   const formatTime = (minutes: number) => {
-    if (minutes < 60) return `${minutes} мин`;
+    if (minutes < 60) return `${minutes} min`;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
-    return mins > 0 ? `${hours} ч ${mins} мин` : `${hours} ч`;
+    return mins > 0 ? `${hours}h ${mins}min` : `${hours}h`;
   };
 
   if (isLoading) {
@@ -103,16 +103,16 @@ function SlaPageContent() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
-            SLA Политики
+            SLA Policies
           </h1>
           <p className="text-muted-foreground mt-1">
-            Управление временем ответа и решения тикетов
+            Manage response and resolution times for tickets
           </p>
         </div>
         {canManage && (
           <Button onClick={() => setShowCreateDialog(true)} className="gap-2">
             <Plus className="h-4 w-4" />
-            Создать политику
+            Create Policy
           </Button>
         )}
       </div>
@@ -123,7 +123,7 @@ function SlaPageContent() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
             <p className="text-muted-foreground">
-              SLA политики не найдены. Создайте первую политику.
+              No SLA policies found. Create the first policy.
             </p>
           </CardContent>
         </Card>
@@ -151,7 +151,7 @@ function SlaPageContent() {
                       )}
                     </div>
                     <Badge variant={policy.isActive ? "default" : "secondary"}>
-                      {policy.isActive ? "Активна" : "Неактивна"}
+                      {policy.isActive ? "Active" : "Inactive"}
                     </Badge>
                   </div>
                 </CardHeader>
@@ -160,21 +160,21 @@ function SlaPageContent() {
                     {/* Response Time */}
                     {policy.responseTime && (
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Время ответа:</span>
+                        <span className="text-muted-foreground">Response Time:</span>
                         <span className="font-semibold">{formatTime(policy.responseTime)}</span>
                       </div>
                     )}
 
                     {/* Resolution Time */}
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Время решения:</span>
+                      <span className="text-muted-foreground">Resolution Time:</span>
                       <span className="font-semibold">{formatTime(policy.resolutionTime)}</span>
                     </div>
 
                     {/* Priorities */}
                     {policy.priorities.length > 0 && (
                       <div>
-                        <span className="text-sm text-muted-foreground">Приоритеты:</span>
+                        <span className="text-sm text-muted-foreground">Priorities:</span>
                         <div className="flex flex-wrap gap-1 mt-1">
                           {policy.priorities.map((priority) => (
                             <Badge key={priority} variant="outline" className="text-xs">
@@ -188,7 +188,7 @@ function SlaPageContent() {
                     {/* Business Hours */}
                     {policy.businessHoursOnly && (
                       <div className="text-sm">
-                        <span className="text-muted-foreground">Рабочее время: </span>
+                        <span className="text-muted-foreground">Business Hours: </span>
                         <span className="font-medium">
                           {policy.businessHoursStart} - {policy.businessHoursEnd}
                         </span>
@@ -205,7 +205,7 @@ function SlaPageContent() {
                           className="flex-1"
                         >
                           <Edit2 className="h-4 w-4 mr-1" />
-                          Редактировать
+                          Edit
                         </Button>
                         <Button
                           variant="outline"

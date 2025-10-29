@@ -31,10 +31,10 @@ interface User {
 }
 
 const roleLabels: Record<string, string> = {
-  ADMIN: "Глобальный администратор",
-  TENANT_ADMIN: "Администратор организации",
-  AGENT: "Агент",
-  USER: "Пользователь",
+  ADMIN: "Global Administrator",
+  TENANT_ADMIN: "Organization Administrator",
+  AGENT: "Agent",
+  USER: "User",
 };
 
 const roleColors: Record<string, string> = {
@@ -52,9 +52,9 @@ export default function TenantUsersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [tenantName, setTenantName] = useState("");
 
-  // Проверяем, что пользователь - админ или tenant админ
+  // Check that user is admin or tenant admin
   useEffect(() => {
-    if (status === "loading") return; // Ждем загрузки сессии
+    if (status === "loading") return; // Wait for session load
     
     if (!session || (session.user.role !== "ADMIN" && session.user.role !== "TENANT_ADMIN")) {
       router.push("/dashboard");
@@ -65,14 +65,14 @@ export default function TenantUsersPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        // Получаем данные организации
+        // Get organization data
         const tenantResponse = await fetch(`/api/tenants/${params.id}`);
         if (tenantResponse.ok) {
           const tenant = await tenantResponse.json();
           setTenantName(tenant.name);
         }
 
-        // Получаем пользователей организации
+        // Get organization users
         const usersResponse = await fetch(`/api/tenants/${params.id}/users`);
         if (!usersResponse.ok) throw new Error("Failed to fetch users");
         const data = await usersResponse.json();
@@ -95,11 +95,11 @@ export default function TenantUsersPage() {
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={() => router.back()}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Назад
+            Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Пользователи организации</h1>
-            <p className="text-muted-foreground mt-2">Загрузка...</p>
+            <h1 className="text-3xl font-bold">Organization Users</h1>
+            <p className="text-muted-foreground mt-2">Loading...</p>
           </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -119,18 +119,18 @@ export default function TenantUsersPage() {
         <div className="flex items-center gap-4">
           <Button variant="ghost" onClick={() => router.back()}>
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Назад
+            Back
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Пользователи организации</h1>
+            <h1 className="text-3xl font-bold">Organization Users</h1>
             <p className="text-muted-foreground mt-2">
-              {tenantName && `Пользователи "${tenantName}"`}
+              {tenantName && `Users of "${tenantName}"`}
             </p>
           </div>
         </div>
         <Button onClick={() => router.push(`/dashboard/tenants/${params.id}/users/new`)}>
           <Plus className="mr-2 h-4 w-4" />
-          Добавить пользователя
+          Add User
         </Button>
       </div>
 
@@ -138,13 +138,13 @@ export default function TenantUsersPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Нет пользователей</h3>
+            <h3 className="text-lg font-semibold mb-2">No Users</h3>
             <p className="text-muted-foreground mb-4">
-              Добавьте первого пользователя в организацию
+              Add the first user to the organization
             </p>
             <Button onClick={() => router.push(`/dashboard/tenants/${params.id}/users/new`)}>
               <Plus className="mr-2 h-4 w-4" />
-              Добавить пользователя
+              Add User
             </Button>
           </CardContent>
         </Card>
@@ -163,7 +163,7 @@ export default function TenantUsersPage() {
                     </Avatar>
                     <div className="flex-1">
                       <CardTitle className="text-lg">
-                        {user.name || "Без имени"}
+                        {user.name || "No Name"}
                       </CardTitle>
                       <CardDescription>{user.email}</CardDescription>
                     </div>
@@ -176,12 +176,12 @@ export default function TenantUsersPage() {
                       {user.isActive ? (
                         <>
                           <UserCheck className="mr-1 h-3 w-3" />
-                          Активен
+                          Active
                         </>
                       ) : (
                         <>
                           <UserX className="mr-1 h-3 w-3" />
-                          Заблокирован
+                          Blocked
                         </>
                       )}
                     </Badge>
@@ -191,30 +191,30 @@ export default function TenantUsersPage() {
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Создан:</span>
+                    <span className="text-muted-foreground">Created:</span>
                     <span>{formatDate(user.createdAt)}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                       <Ticket className="h-4 w-4 text-muted-foreground" />
-                      <span>Создал тикетов:</span>
+                      <span>Created tickets:</span>
                     </div>
                     <span className="font-medium">{user._count.createdTickets}</span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
-                      <span>Назначен на:</span>
+                      <span>Assigned to:</span>
                     </div>
                     <span className="font-medium">{user._count.assignedTickets}</span>
                   </div>
                 </div>
                 <div className="mt-4 flex gap-2">
                   <Button variant="outline" size="sm" className="flex-1">
-                    Редактировать
+                    Edit
                   </Button>
                   <Button variant="outline" size="sm" className="flex-1">
-                    Профиль
+                    Profile
                   </Button>
                 </div>
               </CardContent>

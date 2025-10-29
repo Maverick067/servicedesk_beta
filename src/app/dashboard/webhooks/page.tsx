@@ -16,14 +16,14 @@ export default function WebhooksPage() {
         <PageHeader>
           <PageHeaderHeading>Webhooks</PageHeaderHeading>
           <PageHeaderDescription>
-            Настройте webhooks для интеграции с внешними сервисами.
+            Configure webhooks for integration with external services.
           </PageHeaderDescription>
         </PageHeader>
         <div className="flex justify-end mb-4">
           <CreateWebhookDialog>
             <Link href="#" className={cn(buttonVariants({ variant: "default" }))}>
               <PlusCircle className="mr-2 h-4 w-4" />
-              Создать webhook
+              Create Webhook
             </Link>
           </CreateWebhookDialog>
         </div>

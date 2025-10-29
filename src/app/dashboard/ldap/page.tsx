@@ -25,64 +25,64 @@ export default function LdapPage() {
             Active Directory / LDAP
           </PageHeaderHeading>
           <PageHeaderDescription>
-            Подключите корпоративный домен для единого входа сотрудников
+            Connect your corporate domain for single sign-on for employees
           </PageHeaderDescription>
         </PageHeader>
 
-        {/* Предупреждение для глобального админа */}
+        {/* Warning for global admin */}
         {isGlobalAdmin && (
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              <strong>Внимание:</strong> Вы вошли как глобальный администратор. 
-              Для настройки LDAP/Active Directory необходимо войти как администратор конкретной организации (TENANT_ADMIN).
-              LDAP конфигурация привязывается к организации, а не к глобальному админу.
+              <strong>Warning:</strong> You are signed in as a global administrator. 
+              To configure LDAP/Active Directory, you need to sign in as an organization administrator (TENANT_ADMIN).
+              LDAP configuration is tied to the organization, not to the global admin.
             </AlertDescription>
           </Alert>
         )}
 
-        {/* Информационная карточка */}
+        {/* Info card */}
         {!isGlobalAdmin && (
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              Подключите Active Directory за 2 минуты! Вам понадобится только адрес контроллера домена, 
-              имя домена и учетные данные администратора. Все технические параметры настраиваются автоматически.
+              Connect Active Directory in 2 minutes! You only need the domain controller address, 
+              domain name and administrator credentials. All technical parameters are configured automatically.
             </AlertDescription>
           </Alert>
         )}
 
-        {/* Преимущества */}
+        {/* Benefits */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Что дает подключение?</CardTitle>
+            <CardTitle className="text-base">What does connecting provide?</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="flex gap-3">
                 <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium text-sm">Единый вход</p>
+                  <p className="font-medium text-sm">Single Sign-On</p>
                   <p className="text-xs text-muted-foreground">
-                    Сотрудники входят своими учетными данными Windows
+                    Employees sign in with their Windows credentials
                   </p>
                 </div>
               </div>
               <div className="flex gap-3">
                 <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium text-sm">Автоматическая регистрация</p>
+                  <p className="font-medium text-sm">Automatic Registration</p>
                   <p className="text-xs text-muted-foreground">
-                    Новые пользователи создаются при первом входе
+                    New users are created on first sign in
                   </p>
                 </div>
               </div>
               <div className="flex gap-3">
                 <CheckCircle2 className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-medium text-sm">Безопасность</p>
+                  <p className="font-medium text-sm">Security</p>
                   <p className="text-xs text-muted-foreground">
-                    Пароли не хранятся, только чтение из AD
+                    Passwords are not stored, only read from AD
                   </p>
                 </div>
               </div>
@@ -90,17 +90,17 @@ export default function LdapPage() {
           </CardContent>
         </Card>
 
-        {/* Кнопка подключения */}
+        {/* Connection button */}
         <div className="flex justify-end">
           <SimpleADConfigDialog>
             <Button size="lg" disabled={isGlobalAdmin}>
               <PlusCircle className="mr-2 h-4 w-4" />
-              Подключить домен
+              Connect Domain
             </Button>
           </SimpleADConfigDialog>
         </div>
 
-        {/* Список подключений */}
+        {/* Connections list */}
         <Suspense fallback={<Skeleton className="w-full h-[300px] rounded-lg" />}>
           <LdapConfigList />
         </Suspense>
