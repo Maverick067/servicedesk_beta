@@ -6,7 +6,7 @@ import ldap from "ldapjs";
 
 /**
  * POST /api/ldap/[id]/sync
- * Синхронизация пользователей из Active Directory
+ * Synchronize users from Active Directory
  */
 export async function POST(
   req: NextRequest,
@@ -23,7 +23,7 @@ export async function POST(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Получаем LDAP конфигурацию
+    // Get LDAP configuration
     const ldapConfig = await prisma.ldapConfig.findUnique({
       where: { id: params.id },
       select: {
@@ -49,7 +49,7 @@ export async function POST(
       );
     }
 
-    // Проверяем права доступа
+    // Check access rights
     if (
       session.user.role === "TENANT_ADMIN" &&
       session.user.tenantId !== ldapConfig.tenantId
@@ -66,10 +66,10 @@ export async function POST(
 
     console.log(`[LDAP Sync] Starting sync for config: ${ldapConfig.name}`);
 
-    // Выполняем синхронизацию
+    // Perform synchronization
     const result = await syncUsersFromLdap(ldapConfig);
 
-    // Обновляем время последней синхронизации
+    // Update last sync time
     await prisma.ldapConfig.update({
       where: { id: params.id },
       data: { lastSyncAt: new Date() },
@@ -86,7 +86,7 @@ export async function POST(
 }
 
 /**
- * Синхронизирует пользователей из LDAP/AD
+ * Synchronize users from LDAP/AD
  */
 async function syncUsersFromLdap(config: any): Promise<{
   success: boolean;
@@ -102,7 +102,7 @@ async function syncUsersFromLdap(config: any): Promise<{
 
     const clientOptions: any = {
       url: ldapUrl,
-      timeout: 30000, // Увеличиваем таймаут для синхронизации
+      timeout: 30000, // Increase timeout for synchronization
       connectTimeout: 30000,
       reconnect: false,
     };
@@ -137,7 +137,7 @@ async function syncUsersFromLdap(config: any): Promise<{
       });
     });
 
-    // Подключаемся с учетными данными администратора
+    // Connect with admin credentials
     client.bind(config.bindDn, config.bindPassword, (bindErr) => {
       if (hasResolved) return;
 
@@ -162,7 +162,7 @@ async function syncUsersFromLdap(config: any): Promise<{
 
       console.log(`[LDAP Sync] Bind successful, searching for users...`);
 
-      // Ищем всех пользователей (исключаем компьютеры и отключенные аккаунты)
+      // Search for all users (exclude computers and disabled accounts)
       const searchBase = config.userSearchBase || config.baseDn;
       const searchFilter =
         config.userSearchFilter || "(&(objectClass=user)(objectCategory=person)(!(objectClass=computer))(!(userAccountControl:1.2.840.113556.1.4.803:=2)))";
@@ -173,9 +173,9 @@ async function syncUsersFromLdap(config: any): Promise<{
       const searchOptions = {
         filter: searchFilter,
         scope: "sub" as const,
-        sizeLimit: 500, // Ограничиваем до 500 пользователей за раз
+        sizeLimit: 500, // Limit to 500 users at a time
         paged: {
-          pageSize: 100, // По 100 пользователей на страницу
+          pageSize: 100, // 100 users per page
         },
       };
 
@@ -210,7 +210,7 @@ async function syncUsersFromLdap(config: any): Promise<{
             try {
               console.log(`[LDAP Sync] Found user entry:`, entry.objectName);
               
-              // Извлекаем атрибуты из entry
+              // Extract attributes from entry
               const attributes: any = {};
               if (entry.attributes) {
                 entry.attributes.forEach((attr: any) => {
@@ -222,7 +222,7 @@ async function syncUsersFromLdap(config: any): Promise<{
                 });
               }
               
-              // Логируем атрибуты для отладки
+              // Log attributes for debugging
               console.log(`[LDAP Sync] User attributes:`, attributes);
               
               const sAMAccountName = attributes.sAMAccountName || attributes.uid;
@@ -235,13 +235,13 @@ async function syncUsersFromLdap(config: any): Promise<{
                 return;
               }
 
-              // Пропускаем компьютеры (имена заканчиваются на $)
+              // Skip computers (names ending with $)
               if (sAMAccountName.endsWith('$')) {
                 console.log(`[LDAP Sync] Skipping computer account: ${sAMAccountName}`);
                 return;
               }
 
-              // Пропускаем системные аккаунты
+              // Skip system accounts
               const systemAccounts = ['krbtgt', 'Guest', 'DefaultAccount'];
               if (systemAccounts.some(acc => sAMAccountName.toLowerCase().includes(acc.toLowerCase()))) {
                 console.log(`[LDAP Sync] Skipping system account: ${sAMAccountName}`);
@@ -267,7 +267,7 @@ async function syncUsersFromLdap(config: any): Promise<{
           });
 
           searchRes.on("error", (err) => {
-            // Игнорируем "Size Limit Exceeded" если мы уже нашли пользователей
+            // Ignore "Size Limit Exceeded" if we already found users
             if (err.message && err.message.includes("Size Limit Exceeded")) {
               console.log(
                 `[LDAP Sync] Size limit exceeded (OK), found ${foundUsers.length} users`
@@ -306,22 +306,22 @@ async function syncUsersFromLdap(config: any): Promise<{
 
             console.log(`[LDAP Sync] Search completed. Found ${foundUsers.length} users`);
 
-          // Синхронизируем пользователей с базой данных
+          // Synchronize users with database
           let usersCreated = 0;
           let usersUpdated = 0;
           let usersDeactivated = 0;
 
           const foundEmails = foundUsers.map(u => u.email);
 
-          // Находим пользователей этой организации, которых больше нет в AD
+          // Find users of this organization that are no longer in AD
           const usersToDeactivate = await prisma.user.findMany({
             where: {
               tenantId: config.tenantId,
-              password: "", // Только LDAP пользователи (без локального пароля)
+              password: "", // Only LDAP users (without local password)
               email: {
                 notIn: foundEmails,
               },
-              isActive: true, // Деактивируем только активных
+              isActive: true, // Deactivate only active ones
             },
             select: {
               id: true,
@@ -330,7 +330,7 @@ async function syncUsersFromLdap(config: any): Promise<{
             },
           });
 
-          // Деактивируем пользователей, которых больше нет в AD
+          // Deactivate users that are no longer in AD
           for (const user of usersToDeactivate) {
             try {
               await prisma.user.update({
@@ -349,7 +349,7 @@ async function syncUsersFromLdap(config: any): Promise<{
             }
           }
 
-          // Создаем/обновляем найденных пользователей
+          // Create/update found users
           for (const ldapUser of foundUsers) {
             try {
               const existingUser = await prisma.user.findUnique({
@@ -357,22 +357,22 @@ async function syncUsersFromLdap(config: any): Promise<{
               });
 
               if (existingUser) {
-                // Обновляем существующего пользователя
+                // Update existing user
                 await prisma.user.update({
                   where: { email: ldapUser.email },
                   data: {
                     name: ldapUser.name,
-                    isActive: true, // Активируем, если был деактивирован
+                    isActive: true, // Activate if was deactivated
                   },
                 });
                 usersUpdated++;
               } else {
-                // Создаем нового пользователя
+                // Create new user
                 await prisma.user.create({
                   data: {
                     email: ldapUser.email,
                     name: ldapUser.name,
-                    password: "", // LDAP пользователи без пароля
+                    password: "", // LDAP users without password
                     role: "USER",
                     isActive: true,
                     tenantId: config.tenantId,
@@ -398,14 +398,14 @@ async function syncUsersFromLdap(config: any): Promise<{
               usersCreated,
               usersUpdated,
               usersDeactivated,
-              users: foundUsers.slice(0, 10), // Показываем первых 10 для превью
+              users: foundUsers.slice(0, 10), // Show first 10 for preview
             });
           });
         }
       );
     });
 
-    // Таймаут для синхронизации
+    // Timeout for synchronization
     setTimeout(() => {
       if (hasResolved) return;
       hasResolved = true;

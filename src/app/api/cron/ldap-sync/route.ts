@@ -4,12 +4,12 @@ import ldap from "ldapjs";
 
 /**
  * GET /api/cron/ldap-sync
- * Автоматическая синхронизация всех активных LDAP конфигураций
- * Вызывается по расписанию (например, каждый час)
+ * Automatic synchronization of all active LDAP configurations
+ * Called on schedule (e.g., every hour)
  */
 export async function GET(req: NextRequest) {
   try {
-    // Проверяем секретный ключ для защиты cron endpoint
+    // Check secret key to protect cron endpoint
     const authHeader = req.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET || "change-me-in-production";
 
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
     console.log("[LDAP Cron] Starting scheduled sync...");
 
-    // Получаем все активные LDAP конфигурации с включенной синхронизацией
+    // Get all active LDAP configurations with synchronization enabled
     const configs = await prisma.ldapConfig.findMany({
       where: {
         isActive: true,
@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
     const results = [];
 
     for (const config of configs) {
-      // Проверяем, нужно ли синхронизировать этот конфиг
+      // Check if this config needs to be synced
       const shouldSync = !config.lastSyncAt || 
         (Date.now() - new Date(config.lastSyncAt).getTime()) > (config.syncInterval || 3600) * 1000;
 
@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
       try {
         const syncResult = await syncUsersFromLdap(config);
         
-        // Обновляем время последней синхронизации
+        // Update last sync time
         await prisma.ldapConfig.update({
           where: { id: config.id },
           data: { lastSyncAt: new Date() },
@@ -105,7 +105,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * Синхронизирует пользователей из LDAP/AD
+ * Synchronize users from LDAP/AD
  */
 async function syncUsersFromLdap(config: any): Promise<{
   success: boolean;
@@ -225,7 +225,7 @@ async function syncUsersFromLdap(config: any): Promise<{
             const sAMAccountName = attributes.sAMAccountName || attributes.uid;
             
             if (!sAMAccountName) return;
-            if (sAMAccountName.endsWith('$')) return; // Компьютеры
+            if (sAMAccountName.endsWith('$')) return; // Computers
             
             const systemAccounts = ['krbtgt', 'Guest', 'DefaultAccount'];
             if (systemAccounts.some(acc => sAMAccountName.toLowerCase().includes(acc.toLowerCase()))) {
@@ -246,13 +246,13 @@ async function syncUsersFromLdap(config: any): Promise<{
               username: sAMAccountName,
             });
           } catch (error: any) {
-            // Игнорируем ошибки обработки отдельных записей
+            // Ignore errors processing individual entries
           }
         });
 
         searchRes.on("error", (err) => {
           if (err.message && err.message.includes("Size Limit Exceeded")) {
-            return; // Игнорируем
+            return; // Ignore
           }
           if (hasResolved) return;
           hasResolved = true;
@@ -280,14 +280,14 @@ async function syncUsersFromLdap(config: any): Promise<{
             // ignore
           }
 
-          // Синхронизируем пользователей с базой данных
+          // Synchronize users with database
           let usersCreated = 0;
           let usersUpdated = 0;
           let usersDeactivated = 0;
 
           const foundEmails = foundUsers.map(u => u.email);
 
-          // Деактивируем пользователей, которых больше нет в AD
+          // Deactivate users that are no longer in AD
           const usersToDeactivate = await prisma.user.findMany({
             where: {
               tenantId: config.tenantId,
@@ -305,7 +305,7 @@ async function syncUsersFromLdap(config: any): Promise<{
             usersDeactivated++;
           }
 
-          // Создаем/обновляем найденных пользователей
+          // Create/update found users
           for (const ldapUser of foundUsers) {
             try {
               const existingUser = await prisma.user.findUnique({
@@ -317,7 +317,7 @@ async function syncUsersFromLdap(config: any): Promise<{
                   where: { email: ldapUser.email },
                   data: { 
                     name: ldapUser.name,
-                    isActive: true, // Реактивируем, если был деактивирован
+                    isActive: true, // Reactivate if was deactivated
                   },
                 });
                 usersUpdated++;
