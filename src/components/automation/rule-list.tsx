@@ -25,7 +25,7 @@ import { EditRuleDialog } from "./edit-rule-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 
 interface AutomationRule {
   id: string;
@@ -162,7 +162,7 @@ export function AutomationRuleList() {
     return (
       <Alert variant="destructive">
         <ExclamationTriangleIcon className="h-4 w-4" />
-        <AlertTitle>Ошибка</AlertTitle>
+        <AlertTitle>Error</AlertTitle>
         <AlertDescription>{error}</AlertDescription>
       </Alert>
     );
@@ -172,9 +172,9 @@ export function AutomationRuleList() {
     return (
       <div className="text-center py-8 text-muted-foreground">
         <Zap className="mx-auto h-12 w-12 mb-4" />
-        <h3 className="text-lg font-semibold">Правила автоматизации не найдены</h3>
+        <h3 className="text-lg font-semibold">No Automation Rules Found</h3>
         <p className="text-sm">
-          Создайте первое правило для автоматизации работы с тикетами.
+          Create the first rule to automate ticket management.
         </p>
       </div>
     );
@@ -185,13 +185,13 @@ export function AutomationRuleList() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Название</TableHead>
-            <TableHead>Триггер</TableHead>
-            <TableHead>Приоритет</TableHead>
-            <TableHead>Выполнений</TableHead>
-            <TableHead>Последнее выполнение</TableHead>
-            <TableHead>Статус</TableHead>
-            <TableHead className="text-right">Действия</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Trigger</TableHead>
+            <TableHead>Priority</TableHead>
+            <TableHead>Executions</TableHead>
+            <TableHead>Last Execution</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -216,21 +216,21 @@ export function AutomationRuleList() {
               <TableCell>{rule.executionCount}</TableCell>
               <TableCell>
                 {rule.lastExecutedAt
-                  ? format(new Date(rule.lastExecutedAt), "dd.MM.yyyy HH:mm", {
-                      locale: ru,
+                  ? format(new Date(rule.lastExecutedAt), "MM/dd/yyyy HH:mm", {
+                      locale: enUS,
                     })
-                  : "Не выполнялось"}
+                  : "Never executed"}
               </TableCell>
               <TableCell>
                 <Badge variant={rule.isActive ? "default" : "outline"}>
-                  {rule.isActive ? "Активно" : "Неактивно"}
+                  {rule.isActive ? "Active" : "Inactive"}
                 </Badge>
               </TableCell>
               <TableCell className="text-right">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="h-8 w-8 p-0">
-                      <span className="sr-only">Открыть меню</span>
+                      <span className="sr-only">Open menu</span>
                       <MoreHorizontal className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -239,25 +239,25 @@ export function AutomationRuleList() {
                       {rule.isActive ? (
                         <>
                           <Pause className="mr-2 h-4 w-4" />
-                          Деактивировать
+                          Deactivate
                         </>
                       ) : (
                         <>
                           <Play className="mr-2 h-4 w-4" />
-                          Активировать
+                          Activate
                         </>
                       )}
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleEdit(rule)}>
                       <Edit className="mr-2 h-4 w-4" />
-                      Редактировать
+                      Edit
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => handleDelete(rule.id)}
                       className="text-red-600 focus:text-red-600"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
-                      Удалить
+                      Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>

@@ -89,7 +89,7 @@ export function CustomFieldInputs({ fields, values, onChange }: CustomFieldInput
             required={field.isRequired}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Выберите значение" />
+              <SelectValue placeholder="Select value" />
             </SelectTrigger>
             <SelectContent>
               {field.options?.map((option) => (
@@ -102,14 +102,14 @@ export function CustomFieldInputs({ fields, values, onChange }: CustomFieldInput
         );
 
       case "MULTI_SELECT":
-        // Для упрощения используем текстовое поле с подсказкой
+        // For simplicity use text field with hint
         return (
           <Input
             type="text"
             value={value}
             onChange={(e) => onChange(field.id, e.target.value)}
             required={field.isRequired}
-            placeholder={`Выберите из: ${field.options?.join(", ")}`}
+            placeholder={`Select from: ${field.options?.join(", ")}`}
           />
         );
 
@@ -127,7 +127,7 @@ export function CustomFieldInputs({ fields, values, onChange }: CustomFieldInput
 
   return (
     <div className="space-y-4 border-t pt-4 mt-4">
-      <h3 className="text-lg font-semibold">Дополнительные поля</h3>
+      <h3 className="text-lg font-semibold">Custom Fields</h3>
       {fields.map((field) => (
         <div key={field.id}>
           <Label htmlFor={field.id}>

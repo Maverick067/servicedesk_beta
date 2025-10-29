@@ -27,10 +27,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 
 const ruleSchema = z.object({
-  name: z.string().min(1, "Название обязательно"),
+  name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   isActive: z.boolean(),
-  triggerType: z.string().min(1, "Выберите триггер"),
+  triggerType: z.string().min(1, "Select trigger"),
   priority: z.number().int(),
 });
 
@@ -107,14 +107,14 @@ export function EditRuleDialog({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Не удалось обновить правило");
+        throw new Error(errorData.message || "Failed to update rule");
       }
 
-      toast.success("Правило обновлено");
+      toast.success("Rule updated");
       onOpenChange(false);
       onRuleUpdated?.();
     } catch (e: any) {
-      toast.error("Ошибка при обновлении правила", {
+      toast.error("Error updating rule", {
         description: e.message,
       });
     } finally {
@@ -123,29 +123,29 @@ export function EditRuleDialog({
   };
 
   const triggerOptions = [
-    { value: "TICKET_CREATED", label: "Тикет создан" },
-    { value: "TICKET_UPDATED", label: "Тикет обновлён" },
-    { value: "TICKET_ASSIGNED", label: "Тикет назначен" },
-    { value: "STATUS_CHANGED", label: "Статус изменён" },
-    { value: "PRIORITY_CHANGED", label: "Приоритет изменён" },
-    { value: "COMMENT_ADDED", label: "Добавлен комментарий" },
-    { value: "SLA_BREACH", label: "Нарушение SLA" },
-    { value: "TIME_BASED", label: "По расписанию" },
+    { value: "TICKET_CREATED", label: "Ticket Created" },
+    { value: "TICKET_UPDATED", label: "Ticket Updated" },
+    { value: "TICKET_ASSIGNED", label: "Ticket Assigned" },
+    { value: "STATUS_CHANGED", label: "Status Changed" },
+    { value: "PRIORITY_CHANGED", label: "Priority Changed" },
+    { value: "COMMENT_ADDED", label: "Comment Added" },
+    { value: "SLA_BREACH", label: "SLA Breach" },
+    { value: "TIME_BASED", label: "Scheduled" },
   ];
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Редактировать правило</DialogTitle>
+          <DialogTitle>Edit Rule</DialogTitle>
           <DialogDescription>
-            Измените настройки правила автоматизации.
+            Change automation rule settings.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">
-              Название
+              Name
             </Label>
             <Input
               id="name"
@@ -161,7 +161,7 @@ export function EditRuleDialog({
 
           <div className="grid grid-cols-4 items-start gap-4">
             <Label htmlFor="description" className="text-right pt-2">
-              Описание
+              Description
             </Label>
             <Textarea
               id="description"
@@ -173,7 +173,7 @@ export function EditRuleDialog({
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="triggerType" className="text-right">
-              Триггер
+              Trigger
             </Label>
             <Controller
               name="triggerType"
@@ -197,7 +197,7 @@ export function EditRuleDialog({
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="priority" className="text-right">
-              Приоритет
+              Priority
             </Label>
             <Input
               id="priority"
@@ -209,7 +209,7 @@ export function EditRuleDialog({
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="isActive" className="text-right">
-              Активно
+              Active
             </Label>
             <Controller
               name="isActive"
@@ -230,7 +230,7 @@ export function EditRuleDialog({
               {isSubmitting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              Сохранить изменения
+              Save Changes
             </Button>
           </div>
         </form>

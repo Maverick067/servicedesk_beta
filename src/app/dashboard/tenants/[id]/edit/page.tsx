@@ -52,9 +52,9 @@ export default function EditTenantPage() {
   const [modules, setModules] = useState<Record<FeatureFlag, boolean>>({} as Record<FeatureFlag, boolean>);
   const [updatingModules, setUpdatingModules] = useState<Set<FeatureFlag>>(new Set());
 
-  // Проверяем, что пользователь - админ или tenant админ
+  // Check that user is admin or tenant admin
   useEffect(() => {
-    if (status === "loading") return; // Ждем загрузки сессии
+    if (status === "loading") return; // Wait for session load
     
     if (!session || (session.user.role !== "ADMIN" && session.user.role !== "TENANT_ADMIN")) {
       router.push("/dashboard");
@@ -75,7 +75,7 @@ export default function EditTenantPage() {
           domain: data.domain || "",
         });
         
-        // Загружаем модули
+        // Load modules
         const modulesResponse = await fetch(`/api/tenants/${params.id}/modules`);
         if (modulesResponse.ok) {
           const modulesData = await modulesResponse.json();
@@ -83,7 +83,7 @@ export default function EditTenantPage() {
         }
       } catch (error) {
         console.error("Error fetching tenant:", error);
-        setError("Ошибка загрузки данных");
+        setError("Error loading data");
       } finally {
         setIsLoading(false);
       }
@@ -115,7 +115,7 @@ export default function EditTenantPage() {
         throw new Error(data.error || "Failed to update tenant");
       }
 
-      toast.success("Организация успешно обновлена");
+      toast.success("Organization successfully updated");
       router.push("/dashboard/tenants");
     } catch (error: any) {
       setError(error.message);
@@ -126,7 +126,7 @@ export default function EditTenantPage() {
   };
 
   const handleModuleToggle = async (module: FeatureFlag, enabled: boolean) => {
-    // Оптимистичное обновление UI
+    // Optimistic UI update
     setModules(prev => ({ ...prev, [module]: enabled }));
     setUpdatingModules(prev => new Set(prev).add(module));
 
@@ -149,14 +149,14 @@ export default function EditTenantPage() {
       
       toast.success(
         enabled 
-          ? `Модуль "${MODULE_METADATA[module].name}" включен`
-          : `Модуль "${MODULE_METADATA[module].name}" отключен`
+          ? `Module "${MODULE_METADATA[module].name}" enabled`
+          : `Module "${MODULE_METADATA[module].name}" disabled`
       );
     } catch (error: any) {
       console.error("Error updating module:", error);
-      // Откатываем изменение при ошибке
+      // Rollback change on error
       setModules(prev => ({ ...prev, [module]: !enabled }));
-      toast.error(error.message || "Не удалось обновить модуль");
+      toast.error(error.message || "Failed to update module");
     } finally {
       setUpdatingModules(prev => {
         const newSet = new Set(prev);
@@ -177,9 +177,9 @@ export default function EditTenantPage() {
   if (!tenant) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">Организация не найдена</p>
+        <p className="text-muted-foreground">Organization not found</p>
         <Button onClick={() => router.back()} className="mt-4">
-          Вернуться назад
+          Go Back
         </Button>
       </div>
     );
@@ -192,38 +192,38 @@ export default function EditTenantPage() {
       <div className="flex items-center gap-4">
         <Button variant="ghost" onClick={() => router.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Назад
+          Back
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">Редактировать организацию</h1>
+          <h1 className="text-3xl font-bold">Edit Organization</h1>
           <p className="text-muted-foreground mt-2">
-            Изменение данных организации
+            Update organization information
           </p>
         </div>
       </div>
 
       <Tabs defaultValue="info" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="info">Основная информация</TabsTrigger>
-          <TabsTrigger value="modules">Модули</TabsTrigger>
+          <TabsTrigger value="info">General Information</TabsTrigger>
+          <TabsTrigger value="modules">Modules</TabsTrigger>
         </TabsList>
 
-        {/* Вкладка: Основная информация */}
+        {/* Tab: General Information */}
         <TabsContent value="info">
           <Card>
             <form onSubmit={handleSubmit}>
               <CardHeader>
-                <CardTitle>Данные организации</CardTitle>
+                <CardTitle>Organization Data</CardTitle>
                 <CardDescription>
-                  Обновите информацию об организации
+                  Update organization information
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Название организации *</Label>
+                  <Label htmlFor="name">Organization Name *</Label>
                   <Input
                     id="name"
-                    placeholder="Название компании"
+                    placeholder="Company name"
                     value={formData.name}
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
@@ -233,7 +233,7 @@ export default function EditTenantPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="slug">Slug (идентификатор) *</Label>
+                  <Label htmlFor="slug">Slug (Identifier) *</Label>
                   <Input
                     id="slug"
                     placeholder="company-slug"
@@ -245,11 +245,11 @@ export default function EditTenantPage() {
                     disabled={isSaving}
                   />
                   <p className="text-xs text-muted-foreground">
-                    Используется в URL. Только строчные буквы, цифры и дефисы
+                    Used in URL. Only lowercase letters, numbers and hyphens
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="domain">Домен (опционально)</Label>
+                  <Label htmlFor="domain">Domain (optional)</Label>
                   <Input
                     id="domain"
                     placeholder="company.com"
@@ -273,16 +273,16 @@ export default function EditTenantPage() {
                   onClick={() => router.back()}
                   disabled={isSaving}
                 >
-                  Отмена
+                  Cancel
                 </Button>
                 <Button type="submit" disabled={isSaving}>
                   {isSaving ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Сохранение...
+                      Saving...
                     </>
                   ) : (
-                    "Сохранить изменения"
+                    "Save Changes"
                   )}
                 </Button>
               </CardFooter>
@@ -290,13 +290,13 @@ export default function EditTenantPage() {
           </Card>
         </TabsContent>
 
-        {/* Вкладка: Модули */}
+        {/* Tab: Modules */}
         <TabsContent value="modules" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Управление модулями</CardTitle>
+              <CardTitle>Module Management</CardTitle>
               <CardDescription>
-                Включайте или отключайте модули для этой организации. Супер админ может включать любые модули независимо от плана подписки.
+                Enable or disable modules for this organization. Super admin can enable any modules regardless of subscription plan.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -329,7 +329,7 @@ export default function EditTenantPage() {
                               <h3 className="font-semibold">{module.name}</h3>
                               {module.comingSoon && (
                                 <Badge variant="secondary" className="text-xs">
-                                  Скоро
+                                  Soon
                                 </Badge>
                               )}
                               <Badge 
@@ -371,18 +371,18 @@ export default function EditTenantPage() {
             </CardContent>
           </Card>
 
-          {/* Информационный блок */}
+          {/* Info block */}
           <Card className="bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
             <CardContent className="pt-6">
               <div className="flex items-start gap-3">
                 <div className="text-2xl">ℹ️</div>
                 <div>
                   <p className="font-medium text-blue-900 dark:text-blue-100">
-                    О модулях
+                    About Modules
                   </p>
                   <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
-                    Как супер админ, вы можете включать/отключать любые модули для организации независимо от плана подписки. 
-                    Модули с отметкой "Скоро" находятся в разработке. Включенные модули будут доступны всем пользователям организации.
+                    As super admin, you can enable/disable any modules for the organization regardless of subscription plan. 
+                    Modules marked "Soon" are in development. Enabled modules will be available to all organization users.
                   </p>
                 </div>
               </div>
