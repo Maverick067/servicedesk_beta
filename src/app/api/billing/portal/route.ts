@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { stripe } from '@/lib/stripe';
 
 /**
- * POST /api/billing/portal - Создать Stripe Customer Portal Session
+ * POST /api/billing/portal - Create Stripe Customer Portal Session
  */
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Проверяем права доступа
+    // Check access rights
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { role: true, tenantId: true },
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No tenant associated with user' }, { status: 400 });
     }
 
-    // Получаем подписку
+    // Get subscription
     const subscription = await prisma.subscription.findUnique({
       where: { tenantId: user.tenantId },
     });
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No subscription found' }, { status: 404 });
     }
 
-    // Создаем Customer Portal Session
+    // Create Customer Portal Session
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: subscription.stripeCustomerId,
       return_url: `${process.env.NEXTAUTH_URL}/dashboard/billing`,

@@ -4,7 +4,7 @@ import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 /**
- * GET /api/billing/subscription - Получить текущую подписку
+ * GET /api/billing/subscription - Get current subscription
  */
 export async function GET(req: NextRequest) {
   try {
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Проверяем права доступа
+    // Check access rights
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { role: true, tenantId: true },
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Только TENANT_ADMIN может управлять подпиской
+    // Only TENANT_ADMIN can manage subscription
     if (user.role !== 'TENANT_ADMIN' && user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Forbidden: Only tenant admins can manage subscriptions' }, { status: 403 });
     }
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'No tenant associated with user' }, { status: 400 });
     }
 
-    // Получаем подписку
+    // Get subscription
     const subscription = await prisma.subscription.findUnique({
       where: { tenantId: user.tenantId },
     });

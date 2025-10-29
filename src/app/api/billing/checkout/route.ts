@@ -6,7 +6,7 @@ import { stripe } from '@/lib/stripe';
 import { PlanType } from '@prisma/client';
 
 /**
- * POST /api/billing/checkout - Создать Stripe Checkout Session
+ * POST /api/billing/checkout - Create Stripe Checkout Session
  */
 export async function POST(req: NextRequest) {
   try {
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
     }
 
-    // Проверяем права доступа
+    // Check access rights
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       include: { tenant: true },
@@ -41,12 +41,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No tenant associated with user' }, { status: 400 });
     }
 
-    // Получаем текущую подписку
+    // Get current subscription
     const currentSub = await prisma.subscription.findUnique({
       where: { tenantId: user.tenantId },
     });
 
-    // Цены в центах
+    // Prices in cents
     const priceMap = {
       PRO: 4900, // $49/month
       ENTERPRISE: 19900, // $199/month
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
     const price = priceMap[plan];
 
-    // Создаем Stripe Checkout Session
+    // Create Stripe Checkout Session
     const checkoutSession = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       mode: 'subscription',

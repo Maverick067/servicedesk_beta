@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { getUsageStats, getSubscriptionLimits } from '@/lib/subscription-limits';
 
 /**
- * GET /api/billing/usage - Получить статистику использования ресурсов
+ * GET /api/billing/usage - Get resource usage statistics
  */
 export async function GET(req: NextRequest) {
   try {
@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Проверяем права доступа
+    // Check access rights
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { role: true, tenantId: true },
@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Только TENANT_ADMIN может просматривать использование
+    // Only TENANT_ADMIN can view usage
     if (user.role !== 'TENANT_ADMIN' && user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Forbidden: Only tenant admins can view usage' }, { status: 403 });
     }
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'No tenant associated with user' }, { status: 400 });
     }
 
-    // Получаем статистику
+    // Get statistics
     const [usage, limits] = await Promise.all([
       getUsageStats(user.tenantId),
       getSubscriptionLimits(user.tenantId),
