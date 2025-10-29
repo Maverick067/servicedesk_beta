@@ -4,35 +4,35 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 
 const registerSchema = z.object({
-  // Данные организации
-  tenantName: z.string().min(2, "Название организации должно содержать минимум 2 символа"),
-  tenantSlug: z.string().min(2, "Slug должен содержать минимум 2 символа").regex(/^[a-z0-9-]+$/, "Slug может содержать только строчные буквы, цифры и дефисы"),
+  // Organization data
+  tenantName: z.string().min(2, "Organization name must contain at least 2 characters"),
+  tenantSlug: z.string().min(2, "Slug must contain at least 2 characters").regex(/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers and hyphens"),
   tenantDomain: z.string().nullable().optional(),
-  // Данные пользователя
-  name: z.string().min(2, "Имя должно содержать минимум 2 символа"),
-  email: z.string().email("Некорректный email"),
-  password: z.string().min(6, "Пароль должен содержать минимум 6 символов"),
+  // User data
+  name: z.string().min(2, "Name must contain at least 2 characters"),
+  email: z.string().email("Invalid email"),
+  password: z.string().min(6, "Password must contain at least 6 characters"),
 });
 
-// POST /api/register - Регистрация новой организации с админом
+// POST /api/register - Register new organization with admin
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const validatedData = registerSchema.parse(body);
 
-    // Проверяем уникальность slug
+    // Check slug uniqueness
     const existingTenant = await prisma.tenant.findUnique({
       where: { slug: validatedData.tenantSlug },
     });
 
     if (existingTenant) {
       return NextResponse.json(
-        { error: "Организация с таким slug уже существует" },
+        { error: "Organization with this slug already exists" },
         { status: 400 }
       );
     }
 
-    // Проверяем уникальность domain (если указан)
+    // Check domain uniqueness (if specified)
     if (validatedData.tenantDomain) {
       const existingDomain = await prisma.tenant.findUnique({
         where: { domain: validatedData.tenantDomain },
@@ -40,25 +40,25 @@ export async function POST(request: Request) {
 
       if (existingDomain) {
         return NextResponse.json(
-          { error: "Организация с таким доменом уже существует" },
+          { error: "Organization with this domain already exists" },
           { status: 400 }
         );
       }
     }
 
-    // Проверяем уникальность email
+    // Check email uniqueness
     const existingUser = await prisma.user.findUnique({
       where: { email: validatedData.email },
     });
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "Пользователь с таким email уже существует" },
+        { error: "User with this email already exists" },
         { status: 400 }
       );
     }
 
-    // Создаем организацию и пользователя в транзакции
+    // Create organization and user in transaction
     const result = await prisma.$transaction(async (tx) => {
       console.log("Creating tenant with data:", {
         name: validatedData.tenantName,
@@ -66,7 +66,7 @@ export async function POST(request: Request) {
         domain: validatedData.tenantDomain || null,
       });
 
-      // Создаем организацию
+      // Create organization
       const tenant = await tx.tenant.create({
         data: {
           name: validatedData.tenantName,
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
 
       console.log("Tenant created with ID:", tenant.id);
 
-      // Хешируем пароль
+      // Hash password
       const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
       console.log("Creating user with data:", {
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
         tenantId: tenant.id,
       });
 
-          // Создаем пользователя-админа
+          // Create admin user
           const user = await tx.user.create({
             data: {
               email: validatedData.email,
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        message: "Организация и пользователь успешно созданы",
+        message: "Organization and user successfully created",
         tenant: result.tenant,
         user: result.user,
       },

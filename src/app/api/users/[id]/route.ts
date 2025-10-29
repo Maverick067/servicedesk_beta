@@ -14,7 +14,7 @@ const updateUserSchema = z.object({
 
 /**
  * GET /api/users/[id]
- * Получить информацию о пользователе
+ * Get user information
  */
 export async function GET(
   req: NextRequest,
@@ -51,7 +51,7 @@ export async function GET(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Проверяем права доступа
+    // Check access rights
     if (
       session.user.role !== "ADMIN" &&
       session.user.tenantId !== user.tenantId
@@ -71,7 +71,7 @@ export async function GET(
 
 /**
  * PATCH /api/users/[id]
- * Обновить пользователя
+ * Update user
  */
 export async function PATCH(
   req: NextRequest,
@@ -84,7 +84,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только ADMIN и TENANT_ADMIN могут обновлять пользователей
+    // Only ADMIN and TENANT_ADMIN can update users
     if (session.user.role !== "ADMIN" && session.user.role !== "TENANT_ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -92,7 +92,7 @@ export async function PATCH(
     const body = await req.json();
     const validatedData = updateUserSchema.parse(body);
 
-    // Получаем текущего пользователя
+    // Get current user
     const existingUser = await prisma.user.findUnique({
       where: { id: params.id },
       select: {
@@ -106,7 +106,7 @@ export async function PATCH(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Проверяем права доступа
+    // Check access rights
     if (
       session.user.role === "TENANT_ADMIN" &&
       session.user.tenantId !== existingUser.tenantId
@@ -114,23 +114,23 @@ export async function PATCH(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // TENANT_ADMIN не может создавать ADMIN или изменять роль ADMIN
+    // TENANT_ADMIN cannot create ADMIN or change ADMIN role
     if (session.user.role === "TENANT_ADMIN") {
       if (validatedData.role === "ADMIN") {
         return NextResponse.json(
-          { error: "Только глобальный администратор может назначать роль ADMIN" },
+          { error: "Only global administrator can assign ADMIN role" },
           { status: 403 }
         );
       }
       if (existingUser.role === "ADMIN") {
         return NextResponse.json(
-          { error: "Нельзя изменять глобального администратора" },
+          { error: "Cannot modify global administrator" },
           { status: 403 }
         );
       }
     }
 
-    // Обновляем пользователя
+    // Update user
     const updatedUser = await prisma.user.update({
       where: { id: params.id },
       data: validatedData,
@@ -145,7 +145,7 @@ export async function PATCH(
       },
     });
 
-    // Логируем действие
+    // Log action
     await createAuditLog({
       tenantId: existingUser.tenantId,
       userId: session.user.id,
@@ -180,7 +180,7 @@ export async function PATCH(
 
 /**
  * DELETE /api/users/[id]
- * Удалить пользователя
+ * Delete user
  */
 export async function DELETE(
   req: NextRequest,
@@ -193,12 +193,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только ADMIN и TENANT_ADMIN могут удалять пользователей
+    // Only ADMIN and TENANT_ADMIN can delete users
     if (session.user.role !== "ADMIN" && session.user.role !== "TENANT_ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Нельзя удалить самого себя
+    // Cannot delete yourself
     if (params.id === session.user.id) {
       return NextResponse.json(
         { error: "Cannot delete yourself" },
@@ -206,7 +206,7 @@ export async function DELETE(
       );
     }
 
-    // Получаем пользователя
+    // Get user
     const existingUser = await prisma.user.findUnique({
       where: { id: params.id },
       select: {
@@ -221,7 +221,7 @@ export async function DELETE(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Проверяем права доступа
+    // Check access rights
     if (
       session.user.role === "TENANT_ADMIN" &&
       session.user.tenantId !== existingUser.tenantId
@@ -229,20 +229,20 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // TENANT_ADMIN не может удалять ADMIN
+    // TENANT_ADMIN cannot delete ADMIN
     if (session.user.role === "TENANT_ADMIN" && existingUser.role === "ADMIN") {
       return NextResponse.json(
-        { error: "Нельзя удалять глобального администратора" },
+        { error: "Cannot delete global administrator" },
         { status: 403 }
       );
     }
 
-    // Удаляем пользователя
+    // Delete user
     await prisma.user.delete({
       where: { id: params.id },
     });
 
-    // Логируем действие
+    // Log action
     await createAuditLog({
       tenantId: existingUser.tenantId,
       userId: session.user.id,
