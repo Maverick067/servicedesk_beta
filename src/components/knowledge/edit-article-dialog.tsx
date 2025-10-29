@@ -28,8 +28,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 
 const articleSchema = z.object({
-  title: z.string().min(1, "Название обязательно"),
-  content: z.string().min(1, "Содержание обязательно"),
+  title: z.string().min(1, "Title is required"),
+  content: z.string().min(1, "Content is required"),
   excerpt: z.string().optional(),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]),
   isPublic: z.boolean(),
@@ -114,16 +114,16 @@ export function EditArticleDialog({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Не удалось обновить статью");
+        throw new Error(errorData.message || "Failed to update article");
       }
 
-      toast.success("Статья обновлена", {
-        description: "Статья была успешно изменена.",
+      toast.success("Article updated", {
+        description: "Article has been successfully modified.",
       });
       onOpenChange(false);
       onArticleUpdated?.();
     } catch (e: any) {
-      toast.error("Ошибка при обновлении статьи", {
+      toast.error("Error updating article", {
         description: e.message,
       });
     } finally {
@@ -135,15 +135,15 @@ export function EditArticleDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Редактировать статью</DialogTitle>
+          <DialogTitle>Edit Article</DialogTitle>
           <DialogDescription>
-            Измените детали статьи базы знаний.
+            Modify knowledge base article details.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="title" className="text-right">
-              Название
+              Title
             </Label>
             <Input
               id="title"
@@ -159,7 +159,7 @@ export function EditArticleDialog({
 
           <div className="grid grid-cols-4 items-start gap-4">
             <Label htmlFor="excerpt" className="text-right pt-2">
-              Краткое описание
+              Short Description
             </Label>
             <Textarea
               id="excerpt"
@@ -171,7 +171,7 @@ export function EditArticleDialog({
 
           <div className="grid grid-cols-4 items-start gap-4">
             <Label htmlFor="content" className="text-right pt-2">
-              Содержание
+              Content
             </Label>
             <Textarea
               id="content"
@@ -188,19 +188,19 @@ export function EditArticleDialog({
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="tags" className="text-right">
-              Теги
+              Tags
             </Label>
             <Input
               id="tags"
               {...register("tags")}
               className="col-span-3"
-              placeholder="пароль, аккаунт, безопасность"
+              placeholder="password, account, security"
             />
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="status" className="text-right">
-              Статус
+              Status
             </Label>
             <Controller
               name="status"
@@ -208,12 +208,12 @@ export function EditArticleDialog({
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Выберите статус" />
+                    <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="DRAFT">Черновик</SelectItem>
-                    <SelectItem value="PUBLISHED">Опубликовать</SelectItem>
-                    <SelectItem value="ARCHIVED">В архив</SelectItem>
+                    <SelectItem value="DRAFT">Draft</SelectItem>
+                    <SelectItem value="PUBLISHED">Published</SelectItem>
+                    <SelectItem value="ARCHIVED">Archived</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -222,7 +222,7 @@ export function EditArticleDialog({
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="isPublic" className="text-right">
-              Публичный доступ
+              Public Access
             </Label>
             <Controller
               name="isPublic"
@@ -235,7 +235,7 @@ export function EditArticleDialog({
                     onCheckedChange={field.onChange}
                   />
                   <span className="text-sm text-muted-foreground">
-                    Статья будет доступна всем пользователям
+                    Article will be available to all users
                   </span>
                 </div>
               )}
@@ -247,7 +247,7 @@ export function EditArticleDialog({
               {isSubmitting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              Сохранить изменения
+              Save Changes
             </Button>
           </div>
         </form>

@@ -29,8 +29,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 
 const articleSchema = z.object({
-  title: z.string().min(1, "Название обязательно"),
-  content: z.string().min(1, "Содержание обязательно"),
+  title: z.string().min(1, "Title is required"),
+  content: z.string().min(1, "Content is required"),
   excerpt: z.string().optional(),
   status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).default("DRAFT"),
   isPublic: z.boolean().default(false),
@@ -94,17 +94,17 @@ export function CreateArticleDialog({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || "Не удалось создать статью");
+        throw new Error(errorData.message || "Failed to create article");
       }
 
-      toast.success("Статья создана", {
-        description: "Новая статья была успешно добавлена в базу знаний.",
+      toast.success("Article created", {
+        description: "New article has been successfully added to the knowledge base.",
       });
       reset();
       setIsOpen(false);
       onArticleCreated?.();
     } catch (e: any) {
-      toast.error("Ошибка при создании статьи", {
+      toast.error("Error creating article", {
         description: e.message,
       });
     } finally {
@@ -117,21 +117,21 @@ export function CreateArticleDialog({
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Создать новую статью</DialogTitle>
+          <DialogTitle>Create New Article</DialogTitle>
           <DialogDescription>
-            Добавьте новую статью в базу знаний для самообслуживания пользователей.
+            Add a new article to the knowledge base for user self-service.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="title" className="text-right">
-              Название
+              Title
             </Label>
             <Input
               id="title"
               {...register("title")}
               className="col-span-3"
-              placeholder="Как сбросить пароль?"
+              placeholder="How to reset password?"
             />
             {errors.title && (
               <p className="col-span-4 text-right text-sm text-red-500">
@@ -142,26 +142,26 @@ export function CreateArticleDialog({
 
           <div className="grid grid-cols-4 items-start gap-4">
             <Label htmlFor="excerpt" className="text-right pt-2">
-              Краткое описание
+              Short Description
             </Label>
             <Textarea
               id="excerpt"
               {...register("excerpt")}
               className="col-span-3"
-              placeholder="Краткое описание статьи..."
+              placeholder="Brief article description..."
               rows={2}
             />
           </div>
 
           <div className="grid grid-cols-4 items-start gap-4">
             <Label htmlFor="content" className="text-right pt-2">
-              Содержание
+              Content
             </Label>
             <Textarea
               id="content"
               {...register("content")}
               className="col-span-3"
-              placeholder="Полное содержание статьи..."
+              placeholder="Full article content..."
               rows={10}
             />
             {errors.content && (
@@ -173,19 +173,19 @@ export function CreateArticleDialog({
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="tags" className="text-right">
-              Теги
+              Tags
             </Label>
             <Input
               id="tags"
               {...register("tags")}
               className="col-span-3"
-              placeholder="пароль, аккаунт, безопасность (через запятую)"
+              placeholder="password, account, security (comma-separated)"
             />
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="status" className="text-right">
-              Статус
+              Status
             </Label>
             <Controller
               name="status"
@@ -193,12 +193,12 @@ export function CreateArticleDialog({
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Выберите статус" />
+                    <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="DRAFT">Черновик</SelectItem>
-                    <SelectItem value="PUBLISHED">Опубликовать</SelectItem>
-                    <SelectItem value="ARCHIVED">В архив</SelectItem>
+                    <SelectItem value="DRAFT">Draft</SelectItem>
+                    <SelectItem value="PUBLISHED">Published</SelectItem>
+                    <SelectItem value="ARCHIVED">Archived</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -207,7 +207,7 @@ export function CreateArticleDialog({
 
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="isPublic" className="text-right">
-              Публичный доступ
+              Public Access
             </Label>
             <Controller
               name="isPublic"
@@ -220,7 +220,7 @@ export function CreateArticleDialog({
                     onCheckedChange={field.onChange}
                   />
                   <span className="text-sm text-muted-foreground">
-                    Статья будет доступна всем пользователям
+                    Article will be available to all users
                   </span>
                 </div>
               )}
@@ -232,7 +232,7 @@ export function CreateArticleDialog({
               {isSubmitting ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              Создать статью
+              Create Article
             </Button>
           </div>
         </form>
