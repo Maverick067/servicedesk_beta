@@ -1,6 +1,6 @@
 /**
  * Stripe Webhook Handler
- * Обрабатывает события от Stripe (подписки, платежи, счета)
+ * Handles events from Stripe (subscriptions, payments, invoices)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -9,16 +9,16 @@ import { prisma } from '@/lib/prisma';
 import { PlanType, SubscriptionStatus } from '@prisma/client';
 import { createAuditLog } from '@/lib/audit-log';
 
-// Отключаем body parser для webhook
+// Disable body parser for webhook
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * POST /api/webhooks/stripe - Обработка Stripe webhooks
+ * POST /api/webhooks/stripe - Handle Stripe webhooks
  */
 export async function POST(request: NextRequest) {
   try {
-    // Получаем сырое тело запроса
+    // Get raw request body
     const body = await request.text();
     const signature = request.headers.get('stripe-signature');
 
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Проверяем подпись и получаем событие
+    // Verify signature and get event
     let event;
     try {
       event = constructWebhookEvent(body, signature);
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Stripe Webhook] Received event: ${event.type}`);
 
-    // Обрабатываем разные типы событий
+    // Handle different event types
     switch (event.type) {
       // ========== CHECKOUT SESSION ==========
       case 'checkout.session.completed': {
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'Missing metadata' }, { status: 400 });
         }
 
-        // Создаём подписку в базе данных
+        // Create subscription in database
         await prisma.subscription.upsert({
           where: { tenantId },
           update: {
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'Missing metadata' }, { status: 400 });
         }
 
-        // Маппинг статусов Stripe -> наши статусы
+        // Map Stripe statuses -> our statuses
         const statusMap: Record<string, SubscriptionStatus> = {
           active: SubscriptionStatus.ACTIVE,
           trialing: SubscriptionStatus.TRIALING,
@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
         const invoice = event.data.object as any;
         const subscriptionId = invoice.subscription as string;
 
-        // Находим подписку по stripeSubscriptionId
+        // Find subscription by stripeSubscriptionId
         const subscription = await prisma.subscription.findFirst({
           where: { stripeSubscriptionId: subscriptionId },
         });
@@ -206,7 +206,7 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
         }
 
-        // Создаём запись о счёте
+        // Create invoice record
         await prisma.invoice.upsert({
           where: { stripeInvoiceId: invoice.id },
           update: {
@@ -252,7 +252,7 @@ export async function POST(request: NextRequest) {
         const invoice = event.data.object as any;
         const subscriptionId = invoice.subscription as string;
 
-        // Находим подписку
+        // Find subscription
         const subscription = await prisma.subscription.findFirst({
           where: { stripeSubscriptionId: subscriptionId },
         });
@@ -262,7 +262,7 @@ export async function POST(request: NextRequest) {
           return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
         }
 
-        // Обновляем статус подписки
+        // Update subscription status
         await prisma.subscription.update({
           where: { id: subscription.id },
           data: {
