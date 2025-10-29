@@ -15,8 +15,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 
 const assetSchema = z.object({
-  name: z.string().min(1, "Название обязательно"),
-  type: z.string().min(1, "Выберите тип"),
+  name: z.string().min(1, "Name is required"),
+  type: z.string().min(1, "Select type"),
   status: z.string().default("AVAILABLE"),
   manufacturer: z.string().optional(),
   model: z.string().optional(),
@@ -45,37 +45,37 @@ export function CreateAssetDialog({ children, onAssetCreated }: { children: Reac
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("Не удалось создать актив");
-      toast.success("Актив создан");
+      if (!response.ok) throw new Error("Failed to create asset");
+      toast.success("Asset created");
       reset();
       setIsOpen(false);
       onAssetCreated?.();
     } catch (e: any) {
-      toast.error("Ошибка", { description: e.message });
+      toast.error("Error", { description: e.message });
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const typeOptions = [
-    { value: "COMPUTER", label: "Компьютер" },
-    { value: "LAPTOP", label: "Ноутбук" },
-    { value: "SERVER", label: "Сервер" },
-    { value: "NETWORK", label: "Сетевое оборудование" },
-    { value: "PRINTER", label: "Принтер" },
-    { value: "PHONE", label: "Телефон" },
-    { value: "MOBILE", label: "Мобильное устройство" },
-    { value: "SOFTWARE", label: "ПО" },
-    { value: "LICENSE", label: "Лицензия" },
-    { value: "OTHER", label: "Другое" },
+    { value: "COMPUTER", label: "Computer" },
+    { value: "LAPTOP", label: "Laptop" },
+    { value: "SERVER", label: "Server" },
+    { value: "NETWORK", label: "Network Equipment" },
+    { value: "PRINTER", label: "Printer" },
+    { value: "PHONE", label: "Phone" },
+    { value: "MOBILE", label: "Mobile Device" },
+    { value: "SOFTWARE", label: "Software" },
+    { value: "LICENSE", label: "License" },
+    { value: "OTHER", label: "Other" },
   ];
 
   const statusOptions = [
-    { value: "AVAILABLE", label: "Доступен" },
-    { value: "IN_USE", label: "В использовании" },
-    { value: "MAINTENANCE", label: "На обслуживании" },
-    { value: "RETIRED", label: "Списан" },
-    { value: "LOST", label: "Утерян" },
+    { value: "AVAILABLE", label: "Available" },
+    { value: "IN_USE", label: "In Use" },
+    { value: "MAINTENANCE", label: "Maintenance" },
+    { value: "RETIRED", label: "Retired" },
+    { value: "LOST", label: "Lost" },
   ];
 
   return (
@@ -83,27 +83,27 @@ export function CreateAssetDialog({ children, onAssetCreated }: { children: Reac
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Добавить IT-актив</DialogTitle>
-          <DialogDescription>Добавьте новое оборудование в базу данных.</DialogDescription>
+          <DialogTitle>Add IT Asset</DialogTitle>
+          <DialogDescription>Add new equipment to the database.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">Название</Label>
+            <Label htmlFor="name" className="text-right">Name</Label>
             <Input id="name" {...register("name")} className="col-span-3" placeholder="MacBook Pro 2024" />
             {errors.name && <p className="col-span-4 text-right text-sm text-red-500">{errors.name.message}</p>}
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="type" className="text-right">Тип</Label>
+            <Label htmlFor="type" className="text-right">Type</Label>
             <Controller name="type" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger className="col-span-3"><SelectValue placeholder="Выберите тип" /></SelectTrigger>
+                <SelectTrigger className="col-span-3"><SelectValue placeholder="Select type" /></SelectTrigger>
                 <SelectContent>{typeOptions.map((opt) => (<SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>))}</SelectContent>
               </Select>
             )} />
             {errors.type && <p className="col-span-4 text-right text-sm text-red-500">{errors.type.message}</p>}
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="status" className="text-right">Статус</Label>
+            <Label htmlFor="status" className="text-right">Status</Label>
             <Controller name="status" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
                 <SelectTrigger className="col-span-3"><SelectValue /></SelectTrigger>
@@ -112,29 +112,29 @@ export function CreateAssetDialog({ children, onAssetCreated }: { children: Reac
             )} />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="manufacturer" className="text-right">Производитель</Label>
+            <Label htmlFor="manufacturer" className="text-right">Manufacturer</Label>
             <Input id="manufacturer" {...register("manufacturer")} className="col-span-3" placeholder="Apple" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="model" className="text-right">Модель</Label>
+            <Label htmlFor="model" className="text-right">Model</Label>
             <Input id="model" {...register("model")} className="col-span-3" placeholder="MacBook Pro 14 M3" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="serialNumber" className="text-right">Серийный номер</Label>
+            <Label htmlFor="serialNumber" className="text-right">Serial Number</Label>
             <Input id="serialNumber" {...register("serialNumber")} className="col-span-3" placeholder="C02XZ..." />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="inventoryNumber" className="text-right">Инвентарный №</Label>
+            <Label htmlFor="inventoryNumber" className="text-right">Inventory Number</Label>
             <Input id="inventoryNumber" {...register("inventoryNumber")} className="col-span-3" placeholder="INV-001" />
           </div>
           <div className="grid grid-cols-4 items-start gap-4">
-            <Label htmlFor="notes" className="text-right pt-2">Примечания</Label>
+            <Label htmlFor="notes" className="text-right pt-2">Notes</Label>
             <Textarea id="notes" {...register("notes")} className="col-span-3" rows={3} />
           </div>
           <div className="flex justify-end">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Добавить актив
+              Add Asset
             </Button>
           </div>
         </form>
