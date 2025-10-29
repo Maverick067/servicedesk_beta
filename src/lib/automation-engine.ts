@@ -1,5 +1,5 @@
 /**
- * Движок выполнения правил автоматизации
+ * Automation rules execution engine
  */
 
 import { prisma } from "./prisma";
@@ -49,7 +49,7 @@ interface TicketData {
 }
 
 /**
- * Проверяет условие
+ * Checks condition
  */
 function evaluateCondition(condition: Condition, ticketData: TicketData): boolean {
   const fieldValue = ticketData[condition.field];
@@ -74,7 +74,7 @@ function evaluateCondition(condition: Condition, ticketData: TicketData): boolea
 }
 
 /**
- * Проверяет все условия правила
+ * Checks all rule conditions
  */
 function evaluateConditions(conditions: Record<string, Condition>, ticketData: TicketData): boolean {
   const conditionArray = Object.values(conditions);
@@ -83,12 +83,12 @@ function evaluateConditions(conditions: Record<string, Condition>, ticketData: T
     return false;
   }
 
-  // Все условия должны быть выполнены (AND logic)
+  // All conditions must be met (AND logic)
   return conditionArray.every((condition) => evaluateCondition(condition, ticketData));
 }
 
 /**
- * Выполняет действие
+ * Executes action
  */
 async function executeAction(action: Action, ticketData: TicketData): Promise<void> {
   try {
@@ -115,7 +115,7 @@ async function executeAction(action: Action, ticketData: TicketData): Promise<vo
         break;
 
       case "ADD_COMMENT":
-        // Создаём системный комментарий
+        // Create system comment
         await prisma.comment.create({
           data: {
             content: action.value,
@@ -127,7 +127,7 @@ async function executeAction(action: Action, ticketData: TicketData): Promise<vo
         break;
 
       case "SEND_NOTIFICATION":
-        // Создаём уведомление
+        // Create notification
         if (ticketData.assigneeId) {
           await prisma.notification.create({
             data: {
@@ -143,17 +143,17 @@ async function executeAction(action: Action, ticketData: TicketData): Promise<vo
         break;
 
       case "SEND_EMAIL":
-        // TODO: Интеграция с email сервисом
+        // TODO: Email service integration
         console.log(`[Automation] Send email: ${action.value} for ticket ${ticketData.id}`);
         break;
 
       case "ADD_TAG":
-        // TODO: Добавление тега (если будет поле tags в Ticket)
+        // TODO: Add tag (if tags field is added to Ticket)
         console.log(`[Automation] Add tag: ${action.value} to ticket ${ticketData.id}`);
         break;
 
       case "CALL_WEBHOOK":
-        // TODO: Вызов webhook
+        // TODO: Call webhook
         console.log(`[Automation] Call webhook: ${action.value} for ticket ${ticketData.id}`);
         break;
 
@@ -167,7 +167,7 @@ async function executeAction(action: Action, ticketData: TicketData): Promise<vo
 }
 
 /**
- * Выполняет правило автоматизации
+ * Executes automation rule
  */
 async function executeRule(ruleId: string, ticketData: TicketData): Promise<boolean> {
   try {
@@ -179,20 +179,20 @@ async function executeRule(ruleId: string, ticketData: TicketData): Promise<bool
       return false;
     }
 
-    // Проверяем условия
+    // Check conditions
     const conditionsMet = evaluateConditions(rule.conditions as any, ticketData);
 
     if (!conditionsMet) {
       return false;
     }
 
-    // Выполняем действия
+    // Execute actions
     const actions = rule.actions as Action[];
     for (const action of actions) {
       await executeAction(action, ticketData);
     }
 
-    // Обновляем статистику выполнения
+    // Update execution statistics
     await prisma.automationRule.update({
       where: { id: ruleId },
       data: {
@@ -209,14 +209,14 @@ async function executeRule(ruleId: string, ticketData: TicketData): Promise<bool
 }
 
 /**
- * Запускает правила автоматизации для тикета
+ * Runs automation rules for ticket
  */
 export async function runAutomationRules(
   triggerType: TriggerType,
   ticketData: TicketData
 ): Promise<void> {
   try {
-    // Получаем все активные правила для данного триггера
+    // Get all active rules for this trigger
     const rules = await prisma.automationRule.findMany({
       where: {
         tenantId: ticketData.tenantId,
@@ -234,7 +234,7 @@ export async function runAutomationRules(
       `[Automation] Running ${rules.length} rules for trigger ${triggerType} on ticket ${ticketData.id}`
     );
 
-    // Выполняем правила по порядку приоритета
+    // Execute rules in priority order
     for (const rule of rules) {
       try {
         const executed = await executeRule(rule.id, ticketData);
@@ -243,7 +243,7 @@ export async function runAutomationRules(
         }
       } catch (error) {
         console.error(`[Automation] Error in rule "${rule.name}":`, error);
-        // Продолжаем выполнение других правил даже если одно упало
+        // Continue executing other rules even if one fails
       }
     }
   } catch (error) {
@@ -252,7 +252,7 @@ export async function runAutomationRules(
 }
 
 /**
- * Хелпер для вызова из API routes
+ * Helper for calling from API routes
  */
 export async function triggerAutomation(
   triggerType: TriggerType,

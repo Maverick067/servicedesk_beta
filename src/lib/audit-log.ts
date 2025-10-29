@@ -1,5 +1,5 @@
 /**
- * Утилиты для audit log (логирование действий пользователей)
+ * Utilities for audit log (logging user actions)
  */
 
 import { prisma } from "./prisma";
@@ -38,7 +38,7 @@ interface AuditLogOptions {
 }
 
 /**
- * Создает запись в audit log
+ * Creates an entry in audit log
  */
 export async function createAuditLog(options: AuditLogOptions): Promise<void> {
   try {
@@ -56,12 +56,12 @@ export async function createAuditLog(options: AuditLogOptions): Promise<void> {
     });
   } catch (error) {
     console.error("Failed to create audit log:", error);
-    // Не прерываем основную операцию, если логирование не удалось
+    // Don't interrupt main operation if logging failed
   }
 }
 
 /**
- * Получает IP адрес из запроса
+ * Gets IP address from request
  */
 export function getClientIp(request: Request): string | undefined {
   const forwarded = request.headers.get("x-forwarded-for");
@@ -79,14 +79,14 @@ export function getClientIp(request: Request): string | undefined {
 }
 
 /**
- * Получает User-Agent из запроса
+ * Gets User-Agent from request
  */
 export function getUserAgent(request: Request): string | undefined {
   return request.headers.get("user-agent") || undefined;
 }
 
 /**
- * Получает логи аудита для tenant
+ * Gets audit logs for tenant
  */
 export async function getAuditLogs(
   tenantId: string,
@@ -125,31 +125,31 @@ export async function getAuditLogs(
 }
 
 /**
- * Форматирует действие для отображения
+ * Formats action for display
  */
 export function formatAuditAction(action: string, resourceType: string): string {
   const actionMap: Record<string, string> = {
-    CREATE: "создал(а)",
-    UPDATE: "обновил(а)",
-    DELETE: "удалил(а)",
-    LOGIN: "вошел(а) в систему",
-    LOGOUT: "вышел(а) из системы",
-    ASSIGN: "назначил(а)",
-    UNASSIGN: "снял(а) назначение",
-    STATUS_CHANGE: "изменил(а) статус",
-    COMMENT: "прокомментировал(а)",
-    INVITE: "пригласил(а)",
+    CREATE: "created",
+    UPDATE: "updated",
+    DELETE: "deleted",
+    LOGIN: "logged in",
+    LOGOUT: "logged out",
+    ASSIGN: "assigned",
+    UNASSIGN: "unassigned",
+    STATUS_CHANGE: "changed status",
+    COMMENT: "commented",
+    INVITE: "invited",
   };
 
   const resourceMap: Record<string, string> = {
-    TICKET: "тикет",
-    USER: "пользователя",
-    CATEGORY: "категорию",
-    TENANT: "организацию",
-    COMMENT: "комментарий",
-    ROLE: "роль",
-    PERMISSION: "разрешение",
-    SETTINGS: "настройки",
+    TICKET: "ticket",
+    USER: "user",
+    CATEGORY: "category",
+    TENANT: "organization",
+    COMMENT: "comment",
+    ROLE: "role",
+    PERMISSION: "permission",
+    SETTINGS: "settings",
   };
 
   const actionText = actionMap[action] || action;

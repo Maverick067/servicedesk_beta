@@ -18,10 +18,10 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          throw new Error("Введите email и пароль");
+          throw new Error("Please enter email and password");
         }
 
-        // Сначала ищем существующего пользователя
+        // First, search for existing user
         let user = await prisma.user.findUnique({
           where: { email: credentials.email },
           select: {
@@ -45,10 +45,10 @@ export const authOptions: NextAuthOptions = {
           },
         });
 
-        // Если пользователь найден и у него есть пароль (локальная учетка)
+        // If user found and has password (local account)
         if (user && user.password) {
           if (!user.isActive) {
-            throw new Error("Аккаунт деактивирован");
+            throw new Error("Account is deactivated");
           }
 
           const isPasswordValid = await bcrypt.compare(
@@ -69,7 +69,7 @@ export const authOptions: NextAuthOptions = {
           }
         }
 
-        // Если пользователь не найден или пароль не совпал, пробуем LDAP
+        // If user not found or password doesn't match, try LDAP
         console.log(`[Auth] Trying LDAP authentication for ${credentials.email}`);
         const ldapResult = await authenticateWithLdap(
           credentials.email,
@@ -79,20 +79,20 @@ export const authOptions: NextAuthOptions = {
         if (ldapResult.success && ldapResult.user) {
           console.log(`[Auth] LDAP authentication successful for ${credentials.email}`);
 
-          // Ищем или создаем пользователя
+          // Find or create user
           const ldapUser = await prisma.user.upsert({
             where: { email: ldapResult.user.email },
             update: {
-              // Обновляем имя при каждом входе
+              // Update name on each login
               name: ldapResult.user.name,
             },
             create: {
               email: ldapResult.user.email,
               name: ldapResult.user.name,
-              password: "", // LDAP пользователи без пароля
-              role: "USER", // По умолчанию обычный пользователь
+              password: "", // LDAP users have no password
+              role: "USER", // Default to regular user
               isActive: true,
-              tenantId: ldapResult.user.tenantId, // Автоматически привязываем к организации
+              tenantId: ldapResult.user.tenantId, // Automatically bind to organization
             },
             select: {
               id: true,
@@ -111,7 +111,7 @@ export const authOptions: NextAuthOptions = {
           });
 
           if (!ldapUser.isActive) {
-            throw new Error("Аккаунт деактивирован");
+            throw new Error("Account is deactivated");
           }
 
           return {
@@ -125,8 +125,8 @@ export const authOptions: NextAuthOptions = {
           };
         }
 
-        // Ни локальная, ни LDAP аутентификация не прошли
-        throw new Error("Неверный email или пароль");
+        // Neither local nor LDAP authentication succeeded
+        throw new Error("Invalid email or password");
       },
     }),
     // Google OAuth Provider
@@ -160,7 +160,7 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      // Credentials provider - уже обработан в authorize
+      // Credentials provider - already processed in authorize
       if (account?.provider === "credentials") {
         return true;
       }
@@ -173,7 +173,7 @@ export const authOptions: NextAuthOptions = {
           return false;
         }
 
-        // Проверяем, существует ли пользователь
+        // Check if user exists
         const existingUser = await prisma.user.findUnique({
           where: { email },
           include: { tenant: { select: { slug: true, settings: true } } },
@@ -181,26 +181,26 @@ export const authOptions: NextAuthOptions = {
 
         if (!existingUser) {
           console.log(`[SSO] New user from ${account.provider}: ${email}`);
-          // Можно создать пользователя автоматически или заблокировать
-          // Для безопасности, блокируем вход, если пользователь не создан вручную
+          // Can create user automatically or block
+          // For security, block login if user not created manually
           console.error("[SSO] User not found. SSO users must be pre-created by tenant admin.");
           return false;
         }
 
-        // Проверяем, активен ли пользователь
+        // Check if user is active
         if (!existingUser.isActive) {
           console.error("[SSO] User is inactive");
           return false;
         }
 
-        // Проверяем, разрешен ли SSO для tenant
+        // Check if SSO is enabled for tenant
         const tenantSettings = existingUser.tenant?.settings as any;
         if (!tenantSettings?.ssoEnabled) {
           console.error("[SSO] SSO is not enabled for this tenant");
           return false;
         }
 
-        // Проверяем, соответствует ли провайдер настройкам tenant
+        // Check if provider matches tenant settings
         const allowedProvider = tenantSettings?.ssoProvider; // 'google', 'azure-ad', etc.
         if (allowedProvider && allowedProvider !== account.provider) {
           console.error(`[SSO] Provider ${account.provider} is not allowed for this tenant`);
@@ -222,7 +222,7 @@ export const authOptions: NextAuthOptions = {
         token.permissions = user.permissions;
       }
 
-      // Для OAuth провайдеров, подтягиваем данные из БД
+      // For OAuth providers, fetch data from database
       if (account && (account.provider === "google" || account.provider === "azure-ad")) {
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email as string },
