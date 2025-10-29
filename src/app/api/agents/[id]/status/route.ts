@@ -12,7 +12,7 @@ const updateStatusSchema = z.object({
 
 /**
  * PATCH /api/agents/[id]/status
- * Изменение статуса агента
+ * Change agent status
  */
 export async function PATCH(
   request: NextRequest,
@@ -25,11 +25,11 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Проверяем права доступа
+    // Check access rights
     const canChangeStatus =
       session.user.role === "ADMIN" ||
       session.user.role === "TENANT_ADMIN" ||
-      session.user.id === params.id; // Агент может менять свой статус
+      session.user.id === params.id; // Agent can change their own status
 
     if (!canChangeStatus) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -38,7 +38,7 @@ export async function PATCH(
     const body = await request.json();
     const { status } = updateStatusSchema.parse(body);
 
-    // Проверяем существование агента
+    // Check if agent exists
     const agent = await prisma.user.findUnique({
       where: { id: params.id },
       select: {
@@ -61,7 +61,7 @@ export async function PATCH(
       );
     }
 
-    // Проверяем, что агент из того же tenant (если не глобальный админ)
+    // Check that agent is from the same tenant (if not global admin)
     if (
       session.user.role !== "ADMIN" &&
       session.user.tenantId !== agent.tenantId
@@ -71,7 +71,7 @@ export async function PATCH(
 
     const oldStatus = agent.agentStatus;
 
-    // Обновляем статус
+    // Update status
     const updatedAgent = await prisma.user.update({
       where: { id: params.id },
       data: { agentStatus: status },
@@ -83,7 +83,7 @@ export async function PATCH(
       },
     });
 
-    // Если агент становится недоступным (AWAY или ON_LEAVE), переназначаем его активные тикеты
+    // If agent becomes unavailable (AWAY or ON_LEAVE), reassign their active tickets
     const isNowUnavailable =
       (status === AgentStatus.AWAY || status === AgentStatus.ON_LEAVE) &&
       (oldStatus === AgentStatus.AVAILABLE || oldStatus === AgentStatus.BUSY);
@@ -119,7 +119,7 @@ export async function PATCH(
 
 /**
  * GET /api/agents/[id]/status
- * Получить текущий статус агента
+ * Get current agent status
  */
 export async function GET(
   request: NextRequest,
@@ -166,7 +166,7 @@ export async function GET(
       );
     }
 
-    // Проверяем доступ к тенанту
+    // Check tenant access
     if (session.user.role !== "ADMIN") {
       const userTenant = await prisma.user.findUnique({
         where: { id: session.user.id },

@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 /**
- * GET /api/tenants/settings/sso - Получить настройки SSO для tenant
+ * GET /api/tenants/settings/sso - Get SSO settings for tenant
  */
 export async function GET(req: NextRequest) {
   try {
@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Проверяем права доступа
+    // Check access rights
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { role: true, tenantId: true },
@@ -31,7 +31,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Суперадмин не имеет tenantId, возвращаем пустые настройки
+    // Super-admin doesn't have tenantId, return empty settings
     if (user.role === "ADMIN" && !user.tenantId) {
       return NextResponse.json({
         ssoEnabled: false,
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Получаем tenant settings
+    // Get tenant settings
     const tenant = await prisma.tenant.findUnique({
       where: { id: user.tenantId },
       select: { settings: true },
@@ -66,9 +66,9 @@ export async function GET(req: NextRequest) {
       ssoEnabled: settings.ssoEnabled || false,
       ssoProvider: settings.ssoProvider || "google",
       googleClientId: settings.googleClientId || "",
-      googleClientSecret: "", // Не возвращаем секреты
+      googleClientSecret: "", // Don't return secrets
       azureAdClientId: settings.azureAdClientId || "",
-      azureAdClientSecret: "", // Не возвращаем секреты
+      azureAdClientSecret: "", // Don't return secrets
       azureAdTenantId: settings.azureAdTenantId || "",
     };
 
@@ -83,7 +83,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * POST /api/tenants/settings/sso - Обновить настройки SSO для tenant
+ * POST /api/tenants/settings/sso - Update SSO settings for tenant
  */
 export async function POST(req: NextRequest) {
   try {
@@ -104,7 +104,7 @@ export async function POST(req: NextRequest) {
       azureAdTenantId,
     } = body;
 
-    // Проверяем права доступа
+    // Check access rights
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { role: true, tenantId: true },
@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Проверяем subscription (SSO доступен только для PRO и ENTERPRISE)
+    // Check subscription (SSO available only for PRO and ENTERPRISE)
     const subscription = await prisma.subscription.findUnique({
       where: { tenantId: user.tenantId },
     });
@@ -143,13 +143,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "SSO доступен только для планов PRO и ENTERPRISE. Обновите подписку.",
+            "SSO is only available for PRO and ENTERPRISE plans. Upgrade your subscription.",
         },
         { status: 403 }
       );
     }
 
-    // Получаем текущие settings
+    // Get current settings
     const tenant = await prisma.tenant.findUnique({
       where: { id: user.tenantId },
       select: { settings: true },
@@ -157,14 +157,14 @@ export async function POST(req: NextRequest) {
 
     const currentSettings = (tenant?.settings as any) || {};
 
-    // Обновляем только предоставленные поля
+    // Update only provided fields
     const updatedSettings = {
       ...currentSettings,
       ssoEnabled,
       ssoProvider,
     };
 
-    // Добавляем credentials только если они не пустые
+    // Add credentials only if they are not empty
     if (googleClientId) updatedSettings.googleClientId = googleClientId;
     if (googleClientSecret)
       updatedSettings.googleClientSecret = googleClientSecret;
@@ -173,7 +173,7 @@ export async function POST(req: NextRequest) {
       updatedSettings.azureAdClientSecret = azureAdClientSecret;
     if (azureAdTenantId) updatedSettings.azureAdTenantId = azureAdTenantId;
 
-    // Сохраняем в БД
+    // Save to database
     await prisma.tenant.update({
       where: { id: user.tenantId },
       data: { settings: updatedSettings },
@@ -183,7 +183,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Настройки SSO обновлены",
+      message: "SSO settings updated",
     });
   } catch (error) {
     console.error("[SSO Settings API] Error updating settings:", error);

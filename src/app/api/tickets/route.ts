@@ -9,15 +9,15 @@ import { calculateSlaDueDate } from "@/lib/sla-utils";
 import { autoAssignTicket } from "@/lib/ticket-assignment";
 
 const createTicketSchema = z.object({
-  title: z.string().min(3, "Заголовок должен содержать минимум 3 символа"),
-  description: z.string().min(5, "Описание должно содержать минимум 5 символов"),
+  title: z.string().min(3, "Title must contain at least 3 characters"),
+  description: z.string().min(5, "Description must contain at least 5 characters"),
   priority: z.enum(["LOW", "MEDIUM", "HIGH", "URGENT"]),
   queueId: z.string().optional(),
   categoryId: z.string().optional(),
   customFields: z.record(z.string()).optional(), // { fieldId: value }
 });
 
-// GET /api/tickets - Получить все тикеты (с учетом tenant)
+// GET /api/tickets - Get all tickets (with tenant consideration)
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -32,26 +32,26 @@ export async function GET(request: Request) {
 
     const where: any = {};
 
-    // Глобальный ADMIN (без tenantId) НЕ видит обычные тикеты
+    // Global ADMIN (without tenantId) does NOT see regular tickets
     if (session.user.role === "ADMIN" && !session.user.tenantId) {
-      // Супер-админ работает только с support-тикетами
+      // Super-admin works only with support tickets
       return NextResponse.json([]);
     }
 
-    // Все остальные роли фильтруем по tenantId
+    // All other roles are filtered by tenantId
     if (!session.user.tenantId) {
       return NextResponse.json({ error: "Tenant ID required" }, { status: 400 });
     }
     where.tenantId = session.user.tenantId;
 
-    // Логика видимости тикетов:
-    // - USER: видит только свои тикеты (созданные им)
-    // - AGENT: видит ВСЕ тикеты своего тенанта (поддержка всех клиентов)
-    // - TENANT_ADMIN: видит ВСЕ тикеты своей организации
+    // Ticket visibility logic:
+    // - USER: sees only their own tickets (created by them)
+    // - AGENT: sees ALL tickets of their tenant (supporting all clients)
+    // - TENANT_ADMIN: sees ALL tickets of their organization
     if (session.user.role === "USER") {
       where.creatorId = session.user.id;
     }
-    // AGENT и TENANT_ADMIN видят все тикеты своего тенанта (фильтр по tenantId уже установлен)
+    // AGENT and TENANT_ADMIN see all tickets of their tenant (tenantId filter already set)
 
     if (status) {
       where.status = status;
@@ -121,7 +121,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/tickets - Создать новый тикет
+// POST /api/tickets - Create a new ticket
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -129,7 +129,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Супер-админ не может создавать обычные тикеты (только support-тикеты)
+    // Super-admin cannot create regular tickets (only support tickets)
     if (session.user.role === "ADMIN" && !session.user.tenantId) {
       return NextResponse.json(
         { error: "Super admins cannot create regular tickets. Use support tickets instead." },
@@ -137,7 +137,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Проверяем наличие tenantId
+    // Check for tenantId
     if (!session.user.tenantId) {
       return NextResponse.json({ error: "Tenant ID required" }, { status: 400 });
     }
@@ -145,7 +145,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = createTicketSchema.parse(body);
 
-    // Генерируем следующий номер тикета для этого tenant
+    // Generate next ticket number for this tenant
     const lastTicket = await prisma.ticket.findFirst({
       where: { tenantId: session.user.tenantId },
       orderBy: { number: "desc" },
@@ -154,7 +154,7 @@ export async function POST(request: Request) {
 
     const nextNumber = (lastTicket?.number || 0) + 1;
 
-    // Вычисляем SLA для тикета
+    // Calculate SLA for ticket
     const now = new Date();
     const slaData = await calculateSlaDueDate({
       priority: validatedData.priority,
@@ -164,7 +164,7 @@ export async function POST(request: Request) {
       createdAt: now,
     });
 
-    // Создаем тикет
+    // Create ticket
     const ticket = await prisma.ticket.create({
       data: {
         number: nextNumber,
@@ -195,7 +195,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // Сохраняем значения кастомных полей
+    // Save custom field values
     if (validatedData.customFields && Object.keys(validatedData.customFields).length > 0) {
       const customFieldValues = Object.entries(validatedData.customFields).map(
         ([fieldId, value]) => ({
@@ -210,13 +210,13 @@ export async function POST(request: Request) {
       });
     }
 
-    // 🤖 Автоматическое распределение тикета между агентами
+    // 🤖 Automatic ticket distribution among agents
     const assignedAgentId = await autoAssignTicket({
       tenantId: session.user.tenantId,
       categoryId: validatedData.categoryId || null,
     });
 
-    // Обновляем тикет с назначенным агентом
+    // Update ticket with assigned agent
     if (assignedAgentId) {
       await prisma.ticket.update({
         where: { id: ticket.id },
@@ -224,7 +224,7 @@ export async function POST(request: Request) {
       });
     }
 
-    // Создаем уведомления о новом тикете
+    // Create notifications for new ticket
     try {
       await createTicketNotifications(
         ticket.id,
@@ -235,10 +235,10 @@ export async function POST(request: Request) {
       );
     } catch (error) {
       console.error("Error creating notifications:", error);
-      // Не прерываем создание тикета из-за ошибки уведомлений
+      // Don't interrupt ticket creation due to notification error
     }
 
-    // Логируем создание тикета
+    // Log ticket creation
     await createAuditLog({
       tenantId: session.user.tenantId,
       userId: session.user.id,

@@ -7,10 +7,10 @@ import { createAuditLog, getClientIp, getUserAgent } from "@/lib/audit-log";
 import { getTenantWhereClause, getTenantIdForCreate } from "@/lib/api-utils";
 
 const createSlaPolicySchema = z.object({
-  name: z.string().min(3, "Название должно содержать минимум 3 символа"),
+  name: z.string().min(3, "Name must contain at least 3 characters"),
   description: z.string().optional(),
   responseTime: z.number().int().positive().optional(),
-  resolutionTime: z.number().int().positive("Время решения обязательно"),
+  resolutionTime: z.number().int().positive("Resolution time is required"),
   priorities: z.array(z.string()).default([]),
   categoryIds: z.array(z.string()).default([]),
   queueIds: z.array(z.string()).default([]),
@@ -21,7 +21,7 @@ const createSlaPolicySchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-// GET /api/sla-policies - Получить все SLA политики
+// GET /api/sla-policies - Get all SLA policies
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -29,14 +29,14 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только TENANT_ADMIN и ADMIN могут просматривать SLA политики
+    // Only TENANT_ADMIN and ADMIN can view SLA policies
     if (session.user.role !== "TENANT_ADMIN" && session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Суперадмин (ADMIN без tenantId) видит все политики
+    // Super-admin (ADMIN without tenantId) sees all policies
     const whereClause = session.user.role === "ADMIN" && !session.user.tenantId
-      ? {} // Суперадмин видит все
+      ? {} // Super-admin sees all
       : { tenantId: session.user.tenantId };
 
     const policies = await prisma.slaPolicy.findMany({
@@ -63,7 +63,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/sla-policies - Создать новую SLA политику
+// POST /api/sla-policies - Create a new SLA policy
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только TENANT_ADMIN может создавать SLA политики
+    // Only TENANT_ADMIN can create SLA policies
     if (session.user.role !== "TENANT_ADMIN" && session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // Логируем создание политики
+    // Log policy creation
     await createAuditLog({
       tenantId: session.user.tenantId,
       userId: session.user.id,

@@ -27,7 +27,7 @@ export default function DashboardLayout({
           <main className="flex-1 p-3 sm:p-6 w-full overflow-x-hidden">{children}</main>
         </div>
         
-        {/* Overlay для мобильного меню */}
+        {/* Overlay for mobile menu */}
         {mobileMenuOpen && (
           <div 
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"

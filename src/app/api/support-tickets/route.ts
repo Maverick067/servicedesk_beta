@@ -12,9 +12,9 @@ const createSupportTicketSchema = z.object({
 
 /**
  * GET /api/support-tickets
- * Получить support тикеты
- * - TENANT_ADMIN: видит свои тикеты
- * - SUPER_ADMIN: видит все тикеты
+ * Get support tickets
+ * - TENANT_ADMIN: sees their own tickets
+ * - SUPER_ADMIN: sees all tickets
  */
 export async function GET(request: NextRequest) {
   try {
@@ -24,18 +24,18 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только ADMIN и TENANT_ADMIN имеют доступ к support тикетам
+    // Only ADMIN and TENANT_ADMIN have access to support tickets
     if (session.user.role !== "ADMIN" && session.user.role !== "TENANT_ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     let where: any = {};
 
-    // TENANT_ADMIN видит только свои тикеты
+    // TENANT_ADMIN sees only their own tickets
     if (session.user.role === "TENANT_ADMIN" && session.user.tenantId) {
       where.tenantId = session.user.tenantId;
     }
-    // SUPER_ADMIN видит все тикеты (where пустой)
+    // SUPER_ADMIN sees all tickets (where is empty)
 
     const tickets = await prisma.supportTicket.findMany({
       where,
@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
 
 /**
  * POST /api/support-tickets
- * Создать support тикет (только для TENANT_ADMIN)
+ * Create support ticket (TENANT_ADMIN only)
  */
 export async function POST(request: NextRequest) {
   try {
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только TENANT_ADMIN может создавать support тикеты
+    // Only TENANT_ADMIN can create support tickets
     if (session.user.role !== "TENANT_ADMIN" || !session.user.tenantId) {
       return NextResponse.json(
         { error: "Only tenant administrators can create support tickets" },

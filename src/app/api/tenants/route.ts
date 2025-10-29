@@ -5,12 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const createTenantSchema = z.object({
-  name: z.string().min(2, "Название должно содержать минимум 2 символа"),
-  slug: z.string().min(2, "Slug должен содержать минимум 2 символа").regex(/^[a-z0-9-]+$/, "Slug может содержать только строчные буквы, цифры и дефисы"),
+  name: z.string().min(2, "Name must contain at least 2 characters"),
+  slug: z.string().min(2, "Slug must contain at least 2 characters").regex(/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers, and hyphens"),
   domain: z.string().optional(),
 });
 
-// GET /api/tenants - Получить организации
+// GET /api/tenants - Get organizations
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -18,10 +18,10 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Глобальный админ видит все организации с группами
+    // Global admin sees all organizations with groups
     if (session.user.role === "ADMIN" && !session.user.tenantId) {
       try {
-        // Временное отключение RLS для супер-админа
+        // Temporarily disable RLS for super-admin
         const tenants = await prisma.$queryRaw<Array<{
           id: string;
           name: string;
@@ -50,7 +50,7 @@ export async function GET() {
 
         console.log("Raw tenants data:", tenants);
 
-        // Преобразуем результат в нужный формат
+        // Transform result to required format
         const formattedTenants = tenants.map((t) => ({
           id: t.id,
           name: t.name,
@@ -81,7 +81,7 @@ export async function GET() {
       }
     }
 
-    // TENANT_ADMIN видит только свою организацию
+    // TENANT_ADMIN sees only their organization
     if (session.user.role === "TENANT_ADMIN") {
       const tenant = await prisma.tenant.findUnique({
         where: { id: session.user.tenantId },
@@ -102,7 +102,7 @@ export async function GET() {
       return NextResponse.json([tenant]);
     }
 
-    // AGENT и USER не могут видеть организации
+    // AGENT and USER cannot see organizations
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   } catch (error) {
     console.error("Error fetching tenants:", error);
@@ -113,7 +113,7 @@ export async function GET() {
   }
 }
 
-// POST /api/tenants - Создать новую организацию (только для админов)
+// POST /api/tenants - Create a new organization (admin only)
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -124,19 +124,19 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = createTenantSchema.parse(body);
 
-    // Проверяем уникальность slug
+    // Check slug uniqueness
     const existingTenant = await prisma.tenant.findUnique({
       where: { slug: validatedData.slug },
     });
 
     if (existingTenant) {
       return NextResponse.json(
-        { error: "Организация с таким slug уже существует" },
+        { error: "Organization with this slug already exists" },
         { status: 400 }
       );
     }
 
-    // Проверяем уникальность domain (если указан)
+    // Check domain uniqueness (if specified)
     if (validatedData.domain) {
       const existingDomain = await prisma.tenant.findUnique({
         where: { domain: validatedData.domain },
@@ -144,7 +144,7 @@ export async function POST(request: Request) {
 
       if (existingDomain) {
         return NextResponse.json(
-          { error: "Организация с таким доменом уже существует" },
+          { error: "Organization with this domain already exists" },
           { status: 400 }
         );
       }

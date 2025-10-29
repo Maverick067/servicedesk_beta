@@ -7,12 +7,12 @@ import { z } from "zod";
 const updateGroupSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional(),
-  tenantIds: z.array(z.string()).optional(), // Массив ID тенантов для добавления в группу
+  tenantIds: z.array(z.string()).optional(), // Array of tenant IDs to add to the group
 });
 
 /**
  * GET /api/tenant-groups/[id]
- * Получить группу тенантов
+ * Get tenant group
  */
 export async function GET(
   request: NextRequest,
@@ -57,7 +57,7 @@ export async function GET(
 
 /**
  * PATCH /api/tenant-groups/[id]
- * Обновить группу тенантов
+ * Update tenant group
  */
 export async function PATCH(
   request: NextRequest,
@@ -77,7 +77,7 @@ export async function PATCH(
     if (validatedData.name) updateData.name = validatedData.name;
     if (validatedData.description !== undefined) updateData.description = validatedData.description;
 
-    // Обновляем группу
+    // Update group
     const group = await prisma.tenantGroup.update({
       where: { id: params.id },
       data: updateData,
@@ -86,15 +86,15 @@ export async function PATCH(
       },
     });
 
-    // Если переданы tenantIds, обновляем состав группы
+    // If tenantIds are provided, update group composition
     if (validatedData.tenantIds !== undefined) {
-      // Сначала убираем все тенанты из группы
+      // First, remove all tenants from the group
       await prisma.tenant.updateMany({
         where: { groupId: params.id },
         data: { groupId: null },
       });
 
-      // Затем добавляем новые
+      // Then add new ones
       if (validatedData.tenantIds.length > 0) {
         await prisma.tenant.updateMany({
           where: {
@@ -107,7 +107,7 @@ export async function PATCH(
       }
     }
 
-    // Получаем обновленную группу
+    // Get updated group
     const updatedGroup = await prisma.tenantGroup.findUnique({
       where: { id: params.id },
       include: {
@@ -137,7 +137,7 @@ export async function PATCH(
 
 /**
  * DELETE /api/tenant-groups/[id]
- * Удалить группу тенантов
+ * Delete tenant group
  */
 export async function DELETE(
   request: NextRequest,
@@ -150,13 +150,13 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Сначала убираем все тенанты из группы (groupId станет null)
+    // First, remove all tenants from the group (groupId becomes null)
     await prisma.tenant.updateMany({
       where: { groupId: params.id },
       data: { groupId: null },
     });
 
-    // Затем удаляем группу
+    // Then delete the group
     await prisma.tenantGroup.delete({
       where: { id: params.id },
     });

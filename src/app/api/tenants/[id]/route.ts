@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const updateTenantSchema = z.object({
-  name: z.string().min(2, "Название должно содержать минимум 2 символа"),
+  name: z.string().min(2, "Name must contain at least 2 characters"),
   settings: z.object({
     ticketPrefix: z.string().optional(),
   }).optional(),
@@ -13,7 +13,7 @@ const updateTenantSchema = z.object({
 
 /**
  * GET /api/tenants/[id]
- * Получить информацию об организации
+ * Get organization information
  */
 export async function GET(
   request: NextRequest,
@@ -26,10 +26,10 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Проверка прав доступа
+    // Check access rights
     const canAccess =
-      session.user.role === "ADMIN" || // Глобальный админ
-      (session.user.role === "TENANT_ADMIN" && session.user.tenantId === params.id); // Админ своей организации
+      session.user.role === "ADMIN" || // Global admin
+      (session.user.role === "TENANT_ADMIN" && session.user.tenantId === params.id); // Admin of their organization
 
     if (!canAccess) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -63,7 +63,7 @@ export async function GET(
       return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
     }
 
-    // Подсчет открытых тикетов
+    // Count open tickets
     const openTicketsCount = await prisma.ticket.count({
       where: {
         tenantId: params.id,
@@ -73,7 +73,7 @@ export async function GET(
       },
     });
 
-    // Формируем ответ
+    // Form response
     const response = {
       id: tenant.id,
       name: tenant.name,
@@ -107,7 +107,7 @@ export async function GET(
 
 /**
  * PATCH /api/tenants/[id]
- * Обновить информацию об организации
+ * Update organization information
  */
 export async function PATCH(
   request: NextRequest,
@@ -120,10 +120,10 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Проверка прав доступа
+    // Check access rights
     const canUpdate =
-      session.user.role === "ADMIN" || // Глобальный админ
-      (session.user.role === "TENANT_ADMIN" && session.user.tenantId === params.id); // Админ своей организации
+      session.user.role === "ADMIN" || // Global admin
+      (session.user.role === "TENANT_ADMIN" && session.user.tenantId === params.id); // Admin of their organization
 
     if (!canUpdate) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -132,7 +132,7 @@ export async function PATCH(
     const body = await request.json();
     const validatedData = updateTenantSchema.parse(body);
 
-    // Получаем текущие настройки
+    // Get current settings
     const currentTenant = await prisma.tenant.findUnique({
       where: { id: params.id },
       select: { settings: true },
@@ -142,7 +142,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Tenant not found" }, { status: 404 });
     }
 
-    // Объединяем настройки
+    // Merge settings
     const currentSettings = (currentTenant.settings as any) || {};
     const newSettings = {
       ...currentSettings,
@@ -172,7 +172,7 @@ export async function PATCH(
 
 /**
  * DELETE /api/tenants/[id]
- * Удалить организацию (ОПАСНАЯ ОПЕРАЦИЯ!)
+ * Delete organization (DANGEROUS OPERATION!)
  */
 export async function DELETE(
   request: NextRequest,
@@ -185,12 +185,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только глобальный админ может удалять организации
+    // Only global admin can delete organizations
     if (session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Проверяем подтверждение
+    // Check confirmation
     const { confirmation } = await request.json();
     if (confirmation !== "DELETE") {
       return NextResponse.json(

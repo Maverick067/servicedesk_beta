@@ -5,13 +5,13 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const createGroupSchema = z.object({
-  name: z.string().min(1, "Название обязательно"),
+  name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
 });
 
 /**
  * GET /api/tenant-groups
- * Получить все группы тенантов
+ * Get all tenant groups
  */
 export async function GET() {
   try {
@@ -21,7 +21,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Временно отключаем RLS для суперадмина
+    // Temporarily disable RLS for super-admin
     const groups = await prisma.$queryRaw`
       SELECT 
         tg.id,
@@ -58,7 +58,7 @@ export async function GET() {
 
 /**
  * POST /api/tenant-groups
- * Создать новую группу тенантов
+ * Create a new tenant group
  */
 export async function POST(request: NextRequest) {
   try {
@@ -71,8 +71,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = createGroupSchema.parse(body);
 
-    // Временно отключаем RLS для суперадмина
-    // Используем cuid() для генерации ID
+    // Temporarily disable RLS for super-admin
+    // Use cuid() for ID generation
     const result = await prisma.$queryRaw`
       INSERT INTO tenant_groups (id, name, description, "createdAt", "updatedAt")
       VALUES (

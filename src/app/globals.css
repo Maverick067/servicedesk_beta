@@ -113,13 +113,13 @@
     animation: notification-bounce 0.6s ease-in-out;
   }
 
-  /* Утилиты для touch-устройств */
+  /* Utilities for touch devices */
   .touch-manipulation {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Кастомный scrollbar для мобильных */
+  /* Custom scrollbar for mobile */
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
@@ -139,7 +139,7 @@
     border-radius: 4px;
   }
 
-  /* Адаптивные брейкпоинты */
+  /* Responsive breakpoints */
   @media (min-width: 475px) {
     .xs\:inline {
       display: inline;
@@ -150,7 +150,7 @@
     }
   }
 
-  /* Улучшенный фокус для мобильных */
+  /* Improved focus for mobile */
   @media (hover: none) and (pointer: coarse) {
     button:focus,
     a:focus,
@@ -162,7 +162,7 @@
     }
   }
 
-  /* Улучшенная прокрутка для iOS */
+  /* Improved scrolling for iOS */
   @supports (-webkit-overflow-scrolling: touch) {
     .overflow-auto,
     .overflow-y-auto,

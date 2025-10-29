@@ -13,7 +13,7 @@ const updateTicketSchema = z.object({
   categoryId: z.string().nullable().optional(),
 });
 
-// GET /api/tickets/[id] - Получить один тикет
+// GET /api/tickets/[id] - Get one ticket
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -24,7 +24,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Супер-админ не имеет доступа к обычным тикетам
+    // Super-admin has no access to regular tickets
     if (session.user.role === "ADMIN" && !session.user.tenantId) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -90,16 +90,16 @@ export async function GET(
       return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
     }
 
-    // Логика видимости тикетов:
-    // - USER: видит только свои тикеты
-    // - AGENT: видит все тикеты организации
-    // - TENANT_ADMIN: видит все тикеты организации
-    // - ADMIN: видит все тикеты организации
+    // Ticket visibility logic:
+    // - USER: sees only their own tickets
+    // - AGENT: sees all organization tickets
+    // - TENANT_ADMIN: sees all organization tickets
+    // - ADMIN: sees all organization tickets
     if (session.user.role === "USER" && ticket.creatorId !== session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Если создатель тикета открывает свой тикет - обновляем время последнего просмотра
+    // If ticket creator opens their ticket - update last viewed time
     if (ticket.creatorId === session.user.id) {
       await prisma.ticket.update({
         where: { id: params.id },
@@ -117,7 +117,7 @@ export async function GET(
   }
 }
 
-// PATCH /api/tickets/[id] - Обновить тикет
+// PATCH /api/tickets/[id] - Update ticket
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
@@ -131,7 +131,7 @@ export async function PATCH(
     const body = await request.json();
     const validatedData = updateTicketSchema.parse(body);
 
-    // Проверяем существование тикета и права доступа
+    // Check ticket existence and access rights
     const existingTicket = await prisma.ticket.findFirst({
       where: {
         id: params.id,
@@ -143,11 +143,11 @@ export async function PATCH(
       return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
     }
 
-    // Логика доступа к обновлению тикетов:
-    // - USER: может обновлять только свои тикеты
-    // - AGENT: может обновлять назначенные им тикеты или все тикеты организации
-    // - TENANT_ADMIN: может обновлять все тикеты организации
-    // - ADMIN: может обновлять все тикеты организации
+    // Ticket update access logic:
+    // - USER: can update only their own tickets
+    // - AGENT: can update tickets assigned to them or all organization tickets
+    // - TENANT_ADMIN: can update all organization tickets
+    // - ADMIN: can update all organization tickets
     if (session.user.role === "USER" && existingTicket.creatorId !== session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -158,26 +158,26 @@ export async function PATCH(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Логика обновления полей тикета
+    // Ticket field update logic
     const updateData: any = {};
     
     if (session.user.role === "USER") {
-      // Обычные пользователи могут менять только ограниченный набор полей своих тикетов
+      // Regular users can change only a limited set of fields in their tickets
       if (validatedData.title) updateData.title = validatedData.title;
       if (validatedData.description) updateData.description = validatedData.description;
     } else if (session.user.role === "AGENT") {
-      // Агенты могут менять все поля назначенных им тикетов
+      // Agents can change all fields of tickets assigned to them
       Object.assign(updateData, validatedData);
       
-      // Установить resolvedAt при переводе в RESOLVED
+      // Set resolvedAt when transitioning to RESOLVED
       if (validatedData.status === "RESOLVED" && !existingTicket.resolvedAt) {
         updateData.resolvedAt = new Date();
       }
     } else {
-      // TENANT_ADMIN и ADMIN могут менять все поля всех тикетов
+      // TENANT_ADMIN and ADMIN can change all fields of all tickets
       Object.assign(updateData, validatedData);
       
-      // Установить resolvedAt при переводе в RESOLVED
+      // Set resolvedAt when transitioning to RESOLVED
       if (validatedData.status === "RESOLVED" && !existingTicket.resolvedAt) {
         updateData.resolvedAt = new Date();
       }
@@ -224,7 +224,7 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/tickets/[id] - Удалить тикет (только свои тикеты)
+// DELETE /api/tickets/[id] - Delete ticket (own tickets only)
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
@@ -239,7 +239,7 @@ export async function DELETE(
       where: {
         id: params.id,
         tenantId: session.user.tenantId,
-        creatorId: session.user.id, // Только свои тикеты
+        creatorId: session.user.id, // Own tickets only
       },
     });
 

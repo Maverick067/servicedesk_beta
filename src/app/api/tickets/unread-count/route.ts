@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 /**
  * GET /api/tickets/unread-count
- * Возвращает количество непрочитанных комментариев в обычных тикетах
+ * Returns the count of unread comments in regular tickets
  */
 export async function GET() {
   try {
@@ -15,12 +15,12 @@ export async function GET() {
       return NextResponse.json({ count: 0 });
     }
 
-    // Не показываем для супер-админов (у них нет tenantId)
+    // Don't show for super-admins (they have no tenantId)
     if (session.user.role === "ADMIN") {
       return NextResponse.json({ count: 0 });
     }
 
-    // Получаем все тикеты пользователя с комментариями
+    // Get all user tickets with comments
     const tickets = await prisma.ticket.findMany({
       where: {
         creatorId: session.user.id,
@@ -32,9 +32,9 @@ export async function GET() {
         comments: {
           where: {
             authorId: {
-              not: session.user.id, // Не от самого пользователя
+              not: session.user.id, // Not from the user themselves
             },
-            isInternal: false, // Не внутренние заметки
+            isInternal: false, // Not internal notes
           },
           select: {
             createdAt: true,
@@ -42,23 +42,23 @@ export async function GET() {
           orderBy: {
             createdAt: "desc",
           },
-          // Берем ВСЕ комментарии, а не только последний
+          // Get ALL comments, not just the last one
         },
       },
     });
 
-    // Считаем КОЛИЧЕСТВО непрочитанных комментариев (не тикетов!)
+    // Count the NUMBER of unread comments (not tickets!)
     let unreadCount = 0;
     for (const ticket of tickets) {
       if (ticket.comments.length === 0) continue;
       
-      // Если тикет никогда не открывался - все комментарии непрочитанные
+      // If ticket was never opened - all comments are unread
       if (!ticket.lastViewedByCreatorAt) {
         unreadCount += ticket.comments.length;
         continue;
       }
       
-      // Считаем комментарии новее lastViewedByCreatorAt
+      // Count comments newer than lastViewedByCreatorAt
       const newComments = ticket.comments.filter(
         (comment) => comment.createdAt > ticket.lastViewedByCreatorAt!
       );
