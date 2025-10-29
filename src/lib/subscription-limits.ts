@@ -1,5 +1,5 @@
 /**
- * Утилиты для проверки лимитов подписки
+ * Utilities for checking subscription limits
  */
 
 import { prisma } from './prisma';
@@ -7,16 +7,16 @@ import { PlanType } from '@prisma/client';
 import { getPlanLimits } from './stripe';
 
 /**
- * Проверить лимит пользователей
+ * Check user limit
  */
 export async function checkUserLimit(tenantId: string): Promise<{ allowed: boolean; message?: string }> {
-  // Получаем подписку
+  // Get subscription
   const subscription = await prisma.subscription.findUnique({
     where: { tenantId },
   });
 
   if (!subscription) {
-    // Нет подписки - используем FREE план
+    // No subscription - use FREE plan
     const limits = getPlanLimits(PlanType.FREE);
     const userCount = await prisma.user.count({
       where: { tenantId },
@@ -25,14 +25,14 @@ export async function checkUserLimit(tenantId: string): Promise<{ allowed: boole
     if (userCount >= limits.maxUsers) {
       return {
         allowed: false,
-        message: `Достигнут лимит пользователей для плана FREE (${limits.maxUsers}). Обновите план для добавления новых пользователей.`,
+        message: `User limit reached for FREE plan (${limits.maxUsers}). Upgrade plan to add new users.`,
       };
     }
 
     return { allowed: true };
   }
 
-  // Проверяем лимит для текущего плана
+  // Check limit for current plan
   const userCount = await prisma.user.count({
     where: { tenantId },
   });
@@ -40,7 +40,7 @@ export async function checkUserLimit(tenantId: string): Promise<{ allowed: boole
   if (userCount >= subscription.maxUsers) {
     return {
       allowed: false,
-      message: `Достигнут лимит пользователей для плана ${subscription.plan} (${subscription.maxUsers}). Обновите план для добавления новых пользователей.`,
+      message: `User limit reached for ${subscription.plan} plan (${subscription.maxUsers}). Upgrade plan to add new users.`,
     };
   }
 
@@ -48,7 +48,7 @@ export async function checkUserLimit(tenantId: string): Promise<{ allowed: boole
 }
 
 /**
- * Проверить лимит агентов
+ * Check agent limit
  */
 export async function checkAgentLimit(tenantId: string): Promise<{ allowed: boolean; message?: string }> {
   const subscription = await prisma.subscription.findUnique({
@@ -56,7 +56,7 @@ export async function checkAgentLimit(tenantId: string): Promise<{ allowed: bool
   });
 
   if (!subscription) {
-    // FREE план
+    // FREE plan
     const limits = getPlanLimits(PlanType.FREE);
     const agentCount = await prisma.user.count({
       where: {
@@ -68,7 +68,7 @@ export async function checkAgentLimit(tenantId: string): Promise<{ allowed: bool
     if (agentCount >= limits.maxAgents) {
       return {
         allowed: false,
-        message: `Достигнут лимит агентов для плана FREE (${limits.maxAgents}). Обновите план для добавления новых агентов.`,
+        message: `Agent limit reached for FREE plan (${limits.maxAgents}). Upgrade plan to add new agents.`,
       };
     }
 
@@ -85,7 +85,7 @@ export async function checkAgentLimit(tenantId: string): Promise<{ allowed: bool
   if (agentCount >= subscription.maxAgents) {
     return {
       allowed: false,
-      message: `Достигнут лимит агентов для плана ${subscription.plan} (${subscription.maxAgents}). Обновите план для добавления новых агентов.`,
+      message: `Agent limit reached for ${subscription.plan} plan (${subscription.maxAgents}). Upgrade plan to add new agents.`,
     };
   }
 
@@ -93,7 +93,7 @@ export async function checkAgentLimit(tenantId: string): Promise<{ allowed: bool
 }
 
 /**
- * Проверить лимит хранилища
+ * Check storage limit
  */
 export async function checkStorageLimit(tenantId: string, additionalSizeGB: number): Promise<{ allowed: boolean; message?: string }> {
   const subscription = await prisma.subscription.findUnique({
@@ -102,7 +102,7 @@ export async function checkStorageLimit(tenantId: string, additionalSizeGB: numb
 
   const maxStorageGB = subscription ? subscription.maxStorageGB : getPlanLimits(PlanType.FREE).maxStorageGB;
 
-  // Получаем текущее использование хранилища
+  // Get current storage usage
   const currentStorageBytes = await prisma.attachment.aggregate({
     where: {
       ticket: { tenantId },
@@ -117,7 +117,7 @@ export async function checkStorageLimit(tenantId: string, additionalSizeGB: numb
   if (currentStorageGB + additionalSizeGB > maxStorageGB) {
     return {
       allowed: false,
-      message: `Достигнут лимит хранилища (${maxStorageGB}GB). Текущее использование: ${currentStorageGB.toFixed(2)}GB. Обновите план для увеличения хранилища.`,
+      message: `Storage limit reached (${maxStorageGB}GB). Current usage: ${currentStorageGB.toFixed(2)}GB. Upgrade plan to increase storage.`,
     };
   }
 
@@ -125,7 +125,7 @@ export async function checkStorageLimit(tenantId: string, additionalSizeGB: numb
 }
 
 /**
- * Проверить лимит тикетов за месяц
+ * Check monthly ticket limit
  */
 export async function checkTicketLimit(tenantId: string): Promise<{ allowed: boolean; message?: string }> {
   const subscription = await prisma.subscription.findUnique({
@@ -134,12 +134,12 @@ export async function checkTicketLimit(tenantId: string): Promise<{ allowed: boo
 
   const maxTicketsPerMonth = subscription ? subscription.maxTicketsPerMonth : getPlanLimits(PlanType.FREE).maxTicketsPerMonth;
 
-  // Если лимит не установлен (null) - unlimited
+  // If limit not set (null) - unlimited
   if (!maxTicketsPerMonth) {
     return { allowed: true };
   }
 
-  // Считаем тикеты за текущий месяц
+  // Count tickets for current month
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
   startOfMonth.setHours(0, 0, 0, 0);
@@ -156,7 +156,7 @@ export async function checkTicketLimit(tenantId: string): Promise<{ allowed: boo
   if (ticketCount >= maxTicketsPerMonth) {
     return {
       allowed: false,
-      message: `Достигнут лимит тикетов за месяц (${maxTicketsPerMonth}). Обновите план для создания новых тикетов.`,
+      message: `Monthly ticket limit reached (${maxTicketsPerMonth}). Upgrade plan to create new tickets.`,
     };
   }
 
@@ -164,7 +164,7 @@ export async function checkTicketLimit(tenantId: string): Promise<{ allowed: boo
 }
 
 /**
- * Проверить, доступна ли функция для текущего плана
+ * Check if feature is available for current plan
  */
 export async function checkFeatureAccess(tenantId: string, feature: 'sso' | 'customDomain' | 'api' | 'prioritySupport' | 'customBranding'): Promise<boolean> {
   const subscription = await prisma.subscription.findUnique({
@@ -172,7 +172,7 @@ export async function checkFeatureAccess(tenantId: string, feature: 'sso' | 'cus
   });
 
   if (!subscription) {
-    return false; // FREE plan не имеет дополнительных функций
+    return false; // FREE plan does not have additional features
   }
 
   const featureMap: Record<string, keyof typeof subscription> = {
@@ -188,7 +188,7 @@ export async function checkFeatureAccess(tenantId: string, feature: 'sso' | 'cus
 }
 
 /**
- * Получить текущее использование ресурсов
+ * Get current resource usage
  */
 export async function getUsageStats(tenantId: string) {
   const [userCount, agentCount, storageBytes, ticketCountThisMonth] = await Promise.all([
@@ -219,7 +219,7 @@ export async function getUsageStats(tenantId: string) {
 }
 
 /**
- * Получить лимиты для текущей подписки
+ * Get limits for current subscription
  */
 export async function getSubscriptionLimits(tenantId: string) {
   const subscription = await prisma.subscription.findUnique({

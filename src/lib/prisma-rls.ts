@@ -1,12 +1,12 @@
 /**
- * Prisma Middleware для Row-Level Security (RLS)
- * Автоматически устанавливает app.tenant_id и app.is_admin перед каждым запросом
+ * Prisma Middleware for Row-Level Security (RLS)
+ * Automatically sets app.tenant_id and app.is_admin before each query
  */
 
 import { Prisma, PrismaClient } from '@prisma/client';
 
 /**
- * Интерфейс для контекста RLS
+ * Interface for RLS context
  */
 export interface RLSContext {
   tenantId: string | null;
@@ -15,17 +15,17 @@ export interface RLSContext {
 }
 
 /**
- * Добавить RLS middleware к Prisma Client
+ * Add RLS middleware to Prisma Client
  */
 export function addRLSMiddleware(prisma: PrismaClient) {
   prisma.$use(async (params, next) => {
-    // Пропускаем для миграций и системных операций
+    // Skip for migrations and system operations
     if (params.action === 'executeRaw' || params.action === 'queryRaw') {
       return next(params);
     }
 
-    // RLS context должен быть установлен через setRLSContext
-    // Если не установлен, пропускаем (для системных операций)
+    // RLS context should be set via setRLSContext
+    // If not set, skip (for system operations)
     try {
       return await next(params);
     } catch (error) {
@@ -36,25 +36,25 @@ export function addRLSMiddleware(prisma: PrismaClient) {
 }
 
 /**
- * Установить RLS контекст для текущего запроса
- * Вызывается в начале каждого API запроса
+ * Set RLS context for current request
+ * Called at the start of each API request
  */
 export async function setRLSContext(
   prisma: PrismaClient,
   context: RLSContext
 ): Promise<void> {
   try {
-    // Устанавливаем app.tenant_id
+    // Set app.tenant_id
     if (context.tenantId) {
       await prisma.$executeRawUnsafe(
         `SET LOCAL app.tenant_id = '${context.tenantId}'`
       );
     } else {
-      // Сбрасываем для глобальных админов
+      // Reset for global admins
       await prisma.$executeRawUnsafe(`SET LOCAL app.tenant_id = ''`);
     }
 
-    // Устанавливаем app.is_admin
+    // Set app.is_admin
     await prisma.$executeRawUnsafe(
       `SET LOCAL app.is_admin = '${context.isAdmin}'`
     );
@@ -65,7 +65,7 @@ export async function setRLSContext(
 }
 
 /**
- * Сбросить RLS контекст (для cleanup)
+ * Clear RLS context (for cleanup)
  */
 export async function clearRLSContext(prisma: PrismaClient): Promise<void> {
   try {
@@ -77,8 +77,8 @@ export async function clearRLSContext(prisma: PrismaClient): Promise<void> {
 }
 
 /**
- * Обертка для выполнения запроса с RLS контекстом
- * Автоматически устанавливает и очищает контекст
+ * Wrapper for executing query with RLS context
+ * Automatically sets and clears context
  */
 export async function withRLSContext<T>(
   prisma: PrismaClient,
@@ -94,7 +94,7 @@ export async function withRLSContext<T>(
 }
 
 /**
- * Получить RLS контекст из NextAuth session
+ * Get RLS context from NextAuth session
  */
 export function getRLSContextFromSession(session: any): RLSContext {
   if (!session?.user) {
@@ -109,8 +109,8 @@ export function getRLSContextFromSession(session: any): RLSContext {
 }
 
 /**
- * Middleware функция для API routes
- * Автоматически устанавливает RLS контекст из session
+ * Middleware function for API routes
+ * Automatically sets RLS context from session
  */
 export async function withRLSFromSession<T>(
   prisma: PrismaClient,
@@ -122,23 +122,23 @@ export async function withRLSFromSession<T>(
 }
 
 /**
- * Проверить, имеет ли пользователь доступ к tenant
+ * Check if user has access to tenant
  */
 export function validateTenantAccess(
   session: any,
   tenantId: string
 ): boolean {
-  // Глобальные админы имеют доступ ко всем tenants
+  // Global admins have access to all tenants
   if (session.user.role === 'ADMIN') {
     return true;
   }
 
-  // Обычные пользователи имеют доступ только к своему tenant
+  // Regular users have access only to their tenant
   return session.user.tenantId === tenantId;
 }
 
 /**
- * Логирование RLS events для debugging
+ * RLS event logging for debugging
  */
 export function logRLSEvent(
   action: string,

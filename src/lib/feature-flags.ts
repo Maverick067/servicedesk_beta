@@ -1,5 +1,5 @@
 /**
- * Feature Flags система для управления модулями на уровне tenant
+ * Feature Flags system for managing modules at tenant level
  */
 
 export type FeatureFlag =
@@ -34,7 +34,7 @@ export interface TenantSettings {
 }
 
 /**
- * Проверяет, включен ли модуль для tenant
+ * Checks if module is enabled for tenant
  */
 export function isModuleEnabled(
   settings: TenantSettings | null,
@@ -47,7 +47,7 @@ export function isModuleEnabled(
 }
 
 /**
- * Получает список включенных модулей
+ * Gets list of enabled modules
  */
 export function getEnabledModules(settings: TenantSettings | null): FeatureFlag[] {
   if (!settings || !settings.modules) {
@@ -60,7 +60,7 @@ export function getEnabledModules(settings: TenantSettings | null): FeatureFlag[
 }
 
 /**
- * Обновляет состояние модуля
+ * Updates module state
  */
 export function toggleModule(
   settings: TenantSettings | null,
@@ -79,33 +79,33 @@ export function toggleModule(
 }
 
 /**
- * Типы планов подписки
+ * Subscription plan types
  */
 export type SubscriptionPlan = "FREE" | "PRO" | "ENTERPRISE";
 
 /**
- * Определяет, какие модули доступны на каком плане
+ * Defines which modules are available on which plan
  */
 export const MODULE_PLAN_REQUIREMENTS: Record<FeatureFlag, SubscriptionPlan> = {
-  // Бесплатные модули (доступны на FREE плане)
+  // Free modules (available on FREE plan)
   queues: "FREE",
   reports: "FREE",
   customFields: "FREE",
   savedFilters: "FREE",
   
-  // PRO модули
+  // PRO modules
   knowledge: "PRO",
   automation: "PRO",
   sla: "PRO",
   
-  // ENTERPRISE модули
+  // ENTERPRISE modules
   assets: "ENTERPRISE",
   webhooks: "ENTERPRISE",
   ldap: "ENTERPRISE",
 };
 
 /**
- * Проверяет, доступен ли модуль на данном плане
+ * Checks if module is available on given plan
  */
 export function isModuleAvailableOnPlan(
   module: FeatureFlag,
@@ -123,7 +123,7 @@ export function isModuleAvailableOnPlan(
 }
 
 /**
- * Получает список бесплатных модулей
+ * Gets list of free modules
  */
 export function getFreeModules(): FeatureFlag[] {
   return Object.entries(MODULE_PLAN_REQUIREMENTS)
@@ -132,7 +132,7 @@ export function getFreeModules(): FeatureFlag[] {
 }
 
 /**
- * Метаданные модулей для UI
+ * Module metadata for UI
  */
 export const MODULE_METADATA: Record<
   FeatureFlag,
@@ -146,71 +146,71 @@ export const MODULE_METADATA: Record<
   }
 > = {
   queues: {
-    name: "Очереди",
-    description: "Организация и группировка тикетов по очередям",
+    name: "Queues",
+    description: "Organization and grouping of tickets by queues",
     icon: "📥",
     color: "#8b5cf6",
     requiredPlan: "FREE",
   },
   sla: {
     name: "SLA",
-    description: "Контроль времени ответа и решения, эскалации",
+    description: "Response and resolution time control, escalations",
     icon: "⏱️",
     color: "#ef4444",
     requiredPlan: "PRO",
   },
   knowledge: {
-    name: "База знаний",
-    description: "Статьи, FAQ и документация для пользователей",
+    name: "Knowledge Base",
+    description: "Articles, FAQ and documentation for users",
     icon: "📚",
     color: "#06b6d4",
     requiredPlan: "PRO",
   },
   automation: {
-    name: "Автоматизация",
-    description: "Триггеры, правила и автоматические действия",
+    name: "Automation",
+    description: "Triggers, rules and automatic actions",
     icon: "⚡",
     color: "#f59e0b",
     requiredPlan: "PRO",
   },
   assets: {
-    name: "CMDB/Активы",
-    description: "Управление IT-активами и оборудованием",
+    name: "CMDB/Assets",
+    description: "IT assets and equipment management",
     icon: "💻",
     color: "#10b981",
     requiredPlan: "ENTERPRISE",
   },
   reports: {
-    name: "Отчеты",
-    description: "Аналитика, графики и экспорт данных",
+    name: "Reports",
+    description: "Analytics, charts and data export",
     icon: "📊",
     color: "#6366f1",
     requiredPlan: "FREE",
   },
   webhooks: {
     name: "Webhooks",
-    description: "Интеграции через HTTP callbacks",
+    description: "Integrations via HTTP callbacks",
     icon: "🔗",
     color: "#ec4899",
     requiredPlan: "ENTERPRISE",
   },
   ldap: {
     name: "LDAP/SSO",
-    description: "Аутентификация через LDAP или Single Sign-On",
+    description: "Authentication via LDAP or Single Sign-On",
     icon: "🔐",
     color: "#8b5cf6",
     requiredPlan: "ENTERPRISE",
   },
   customFields: {
-    name: "Кастомные поля",
-    description: "Дополнительные поля для тикетов",
+    name: "Custom Fields",
+    description: "Additional fields for tickets",
     icon: "📝",
     color: "#14b8a6",
     requiredPlan: "FREE",
   },
   savedFilters: {
-    name: "Сохраненные фильтры",
-    description: "Быстрый доступ к часто используемым фильтрам",
+    name: "Saved Filters",
+    description: "Quick access to frequently used filters",
     icon: "🔍",
     color: "#f97316",
     requiredPlan: "FREE",
@@ -218,14 +218,14 @@ export const MODULE_METADATA: Record<
 };
 
 /**
- * Получает настройки по умолчанию для нового tenant
+ * Gets default settings for new tenant
  */
 export function getDefaultTenantSettings(): TenantSettings {
   return {
     ticketPrefix: "TICKET",
     modules: {
-      queues: true, // Включаем по умолчанию
-      reports: true, // Включаем по умолчанию
+      queues: true, // Enable by default
+      reports: true, // Enable by default
       sla: false,
       knowledge: false,
       automation: false,

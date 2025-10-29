@@ -12,7 +12,7 @@ function createPrismaClient() {
       : ['error'],
   })
 
-  // Добавляем RLS middleware
+  // Add RLS middleware
   addRLSMiddleware(client)
 
   return client
