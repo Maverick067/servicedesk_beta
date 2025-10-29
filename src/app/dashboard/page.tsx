@@ -125,7 +125,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      {/* Hero Section with Gradient - Адаптивный */}
+      {/* Hero Section with Gradient - Responsive */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}

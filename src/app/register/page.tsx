@@ -29,11 +29,11 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState("");
   const [formData, setFormData] = useState({
-    // Данные организации
+    // Organization data
     tenantName: "",
     tenantSlug: "",
     tenantDomain: "",
-    // Данные пользователя
+    // User data
     name: "",
     email: "",
     password: "",
@@ -67,7 +67,7 @@ export default function RegisterPage() {
       setError("Fill in all fields");
       return;
     }
-    // Автоматически генерируем пароль при переходе на шаг 2
+    // Automatically generate password when moving to step 2
     generatePassword();
     setStep(2);
     setError("");
@@ -96,7 +96,7 @@ export default function RegisterPage() {
       
       console.log("Sending registration data:", requestData);
       
-      // Создаем организацию и пользователя через единый API
+      // Create organization and user via a single API
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -108,10 +108,10 @@ export default function RegisterPage() {
         throw new Error(data.error || "Failed to create organization");
       }
 
-      // Показываем уведомление с паролем
+      // Show notification with password
       alert(`Organization successfully created!\n\nYour login credentials:\nEmail: ${formData.email}\nPassword: ${formData.password}\n\nPlease save these credentials!`);
 
-      // Перенаправляем на страницу входа
+      // Redirect to login page
       router.push("/login?message=registration-success");
     } catch (error: any) {
       setError(error.message);

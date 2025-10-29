@@ -28,10 +28,10 @@ export function DashboardHeader({ onMenuToggle, mobileMenuOpen }: DashboardHeade
 
   const getRoleLabel = () => {
     switch (session?.user.role) {
-      case "ADMIN": return "Администратор";
-      case "TENANT_ADMIN": return "Админ организации";
-      case "AGENT": return "Агент";
-      case "USER": return "Пользователь";
+      case "ADMIN": return "Administrator";
+      case "TENANT_ADMIN": return "Organization Admin";
+      case "AGENT": return "Agent";
+      case "USER": return "User";
       default: return "";
     }
   };
@@ -40,7 +40,7 @@ export function DashboardHeader({ onMenuToggle, mobileMenuOpen }: DashboardHeade
     <header className="border-b bg-white sticky top-0 z-30">
       <div className="flex h-14 sm:h-16 items-center px-3 sm:px-6 justify-between">
         <div className="flex items-center gap-2 sm:gap-4">
-          {/* Кнопка мобильного меню */}
+          {/* Mobile menu button */}
           <Button
             variant="ghost"
             size="icon"
@@ -63,7 +63,7 @@ export function DashboardHeader({ onMenuToggle, mobileMenuOpen }: DashboardHeade
         </div>
 
         <div className="flex items-center gap-2 sm:gap-4">
-          {/* Десктопная версия профиля */}
+          {/* Desktop profile version */}
           <div className="hidden md:flex items-center gap-4">
             <div className="text-right">
               <p className="text-sm font-medium">{session?.user.name || session?.user.email}</p>
@@ -84,7 +84,7 @@ export function DashboardHeader({ onMenuToggle, mobileMenuOpen }: DashboardHeade
             </Button>
           </div>
 
-          {/* Мобильная версия профиля (dropdown) */}
+          {/* Mobile profile version (dropdown) */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild className="md:hidden">
               <Button variant="ghost" size="icon" className="rounded-full">
@@ -103,7 +103,7 @@ export function DashboardHeader({ onMenuToggle, mobileMenuOpen }: DashboardHeade
                   <p className="text-xs text-muted-foreground mt-1">{getRoleLabel()}</p>
                   {session?.user.tenantSlug && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      Тенант: {session.user.tenantSlug}
+                      Tenant: {session.user.tenantSlug}
                     </p>
                   )}
                 </div>
@@ -111,7 +111,7 @@ export function DashboardHeader({ onMenuToggle, mobileMenuOpen }: DashboardHeade
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })}>
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Выйти</span>
+                <span>Sign Out</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
