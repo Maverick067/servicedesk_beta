@@ -1,4 +1,4 @@
-// Prisma schema для Service Desk с multi-tenancy
+// Prisma schema for Service Desk with multi-tenancy
 
 generator client {
   provider = "prisma-client-js"
@@ -9,7 +9,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Модель для объединения тенантов (группы для админ-панели)
+// Model for grouping tenants (groups for admin panel)
 model TenantGroup {
   id          String   @id @default(cuid())
   name        String
@@ -17,12 +17,12 @@ model TenantGroup {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
-  tenants     Tenant[] // Тенанты в этой группе
+  tenants     Tenant[] // Tenants in this group
   
   @@map("tenant_groups")
 }
 
-// Модель для организаций (tenants)
+// Model for organizations (tenants)
 model Tenant {
   id        String   @id @default(cuid())
   name      String
@@ -32,14 +32,14 @@ model Tenant {
   // Custom domain support
   customDomain          String?  @unique
   customDomainVerified  Boolean  @default(false)
-  dnsVerificationToken  String?  // Токен для верификации через TXT record
+  dnsVerificationToken  String?  // Token for verification via TXT record
   sslEnabled            Boolean  @default(false)
   
   // Tenant grouping
-  groupId   String?  // Опциональная группа для объединения тенантов
+  groupId   String?  // Optional group for combining tenants
   group     TenantGroup? @relation(fields: [groupId], references: [id], onDelete: SetNull)
   
-  settings  Json?    @default("{\"ticketPrefix\": \"TICKET\", \"modules\": {\"queues\": true, \"sla\": false, \"knowledge\": false, \"automation\": false, \"cmdb\": false, \"reports\": true, \"webhooks\": false, \"ldap\": false}}") // Настройки модулей и конфигурация
+  settings  Json?    @default("{\"ticketPrefix\": \"TICKET\", \"modules\": {\"queues\": true, \"sla\": false, \"knowledge\": false, \"automation\": false, \"cmdb\": false, \"reports\": true, \"webhooks\": false, \"ldap\": false}}") // Module settings and configuration
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -48,38 +48,38 @@ model Tenant {
   categories Category[]
   invitations UserInvitation[]
   queues    Queue[]
-  slaPolicies SlaPolicy[] // SLA политики
-  customFields CustomField[] // Кастомные поля
-  knowledgeArticles KnowledgeArticle[] // База знаний
-  automationRules AutomationRule[] // Правила автоматизации
-  assets Asset[] // IT-активы (CMDB)
+  slaPolicies SlaPolicy[] // SLA policies
+  customFields CustomField[] // Custom fields
+  knowledgeArticles KnowledgeArticle[] // Knowledge base
+  automationRules AutomationRule[] // Automation rules
+  assets Asset[] // IT assets (CMDB)
   webhooks Webhook[] // Webhooks
-  ldapConfigs LdapConfig[] // LDAP/SSO конфигурации
-  subscription Subscription? // Подписка и биллинг
-  telegramBots TelegramBot[] // Telegram боты
-  supportTickets SupportTicket[] // Support тикеты от админов организации
+  ldapConfigs LdapConfig[] // LDAP/SSO configurations
+  subscription Subscription? // Subscription and billing
+  telegramBots TelegramBot[] // Telegram bots
+  supportTickets SupportTicket[] // Support tickets from organization admins
   
   @@index([groupId])
   @@map("tenants")
 }
 
-// Роли пользователей
+// User roles
 enum UserRole {
-  ADMIN       // Глобальный администратор (видит все tenant'ы)
-  TENANT_ADMIN // Администратор конкретной организации
-  AGENT       // Агент поддержки
-  USER        // Обычный пользователь
+  ADMIN       // Global administrator (sees all tenants)
+  TENANT_ADMIN // Administrator of specific organization
+  AGENT       // Support agent
+  USER        // Regular user
 }
 
-// Статусы агентов
+// Agent statuses
 enum AgentStatus {
-  AVAILABLE   // Доступен
-  BUSY        // Занят
-  AWAY        // Не на работе
-  ON_LEAVE    // В отпуске
+  AVAILABLE   // Available
+  BUSY        // Busy
+  AWAY        // Away
+  ON_LEAVE    // On leave
 }
 
-// Пользователи
+// Users
 model User {
   id            String      @id @default(cuid())
   email         String      @unique
@@ -88,9 +88,9 @@ model User {
   role          UserRole    @default(USER)
   avatar        String?
   isActive      Boolean     @default(true)
-  agentStatus   AgentStatus @default(AVAILABLE) // Статус агента (только для AGENT)
-  tenantId      String?     // Опционально: null для глобальных администраторов
-  permissions   Json?       // Модульные разрешения для агентов
+  agentStatus   AgentStatus @default(AVAILABLE) // Agent status (only for AGENT)
+  tenantId      String?     // Optional: null for global administrators
+  permissions   Json?       // Modular permissions for agents
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   
@@ -100,43 +100,43 @@ model User {
   comments      Comment[]
   categoryAssignments CategoryAgentAssignment[]
   notifications Notification[]
-  readComments CommentRead[] // Отслеживание прочитанных комментариев
-  sentInvitations UserInvitation[] // Приглашения, отправленные пользователем
-  notificationSettings NotificationSettings? // Настройки уведомлений пользователя
-  savedFilters SavedFilter[] // Сохранённые фильтры тикетов
-  supportComments SupportComment[] @relation("SupportCommentAuthor") // Комментарии в support тикетах
+  readComments CommentRead[] // Tracking read comments
+  sentInvitations UserInvitation[] // Invitations sent by user
+  notificationSettings NotificationSettings? // User notification settings
+  savedFilters SavedFilter[] // Saved ticket filters
+  supportComments SupportComment[] @relation("SupportCommentAuthor") // Comments in support tickets
   
   @@index([tenantId])
   @@index([email])
   @@map("users")
 }
 
-// Статусы тикетов
+// Ticket statuses
 enum TicketStatus {
-  OPEN        // Открыт
-  IN_PROGRESS // В работе
-  PENDING     // Ожидание
-  RESOLVED    // Решен
-  CLOSED      // Закрыт
+  OPEN        // Open
+  IN_PROGRESS // In progress
+  PENDING     // Pending
+  RESOLVED    // Resolved
+  CLOSED      // Closed
 }
 
-// Приоритеты
+// Priorities
 enum TicketPriority {
-  LOW         // Низкий
-  MEDIUM      // Средний
-  HIGH        // Высокий
-  URGENT      // Срочный
+  LOW         // Low
+  MEDIUM      // Medium
+  HIGH        // High
+  URGENT      // Urgent
 }
 
-// Очереди для группировки тикетов
+// Queues for grouping tickets
 model Queue {
   id          String   @id @default(cuid())
   name        String
   description String?
   color       String   @default("#8b5cf6")
-  icon        String?  // Иконка для очереди
+  icon        String?  // Icon for queue
   isActive    Boolean  @default(true)
-  priority    Int      @default(0) // Приоритет отображения
+  priority    Int      @default(0) // Display priority
   tenantId    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -149,7 +149,7 @@ model Queue {
   @@map("queues")
 }
 
-// Категории тикетов
+// Ticket categories
 model Category {
   id          String   @id @default(cuid())
   name        String
@@ -166,7 +166,7 @@ model Category {
   @@map("categories")
 }
 
-// Назначение категорий агентам
+// Category assignments to agents
 model CategoryAgentAssignment {
   id         String   @id @default(cuid())
   categoryId String
@@ -182,27 +182,27 @@ model CategoryAgentAssignment {
   @@map("category_agent_assignments")
 }
 
-// Тикеты
+// Tickets
 model Ticket {
   id          String         @id @default(cuid())
-  number      Int?           // Автоматический номер тикета (per-tenant), генерируется программно
+  number      Int?           // Automatic ticket number (per-tenant), generated programmatically
   title       String
   description String         @db.Text
   status      TicketStatus   @default(OPEN)
   priority    TicketPriority @default(MEDIUM)
   tenantId    String
-  queueId     String?        // Очередь тикета
+  queueId     String?        // Ticket queue
   categoryId  String?
   creatorId   String
   assigneeId  String?
-  slaId       String?        // SLA политика
-  slaDueDate  DateTime?      // Срок по SLA
-  slaBreached Boolean        @default(false) // Нарушен ли SLA
+  slaId       String?        // SLA policy
+  slaDueDate  DateTime?      // SLA due date
+  slaBreached Boolean        @default(false) // SLA breached
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   resolvedAt  DateTime?
-  firstResponseAt DateTime?  // Время первого ответа
-  lastViewedByCreatorAt DateTime? @default(now()) // Для отслеживания непрочитанных комментариев
+  firstResponseAt DateTime?  // First response time
+  lastViewedByCreatorAt DateTime? @default(now()) // For tracking unread comments
   
   tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   queue       Queue?         @relation(fields: [queueId], references: [id], onDelete: SetNull)
@@ -215,7 +215,7 @@ model Ticket {
   notifications Notification[]
   customFieldValues CustomFieldValue[] // Значения кастомных полей
   
-  @@unique([tenantId, number]) // Уникальность номера в рамках tenant
+  @@unique([tenantId, number]) // Number uniqueness within tenant
   @@index([tenantId])
   @@index([queueId])
   @@index([creatorId])
@@ -228,26 +228,26 @@ model Ticket {
   @@map("tickets")
 }
 
-// Комментарии к тикетам
+// Ticket comments
 model Comment {
   id        String   @id @default(cuid())
   content   String   @db.Text
   ticketId  String
   authorId  String
-  isInternal Boolean @default(false) // Внутренний комментарий (только для агентов)
+  isInternal Boolean @default(false) // Internal comment (only for agents)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
   ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   author    User     @relation(fields: [authorId], references: [id])
-  readBy    CommentRead[] // Кто прочитал комментарий
+  readBy    CommentRead[] // Who read the comment
   
   @@index([ticketId])
   @@index([authorId])
   @@map("comments")
 }
 
-// Вложения
+// Attachments
 model Attachment {
   id        String   @id @default(cuid())
   filename  String
@@ -264,17 +264,17 @@ model Attachment {
 }
 
 
-// Типы уведомлений
+// Notification types
 enum NotificationType {
-  TICKET_CREATED    // Новый тикет
-  TICKET_ASSIGNED   // Тикет назначен
-  TICKET_UPDATED    // Тикет обновлен
-  COMMENT_ADDED     // Добавлен комментарий
-  TICKET_RESOLVED   // Тикет решен
-  TICKET_CLOSED     // Тикет закрыт
+  TICKET_CREATED    // New ticket
+  TICKET_ASSIGNED   // Ticket assigned
+  TICKET_UPDATED    // Ticket updated
+  COMMENT_ADDED     // Comment added
+  TICKET_RESOLVED   // Ticket resolved
+  TICKET_CLOSED     // Ticket closed
 }
 
-// Уведомления
+// Notifications
 model Notification {
   id              String           @id @default(cuid())
   type            NotificationType
@@ -283,11 +283,11 @@ model Notification {
   isRead          Boolean          @default(false)
   userId          String
   ticketId        String?
-  groupId         String?          // Группа уведомлений (для группировки)
+  groupId         String?          // Notification group (for grouping)
   priority        String           @default("normal") // low, normal, high, urgent
-  channels        String[]         @default(["IN_APP"]) // Каналы доставки
-  emailSent       Boolean          @default(false) // Отправлено ли email
-  metadata        Json?            // Дополнительные данные (для кастомных уведомлений)
+  channels        String[]         @default(["IN_APP"]) // Delivery channels
+  emailSent       Boolean          @default(false) // Email sent
+  metadata        Json?            // Additional data (for custom notifications)
   createdAt       DateTime         @default(now())
   
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -303,7 +303,7 @@ model Notification {
   @@map("notifications")
 }
 
-// Отслеживание прочитанных комментариев
+// Tracking read comments
 model CommentRead {
   id        String   @id @default(cuid())
   userId    String
@@ -319,7 +319,7 @@ model CommentRead {
   @@map("comment_reads")
 }
 
-// Приглашения пользователей
+// User invitations
 model UserInvitation {
   id        String   @id @default(cuid())
   email     String
@@ -340,7 +340,7 @@ model UserInvitation {
   @@map("user_invitations")
 }
 
-// SLA Политики (Service Level Agreement)
+// SLA Policies (Service Level Agreement)
 model SlaPolicy {
   id                    String   @id @default(cuid())
   name                  String
@@ -348,20 +348,20 @@ model SlaPolicy {
   tenantId              String
   isActive              Boolean  @default(true)
   
-  // Время в минутах
-  responseTime          Int?     // Время первого ответа (в минутах)
-  resolutionTime        Int      // Время решения (в минутах)
+  // Time in minutes
+  responseTime          Int?     // First response time (in minutes)
+  resolutionTime        Int      // Resolution time (in minutes)
   
-  // Условия применения
-  priorities            String[] @default([]) // Приоритеты, к которым применяется
-  categoryIds           String[] @default([]) // Категории, к которым применяется
-  queueIds              String[] @default([]) // Очереди, к которым применяется
+  // Application conditions
+  priorities            String[] @default([]) // Priorities to which it applies
+  categoryIds           String[] @default([]) // Categories to which it applies
+  queueIds              String[] @default([]) // Queues to which it applies
   
-  // Рабочее время (опционально)
+  // Business hours (optional)
   businessHoursOnly     Boolean  @default(false)
   businessHoursStart    String?  // "09:00"
   businessHoursEnd      String?  // "18:00"
-  businessDays          Int[]    @default([1, 2, 3, 4, 5]) // 1-7 (понедельник-воскресенье)
+  businessDays          Int[]    @default([1, 2, 3, 4, 5]) // 1-7 (Monday-Sunday)
   
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
@@ -374,15 +374,15 @@ model SlaPolicy {
   @@map("sla_policies")
 }
 
-// Аудит лог (история всех действий)
+// Audit log (history of all actions)
 model AuditLog {
   id            String   @id @default(cuid())
   tenantId      String
-  userId        String?   // Может быть null для системных действий
-  action        String    // Тип действия: CREATE, UPDATE, DELETE, LOGIN, etc
-  resourceType  String    // Тип ресурса: TICKET, USER, CATEGORY, etc
-  resourceId    String?   // ID ресурса
-  metadata      Json?     // Дополнительные данные (что именно изменилось)
+  userId        String?   // Can be null for system actions
+  action        String    // Action type: CREATE, UPDATE, DELETE, LOGIN, etc
+  resourceType  String    // Resource type: TICKET, USER, CATEGORY, etc
+  resourceId    String?   // Resource ID
+  metadata      Json?     // Additional data (what exactly changed)
   ipAddress     String?
   userAgent     String?
   createdAt     DateTime  @default(now())
@@ -396,29 +396,29 @@ model AuditLog {
   @@map("audit_logs")
 }
 
-// Типы кастомных полей
+// Custom field types
 enum CustomFieldType {
-  TEXT        // Текстовое поле
-  NUMBER      // Числовое поле
-  DATE        // Дата
-  CHECKBOX    // Чекбокс (Boolean)
-  SELECT      // Выбор из списка
-  MULTI_SELECT // Множественный выбор
-  URL         // Ссылка
+  TEXT        // Text field
+  NUMBER      // Number field
+  DATE        // Date
+  CHECKBOX    // Checkbox (Boolean)
+  SELECT      // Select from list
+  MULTI_SELECT // Multi-select
+  URL         // URL
   EMAIL       // Email
 }
 
-// Определения кастомных полей (настраиваются на уровне tenant)
+// Custom field definitions (configured at tenant level)
 model CustomField {
   id          String          @id @default(cuid())
-  name        String          // Название поля (внутреннее)
-  label       String          // Отображаемое название
-  description String?         // Описание поля
-  type        CustomFieldType // Тип поля
-  options     Json?           // Опции для SELECT/MULTI_SELECT: ["Option1", "Option2"]
-  isRequired  Boolean         @default(false) // Обязательное ли поле
+  name        String          // Field name (internal)
+  label       String          // Display label
+  description String?         // Field description
+  type        CustomFieldType // Field type
+  options     Json?           // Options for SELECT/MULTI_SELECT: ["Option1", "Option2"]
+  isRequired  Boolean         @default(false) // Whether field is required
   isActive    Boolean         @default(true)
-  order       Int             @default(0) // Порядок отображения
+  order       Int             @default(0) // Display order
   tenantId    String
   createdAt   DateTime        @default(now())
   updatedAt   DateTime        @updatedAt
@@ -426,56 +426,56 @@ model CustomField {
   tenant      Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   values      CustomFieldValue[]
   
-  @@unique([tenantId, name]) // Уникальное имя в рамках tenant
+  @@unique([tenantId, name]) // Unique name within tenant
   @@index([tenantId])
   @@index([isActive])
   @@map("custom_fields")
 }
 
-// Значения кастомных полей для тикетов
+// Custom field values for tickets
 model CustomFieldValue {
   id            String      @id @default(cuid())
   customFieldId String
   ticketId      String
-  value         String      @db.Text // Хранится как строка, парсится по типу
+  value         String      @db.Text // Stored as string, parsed by type
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   
   customField   CustomField @relation(fields: [customFieldId], references: [id], onDelete: Cascade)
   ticket        Ticket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   
-  @@unique([customFieldId, ticketId]) // Одно значение на поле на тикет
+  @@unique([customFieldId, ticketId]) // One value per field per ticket
   @@index([customFieldId])
   @@index([ticketId])
   @@map("custom_field_values")
 }
 
-// Каналы доставки уведомлений
+// Notification delivery channels
 enum NotificationChannel {
-  IN_APP      // В приложении
+  IN_APP      // In app
   EMAIL       // Email
-  PUSH        // Push-уведомления (для будущего)
+  PUSH        // Push notifications (for future)
 }
 
-// Настройки уведомлений пользователя
+// User notification settings
 model NotificationSettings {
   id                        String   @id @default(cuid())
   userId                    String   @unique
   
-  // Каналы доставки
+  // Delivery channels
   enableInApp               Boolean  @default(true)
   enableEmail               Boolean  @default(true)
   enablePush                Boolean  @default(false)
   
-  // Группировка уведомлений
-  groupSimilar              Boolean  @default(true)    // Группировать похожие уведомления
-  groupingInterval          Int      @default(15)      // Интервал группировки в минутах
+  // Notification grouping
+  groupSimilar              Boolean  @default(true)    // Group similar notifications
+  groupingInterval          Int      @default(15)      // Grouping interval in minutes
   
-  // Частота email уведомлений
+  // Email notification frequency
   emailFrequency            String   @default("instant") // instant, hourly, daily, off
-  emailDigestTime           String?  @default("09:00")  // Время отправки дайджеста (HH:MM)
+  emailDigestTime           String?  @default("09:00")  // Digest send time (HH:MM)
   
-  // Типы уведомлений (включить/выключить)
+  // Notification types (enable/disable)
   notifyTicketCreated       Boolean  @default(true)
   notifyTicketAssigned      Boolean  @default(true)
   notifyTicketStatusChanged Boolean  @default(true)
@@ -484,10 +484,10 @@ model NotificationSettings {
   notifyTicketEscalated     Boolean  @default(true)
   notifySlaBreach           Boolean  @default(true)
   
-  // Приоритетные уведомления (всегда отправлять)
-  priorityOverride          Boolean  @default(true)    // Отправлять urgent тикеты всегда
+  // Priority notifications (always send)
+  priorityOverride          Boolean  @default(true)    // Always send urgent tickets
   
-  // Тихий режим
+  // Quiet hours
   quietHoursEnabled         Boolean  @default(false)
   quietHoursStart           String?  @default("22:00") // HH:MM
   quietHoursEnd             String?  @default("08:00") // HH:MM
@@ -501,16 +501,16 @@ model NotificationSettings {
   @@map("notification_settings")
 }
 
-// Группы уведомлений (для группировки похожих)
+// Notification groups (for grouping similar ones)
 model NotificationGroup {
   id              String         @id @default(cuid())
   userId          String
-  type            String         // Тип уведомлений в группе
+  type            String         // Type of notifications in group
   resourceType    String?        // TICKET, COMMENT, etc
-  resourceId      String?        // ID ресурса (например, ticketId)
-  count           Int            @default(1)      // Количество уведомлений в группе
-  firstEventAt    DateTime       @default(now())  // Время первого события
-  lastEventAt     DateTime       @default(now())  // Время последнего события
+  resourceId      String?        // Resource ID (e.g., ticketId)
+  count           Int            @default(1)      // Number of notifications in group
+  firstEventAt    DateTime       @default(now())  // First event time
+  lastEventAt     DateTime       @default(now())  // Last event time
   isRead          Boolean        @default(false)
   isDismissed     Boolean        @default(false)
   
@@ -527,20 +527,20 @@ model NotificationGroup {
   @@map("notification_groups")
 }
 
-// Сохранённые фильтры тикетов
+// Saved ticket filters
 model SavedFilter {
   id              String   @id @default(cuid())
   userId          String
   tenantId        String
-  name            String          // Название фильтра
-  description     String?         // Описание
-  icon            String?         // Иконка (emoji или icon name)
-  color           String?         // Цвет метки
-  isDefault       Boolean  @default(false) // Фильтр по умолчанию
-  isPublic        Boolean  @default(false) // Общий фильтр для всей команды
-  sortOrder       Int      @default(0)     // Порядок отображения
+  name            String          // Filter name
+  description     String?         // Description
+  icon            String?         // Icon (emoji or icon name)
+  color           String?         // Label color
+  isDefault       Boolean  @default(false) // Default filter
+  isPublic        Boolean  @default(false) // Shared filter for entire team
+  sortOrder       Int      @default(0)     // Display order
   
-  // Условия фильтра (JSON)
+  // Filter conditions (JSON)
   filters         Json     // { status: ["OPEN"], priority: ["HIGH"], assigneeId: "xxx", ... }
   
   createdAt       DateTime @default(now())
@@ -555,31 +555,31 @@ model SavedFilter {
 }
 
 // ====================
-// БАЗА ЗНАНИЙ (Knowledge Base)
+// KNOWLEDGE BASE
 // ====================
 
-// Статусы статей
+// Article statuses
 enum ArticleStatus {
-  DRAFT       // Черновик
-  PUBLISHED   // Опубликовано
-  ARCHIVED    // В архиве
+  DRAFT       // Draft
+  PUBLISHED   // Published
+  ARCHIVED    // Archived
 }
 
-// Статьи базы знаний
+// Knowledge base articles
 model KnowledgeArticle {
   id              String        @id @default(cuid())
   title           String
-  slug            String        // URL-friendly название
+  slug            String        // URL-friendly name
   content         String        @db.Text
-  excerpt         String?       // Краткое описание
+  excerpt         String?       // Short description
   status          ArticleStatus @default(DRAFT)
   tenantId        String
   authorId        String
-  categoryId      String?       // Категория статьи (можно использовать Category)
+  categoryId      String?       // Article category (can use Category)
   views           Int           @default(0)
-  isPublic        Boolean       @default(false) // Доступна пользователям?
+  isPublic        Boolean       @default(false) // Available to users?
   tags            String[]      @default([])
-  attachments     String[]      @default([]) // URL файлов
+  attachments     String[]      @default([]) // File URLs
   version         Int           @default(1)
   publishedAt     DateTime?
   createdAt       DateTime      @default(now())
@@ -596,34 +596,34 @@ model KnowledgeArticle {
 }
 
 // ====================
-// АВТОМАТИЗАЦИЯ (Automation)
+// AUTOMATION
 // ====================
 
-// Типы триггеров
+// Trigger types
 enum TriggerType {
-  TICKET_CREATED      // При создании тикета
-  TICKET_UPDATED      // При обновлении тикета
-  TICKET_ASSIGNED     // При назначении тикета
-  STATUS_CHANGED      // При изменении статуса
-  PRIORITY_CHANGED    // При изменении приоритета
-  COMMENT_ADDED       // При добавлении комментария
-  SLA_BREACH          // При нарушении SLA
-  TIME_BASED          // По времени (cron)
+  TICKET_CREATED      // On ticket creation
+  TICKET_UPDATED      // On ticket update
+  TICKET_ASSIGNED     // On ticket assignment
+  STATUS_CHANGED      // On status change
+  PRIORITY_CHANGED    // On priority change
+  COMMENT_ADDED       // On comment added
+  SLA_BREACH          // On SLA breach
+  TIME_BASED          // Time-based (cron)
 }
 
-// Типы действий
+// Action types
 enum ActionType {
-  ASSIGN_TO_AGENT     // Назначить агенту
-  CHANGE_STATUS       // Изменить статус
-  CHANGE_PRIORITY     // Изменить приоритет
-  ADD_COMMENT         // Добавить комментарий
-  SEND_EMAIL          // Отправить email
-  SEND_NOTIFICATION   // Отправить уведомление
-  ADD_TAG             // Добавить тег
-  CALL_WEBHOOK        // Вызвать webhook
+  ASSIGN_TO_AGENT     // Assign to agent
+  CHANGE_STATUS       // Change status
+  CHANGE_PRIORITY     // Change priority
+  ADD_COMMENT         // Add comment
+  SEND_EMAIL          // Send email
+  SEND_NOTIFICATION   // Send notification
+  ADD_TAG             // Add tag
+  CALL_WEBHOOK        // Call webhook
 }
 
-// Правила автоматизации
+// Automation rules
 model AutomationRule {
   id              String       @id @default(cuid())
   name            String
@@ -631,10 +631,10 @@ model AutomationRule {
   tenantId        String
   isActive        Boolean      @default(true)
   triggerType     TriggerType
-  conditions      Json         // Условия: { field: "priority", operator: "equals", value: "HIGH" }
-  actions         Json         // Действия: [{ type: "ASSIGN_TO_AGENT", agentId: "xxx" }]
-  priority        Int          @default(0) // Порядок выполнения (меньше = раньше)
-  executionCount  Int          @default(0) // Сколько раз выполнилось
+  conditions      Json         // Conditions: { field: "priority", operator: "equals", value: "HIGH" }
+  actions         Json         // Actions: [{ type: "ASSIGN_TO_AGENT", agentId: "xxx" }]
+  priority        Int          @default(0) // Execution order (lower = earlier)
+  executionCount  Int          @default(0) // Number of executions
   lastExecutedAt  DateTime?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
@@ -648,41 +648,41 @@ model AutomationRule {
 }
 
 // ====================
-// CMDB / АКТИВЫ (Assets/IT Infrastructure)
+// CMDB / ASSETS (IT Infrastructure)
 // ====================
 
-// Типы активов
+// Asset types
 enum AssetType {
-  COMPUTER        // Компьютер
-  LAPTOP          // Ноутбук
-  SERVER          // Сервер
-  NETWORK         // Сетевое оборудование
-  PRINTER         // Принтер
-  PHONE           // Телефон
-  MOBILE          // Мобильное устройство
-  SOFTWARE        // ПО
-  LICENSE         // Лицензия
-  OTHER           // Другое
+  COMPUTER        // Computer
+  LAPTOP          // Laptop
+  SERVER          // Server
+  NETWORK         // Network equipment
+  PRINTER         // Printer
+  PHONE           // Phone
+  MOBILE          // Mobile device
+  SOFTWARE        // Software
+  LICENSE         // License
+  OTHER           // Other
 }
 
-// Статусы активов
+// Asset statuses
 enum AssetStatus {
-  IN_USE          // В использовании
-  AVAILABLE       // Доступен
-  MAINTENANCE     // На обслуживании
-  RETIRED         // Списан
-  LOST            // Утерян
+  IN_USE          // In use
+  AVAILABLE       // Available
+  MAINTENANCE     // Under maintenance
+  RETIRED         // Retired
+  LOST            // Lost
 }
 
-// IT-активы (CMDB)
+// IT assets (CMDB)
 model Asset {
   id              String       @id @default(cuid())
   name            String
   type            AssetType
   status          AssetStatus  @default(AVAILABLE)
   tenantId        String
-  assignedToId    String?      // Кому назначен (User)
-  locationId      String?      // Локация/офис
+  assignedToId    String?      // Assigned to (User)
+  locationId      String?      // Location/office
   manufacturer    String?
   model           String?
   serialNumber    String?
@@ -690,7 +690,7 @@ model Asset {
   purchaseDate    DateTime?
   warrantyExpiry  DateTime?
   notes           String?      @db.Text
-  customData      Json?        // Дополнительные поля (IP, MAC, etc)
+  customData      Json?        // Additional fields (IP, MAC, etc)
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   
@@ -745,7 +745,7 @@ model Webhook {
   @@map("webhooks")
 }
 
-// История доставки webhooks
+// Webhook delivery history
 model WebhookDelivery {
   id              String   @id @default(cuid())
   webhookId       String
@@ -754,7 +754,7 @@ model WebhookDelivery {
   statusCode      Int?
   response        String?  @db.Text
   error           String?  @db.Text
-  duration        Int?     // Время выполнения в мс
+  duration        Int?     // Execution time in ms
   retriesLeft     Int      @default(3)
   createdAt       DateTime @default(now())
   
@@ -769,7 +769,7 @@ model WebhookDelivery {
 // LDAP / SSO
 // ====================
 
-// Типы аутентификации
+// Authentication types
 enum AuthProviderType {
   LDAP
   ACTIVE_DIRECTORY
@@ -777,7 +777,7 @@ enum AuthProviderType {
   SAML
 }
 
-// Конфигурации LDAP/SSO
+// LDAP/SSO configurations
 model LdapConfig {
   id              String           @id @default(cuid())
   name            String
@@ -785,10 +785,10 @@ model LdapConfig {
   tenantId        String
   isActive        Boolean          @default(false)
   
-  // LDAP/AD настройки
+  // LDAP/AD settings
   host            String?
   port            Int?             @default(389)
-  useSSL          Boolean?         @default(false) // Использовать LDAPS (SSL/TLS)
+  useSSL          Boolean?         @default(false) // Use LDAPS (SSL/TLS)
   baseDn          String?
   bindDn          String?
   bindPassword    String?
@@ -797,7 +797,7 @@ model LdapConfig {
   groupSearchBase String?
   groupSearchFilter String?
   
-  // OAuth2/SAML настройки
+  // OAuth2/SAML settings
   clientId        String?
   clientSecret    String?
   authorizationUrl String?
@@ -805,13 +805,13 @@ model LdapConfig {
   userInfoUrl     String?
   callbackUrl     String?
   
-  // Маппинг атрибутов
+  // Attribute mapping
   attributeMapping Json?           // { email: "mail", name: "cn", ... }
   groupMapping     Json?           // { "CN=Admins": "TENANT_ADMIN" }
   
-  // Настройки синхронизации
+  // Synchronization settings
   syncEnabled      Boolean         @default(false)
-  syncInterval     Int?            @default(3600) // В секундах
+  syncInterval     Int?            @default(3600) // In seconds
   lastSyncAt       DateTime?
   
   createdAt        DateTime        @default(now())
@@ -828,24 +828,24 @@ model LdapConfig {
 // Billing & Subscriptions
 // ==============================================
 
-// Тарифные планы
+// Subscription plans
 enum PlanType {
-  FREE        // Бесплатный: 10 users, 2 agents, 1GB storage
+  FREE        // Free: 10 users, 2 agents, 1GB storage
   PRO         // PRO: 50 users, 15 agents, 20GB storage, SLA, KB, Assets
-  ENTERPRISE  // Enterprise: Unlimited, все модули, SSO, custom support
+  ENTERPRISE  // Enterprise: Unlimited, all modules, SSO, custom support
 }
 
-// Статусы подписки
+// Subscription statuses
 enum SubscriptionStatus {
-  ACTIVE        // Активна
-  TRIALING      // Пробный период
-  PAST_DUE      // Просрочен платеж
-  CANCELED      // Отменена
-  INCOMPLETE    // Платеж не завершен
-  UNPAID        // Не оплачена
+  ACTIVE        // Active
+  TRIALING      // Trialing
+  PAST_DUE      // Past due
+  CANCELED      // Canceled
+  INCOMPLETE    // Incomplete
+  UNPAID        // Unpaid
 }
 
-// Модель подписки
+// Subscription model
 model Subscription {
   id                      String              @id @default(cuid())
   tenantId                String              @unique
@@ -857,7 +857,7 @@ model Subscription {
   stripeSubscriptionId    String?             @unique
   stripePriceId           String?
   
-  // Период подписки
+  // Subscription period
   currentPeriodStart      DateTime?
   currentPeriodEnd        DateTime?
   cancelAtPeriodEnd       Boolean             @default(false)
@@ -865,21 +865,21 @@ model Subscription {
   trialStart              DateTime?
   trialEnd                DateTime?
   
-  // Лимиты тарифного плана
-  maxUsers                Int                 @default(10)      // Максимум пользователей
-  maxAgents               Int                 @default(2)       // Максимум агентов
-  maxStorageGB            Int                 @default(1)       // Максимум хранилища (GB)
-  maxTicketsPerMonth      Int?                // Лимит тикетов в месяц (null = unlimited)
+  // Plan limits
+  maxUsers                Int                 @default(10)      // Maximum users
+  maxAgents               Int                 @default(2)       // Maximum agents
+  maxStorageGB            Int                 @default(1)       // Maximum storage (GB)
+  maxTicketsPerMonth      Int?                // Ticket limit per month (null = unlimited)
   
-  // Включенные функции
-  ssoEnabled              Boolean             @default(false)   // SSO доступен
-  customDomainEnabled     Boolean             @default(false)   // Кастомный домен
-  apiAccessEnabled        Boolean             @default(false)   // API доступ
-  prioritySupportEnabled  Boolean             @default(false)   // Приоритетная поддержка
-  customBrandingEnabled   Boolean             @default(false)   // Кастомный брендинг
+  // Enabled features
+  ssoEnabled              Boolean             @default(false)   // SSO available
+  customDomainEnabled     Boolean             @default(false)   // Custom domain
+  apiAccessEnabled        Boolean             @default(false)   // API access
+  prioritySupportEnabled  Boolean             @default(false)   // Priority support
+  customBrandingEnabled   Boolean             @default(false)   // Custom branding
   
-  // Метаданные
-  metadata                Json?               // Дополнительные данные
+  // Metadata
+  metadata                Json?               // Additional data
   
   createdAt               DateTime            @default(now())
   updatedAt               DateTime            @updatedAt
@@ -895,26 +895,26 @@ model Subscription {
   @@map("subscriptions")
 }
 
-// Счета (Invoices)
+// Invoices
 model Invoice {
   id                    String   @id @default(cuid())
   subscriptionId        String
   
   stripeInvoiceId       String?  @unique
-  amountDue             Int      // В центах
+  amountDue             Int      // In cents
   amountPaid            Int      @default(0)
   currency              String   @default("usd")
   status                String   // draft, open, paid, void, uncollectible
   
-  // Период счета
+  // Invoice period
   periodStart           DateTime
   periodEnd             DateTime
   
-  // Даты
+  // Dates
   dueDate               DateTime?
   paidAt                DateTime?
   
-  // Ссылки
+  // Links
   hostedInvoiceUrl      String?  // Stripe hosted page
   invoicePdf            String?  // PDF URL
   
@@ -931,17 +931,17 @@ model Invoice {
   @@map("invoices")
 }
 
-// Записи использования (для метрик)
+// Usage records (for metrics)
 model UsageRecord {
   id                    String   @id @default(cuid())
   subscriptionId        String
   
-  // Метрика
+  // Metric
   metricType            String   // users, agents, storage, tickets, api_calls
-  metricValue           Int      // Текущее значение
-  maxValue              Int?     // Максимальное значение (лимит)
+  metricValue           Int      // Current value
+  maxValue              Int?     // Maximum value (limit)
   
-  // Период
+  // Period
   periodStart           DateTime
   periodEnd             DateTime
   
@@ -967,20 +967,20 @@ model TelegramBot {
   
   // Bot credentials
   botToken        String   // Telegram Bot API Token
-  botUsername     String   // @username бота
+  botUsername     String   // Bot @username
   
-  // Настройки
+  // Settings
   isActive        Boolean  @default(true)
   
-  // Группы для уведомлений
-  groupChatId     String?  // ID группы для уведомлений агентов
+  // Notification groups
+  groupChatId     String?  // Group ID for agent notifications
   
-  // Настройки уведомлений
+  // Notification settings
   notifyOnNewTicket         Boolean @default(true)
   notifyOnTicketUpdate      Boolean @default(true)
   notifyOnNewComment        Boolean @default(true)
   
-  // Разрешения
+  // Permissions
   allowTicketCreation       Boolean @default(true)
   allowTicketStatusChange   Boolean @default(false)
   
@@ -992,32 +992,32 @@ model TelegramBot {
   updatedAt       DateTime @updatedAt
   
   tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  users           TelegramUser[] // Связи пользователей с Telegram аккаунтами
-  messages        TelegramMessage[] // История сообщений
+  users           TelegramUser[] // Links between ServiceDesk users and Telegram accounts
+  messages        TelegramMessage[] // Message history
   
-  @@unique([tenantId]) // Один бот на tenant
+  @@unique([tenantId]) // One bot per tenant
   @@index([botToken])
   @@map("telegram_bots")
 }
 
-// Связь пользователей ServiceDesk с Telegram аккаунтами
+// Link between ServiceDesk users and Telegram accounts
 model TelegramUser {
   id              String   @id @default(cuid())
   botId           String
-  userId          String   // ID пользователя в ServiceDesk
+  userId          String   // ServiceDesk user ID
   
-  // Telegram данные
+  // Telegram data
   telegramId      String   // Telegram user ID (chat ID)
-  telegramUsername String?  // @username (если есть)
+  telegramUsername String?  // @username (if exists)
   firstName       String?
   lastName        String?
   
-  // Статус
+  // Status
   isVerified      Boolean  @default(false)
   verificationCode String?
   verifiedAt      DateTime?
   
-  // Настройки
+  // Settings
   notificationsEnabled Boolean @default(true)
   
   createdAt       DateTime @default(now())
@@ -1025,33 +1025,33 @@ model TelegramUser {
   
   bot             TelegramBot @relation(fields: [botId], references: [id], onDelete: Cascade)
   
-  @@unique([botId, telegramId]) // Один Telegram аккаунт на бота
-  @@unique([botId, userId]) // Один пользователь может быть связан только с одним Telegram аккаунтом на бота
+  @@unique([botId, telegramId]) // One Telegram account per bot
+  @@unique([botId, userId]) // One user can be linked to only one Telegram account per bot
   @@index([telegramId])
   @@index([userId])
   @@map("telegram_users")
 }
 
-// История сообщений Telegram
+// Telegram message history
 model TelegramMessage {
   id              String   @id @default(cuid())
   botId           String
   
-  // Telegram данные
-  telegramMessageId String // ID сообщения в Telegram
-  telegramChatId    String // ID чата
+  // Telegram data
+  telegramMessageId String // Telegram message ID
+  telegramChatId    String // Chat ID
   
-  // Связь с тикетом
+  // Link to ticket
   ticketId        String?
   
-  // Содержимое
+  // Content
   messageType     String   // text, photo, document, command
   text            String?
   
-  // Направление
-  direction       String   // incoming (от пользователя) | outgoing (от бота)
+  // Direction
+  direction       String   // incoming (from user) | outgoing (from bot)
   
-  // Метаданные
+  // Metadata
   metadata        Json?
   
   createdAt       DateTime @default(now())
@@ -1065,21 +1065,21 @@ model TelegramMessage {
   @@map("telegram_messages")
 }
 
-// Support тикеты для общения Tenant Admin с Super Admin
+// Support tickets for communication between Tenant Admin and Super Admin
 model SupportTicket {
   id          String   @id @default(cuid())
-  number      Int      @default(autoincrement()) // Уникальный номер тикета
+  number      Int      @default(autoincrement()) // Unique ticket number
   
   title       String
   description String   @db.Text
   status      TicketStatus @default(OPEN)
   priority    TicketPriority @default(MEDIUM)
   
-  // Связь с организацией (от кого тикет)
+  // Link to organization (who the ticket is from)
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   
-  // Создатель (TENANT_ADMIN)
+  // Creator (TENANT_ADMIN)
   creatorId   String
   
   // Timestamps
@@ -1088,16 +1088,16 @@ model SupportTicket {
   resolvedAt  DateTime?
   closedAt    DateTime?
   
-  // Отслеживание прочтения (когда тенант админ последний раз просматривал тикет)
+  // Tracking read status (when tenant admin last viewed the ticket)
   lastViewedByCreatorAt DateTime? @default(now())
   
-  // Отслеживание прочтения супер-админом (когда супер-админ последний раз просматривал тикет)
+  // Tracking read status by super-admin (when super-admin last viewed the ticket)
   lastViewedByAdminAt DateTime? @default(now())
   
-  // Комментарии
+  // Comments
   comments    SupportComment[]
   
-  // Вложения
+  // Attachments
   attachments SupportAttachment[]
   
   @@index([tenantId])
@@ -1107,14 +1107,14 @@ model SupportTicket {
   @@map("support_tickets")
 }
 
-// Комментарии к support тикетам
+// Support ticket comments
 model SupportComment {
   id        String   @id @default(cuid())
   content   String   @db.Text
   ticketId  String
-  authorId  String   // ID пользователя (может быть TENANT_ADMIN или SUPER_ADMIN)
+  authorId  String   // User ID (can be TENANT_ADMIN or SUPER_ADMIN)
   
-  isInternal Boolean @default(false) // Внутренний комментарий (только для супер-админа)
+  isInternal Boolean @default(false) // Internal comment (only for super-admin)
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1128,7 +1128,7 @@ model SupportComment {
   @@map("support_comments")
 }
 
-// Вложения к support тикетам
+// Support ticket attachments
 model SupportAttachment {
   id        String   @id @default(cuid())
   filename  String

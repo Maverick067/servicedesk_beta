@@ -1,6 +1,6 @@
 /**
- * Скрипт для применения Row-Level Security (RLS) к базе данных
- * Использует Prisma для выполнения SQL команд
+ * Script for applying Row-Level Security (RLS) to database
+ * Uses Prisma to execute SQL commands
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -13,7 +13,7 @@ async function applyRLS() {
   console.log('🔐 Applying Row-Level Security (RLS) to PostgreSQL...\n');
 
   try {
-    // Читаем SQL файл
+    // Read SQL file
     const sqlFilePath = path.join(
       process.cwd(),
       'prisma',
@@ -29,12 +29,12 @@ async function applyRLS() {
 
     const sqlContent = fs.readFileSync(sqlFilePath, 'utf-8');
 
-    // Разбиваем на отдельные SQL команды (по точке с запятой)
+    // Split into separate SQL commands (by semicolon)
     const sqlCommands = sqlContent
       .split(';')
       .map((cmd) => cmd.trim())
       .filter((cmd) => {
-        // Пропускаем комментарии и пустые строки
+        // Skip comments and empty lines
         return (
           cmd.length > 0 &&
           !cmd.startsWith('--') &&
@@ -44,21 +44,21 @@ async function applyRLS() {
 
     console.log(`📊 Found ${sqlCommands.length} SQL commands to execute\n`);
 
-    // Выполняем каждую команду
+    // Execute each command
     let successCount = 0;
     let errorCount = 0;
 
     for (let i = 0; i < sqlCommands.length; i++) {
       const command = sqlCommands[i];
 
-      // Пропускаем команды, которые являются только комментариями
+      // Skip commands that are only comments
       if (command.startsWith('CREATE') || command.startsWith('ALTER')) {
         try {
           console.log(`[${i + 1}/${sqlCommands.length}] Executing...`);
           await prisma.$executeRawUnsafe(command + ';');
           successCount++;
         } catch (error: any) {
-          // Игнорируем ошибки "already exists"
+          // Ignore "already exists" errors
           if (
             error.message.includes('already exists') ||
             error.message.includes('does not exist')
@@ -76,7 +76,7 @@ async function applyRLS() {
     console.log(`  ✅ Successfully executed: ${successCount}`);
     console.log(`  ❌ Errors: ${errorCount}`);
 
-    // Проверяем, что RLS включен
+    // Check that RLS is enabled
     console.log('\n🔍 Verifying RLS status...');
 
     const rlsStatus: any[] = await prisma.$queryRaw`
@@ -111,7 +111,7 @@ async function applyRLS() {
   }
 }
 
-// Запускаем
+// Run
 applyRLS()
   .then(() => {
     process.exit(0);
