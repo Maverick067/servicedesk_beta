@@ -112,14 +112,14 @@ export function StatsCharts() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="7d">Последние 7 дней</SelectItem>
-            <SelectItem value="30d">Последние 30 дней</SelectItem>
-            <SelectItem value="90d">Последние 90 дней</SelectItem>
+            <SelectItem value="7d">Last 7 days</SelectItem>
+            <SelectItem value="30d">Last 30 days</SelectItem>
+            <SelectItem value="90d">Last 90 days</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {/* Ключевые метрики */}
+      {/* Key metrics */}
       <div className="grid gap-4 md:grid-cols-3">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -129,7 +129,7 @@ export function StatsCharts() {
           <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200">
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                Всего тикетов
+                Total Tickets
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -137,7 +137,7 @@ export function StatsCharts() {
                 {stats.overview.total}
               </div>
               <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                за выбранный период
+                for selected period
               </p>
             </CardContent>
           </Card>
@@ -152,7 +152,7 @@ export function StatsCharts() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-green-900 dark:text-green-100 flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" />
-                Решено тикетов
+                Resolved Tickets
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -161,8 +161,8 @@ export function StatsCharts() {
               </div>
               <p className="text-xs text-green-700 dark:text-green-300 mt-1">
                 {stats.overview.total > 0 
-                  ? `${Math.round((stats.overview.resolved / stats.overview.total) * 100)}% от общего числа`
-                  : "0% от общего числа"
+                  ? `${Math.round((stats.overview.resolved / stats.overview.total) * 100)}% of total`
+                  : "0% of total"
                 }
               </p>
             </CardContent>
@@ -178,24 +178,24 @@ export function StatsCharts() {
             <CardHeader className="pb-3">
               <CardTitle className="text-sm font-medium text-purple-900 dark:text-purple-100 flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                Среднее время решения
+                Avg Resolution Time
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold text-purple-600 dark:text-purple-400">
-                {stats.overview.avgResolutionHours}ч
+                {stats.overview.avgResolutionHours}h
               </div>
               <p className="text-xs text-purple-700 dark:text-purple-300 mt-1">
-                для решенных тикетов
+                for resolved tickets
               </p>
             </CardContent>
           </Card>
         </motion.div>
       </div>
 
-      {/* Графики */}
+      {/* Charts */}
       <div className="grid gap-6 lg:grid-cols-2">
-        {/* Тренд по дням */}
+        {/* Daily trend */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -203,8 +203,8 @@ export function StatsCharts() {
         >
           <Card>
             <CardHeader>
-              <CardTitle>Динамика тикетов</CardTitle>
-              <CardDescription>Созданные и решенные тикеты по дням</CardDescription>
+              <CardTitle>Ticket Trends</CardTitle>
+              <CardDescription>Created and resolved tickets by day</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -213,25 +213,25 @@ export function StatsCharts() {
                   <XAxis 
                     dataKey="date" 
                     tick={{ fontSize: 12 }}
-                    tickFormatter={(value) => new Date(value).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit' })}
+                    tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: '2-digit' })}
                   />
                   <YAxis />
                   <Tooltip 
-                    labelFormatter={(value) => new Date(value).toLocaleDateString('ru-RU', { day: '2-digit', month: 'long' })}
+                    labelFormatter={(value) => new Date(value).toLocaleDateString('en-US', { day: '2-digit', month: 'long' })}
                   />
                   <Legend />
                   <Line 
                     type="monotone" 
                     dataKey="created" 
                     stroke="#3b82f6" 
-                    name="Создано"
+                    name="Created"
                     strokeWidth={2}
                   />
                   <Line 
                     type="monotone" 
                     dataKey="resolved" 
                     stroke="#10b981" 
-                    name="Решено"
+                    name="Resolved"
                     strokeWidth={2}
                   />
                 </LineChart>
@@ -240,7 +240,7 @@ export function StatsCharts() {
           </Card>
         </motion.div>
 
-        {/* Приоритеты */}
+        {/* Priorities */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -248,8 +248,8 @@ export function StatsCharts() {
         >
           <Card>
             <CardHeader>
-              <CardTitle>Распределение по приоритетам</CardTitle>
-              <CardDescription>Количество тикетов по уровням приоритета</CardDescription>
+              <CardTitle>Priority Distribution</CardTitle>
+              <CardDescription>Number of tickets by priority level</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -275,7 +275,7 @@ export function StatsCharts() {
           </Card>
         </motion.div>
 
-        {/* Категории */}
+        {/* Categories */}
         {stats.categories.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -284,8 +284,8 @@ export function StatsCharts() {
           >
             <Card>
               <CardHeader>
-                <CardTitle>Топ-5 категорий</CardTitle>
-                <CardDescription>Самые активные категории</CardDescription>
+                <CardTitle>Top 5 Categories</CardTitle>
+                <CardDescription>Most active categories</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -294,7 +294,7 @@ export function StatsCharts() {
                     <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="value" name="Тикетов">
+                    <Bar dataKey="value" name="Tickets">
                       {stats.categories.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
@@ -306,7 +306,7 @@ export function StatsCharts() {
           </motion.div>
         )}
 
-        {/* Очереди */}
+        {/* Queues */}
         {stats.queues.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -315,8 +315,8 @@ export function StatsCharts() {
           >
             <Card>
               <CardHeader>
-                <CardTitle>Топ-5 очередей</CardTitle>
-                <CardDescription>Самые загруженные очереди</CardDescription>
+                <CardTitle>Top 5 Queues</CardTitle>
+                <CardDescription>Most loaded queues</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
@@ -325,7 +325,7 @@ export function StatsCharts() {
                     <XAxis dataKey="name" tick={{ fontSize: 12 }} />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="value" name="Тикетов">
+                    <Bar dataKey="value" name="Tickets">
                       {stats.queues.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
