@@ -1,18 +1,18 @@
 /**
- * Утилиты для API routes
+ * Utilities for API routes
  */
 
 /**
- * Получить WHERE clause для фильтрации по tenantId
- * Глобальный ADMIN видит все данные, остальные - только своего тенанта
+ * Get WHERE clause for filtering by tenantId
+ * Global ADMIN sees all data, others - only their tenant
  */
 export function getTenantWhereClause(session: any): { tenantId?: string } {
-  // Глобальный ADMIN видит всё
+  // Global ADMIN sees everything
   if (session.user.role === "ADMIN") {
     return {};
   }
   
-  // Остальные - только свой tenant
+  // Others - only their tenant
   if (!session.user.tenantId) {
     throw new Error("Tenant ID required for non-admin users");
   }
@@ -21,34 +21,34 @@ export function getTenantWhereClause(session: any): { tenantId?: string } {
 }
 
 /**
- * Получить tenantId для создания ресурсов
- * Возвращает tenantId пользователя или выбрасывает ошибку для глобального админа
+ * Get tenantId for creating resources
+ * Returns user's tenantId or throws error for global admin
  */
 export function getTenantIdForCreate(session: any, explicitTenantId?: string): string {
-  // Если явно указан tenantId (например, при создании организации), используем его
+  // If tenantId is explicitly specified (e.g., when creating organization), use it
   if (explicitTenantId) {
     return explicitTenantId;
   }
   
-  // Для обычных пользователей используем их tenantId
+  // For regular users, use their tenantId
   if (session.user.tenantId) {
     return session.user.tenantId;
   }
   
-  // Глобальный админ не может создавать ресурсы без указания tenantId
+  // Global admin cannot create resources without specifying tenantId
   throw new Error("Global admin must specify tenantId when creating resources");
 }
 
 /**
- * Проверить доступ к ресурсу по tenantId
+ * Check access to resource by tenantId
  */
 export function checkTenantAccess(session: any, resourceTenantId: string | null): boolean {
-  // Глобальный ADMIN имеет доступ ко всему
+  // Global ADMIN has access to everything
   if (session.user.role === "ADMIN") {
     return true;
   }
   
-  // Остальные - только к своему тенанту
+  // Others - only to their tenant
   return session.user.tenantId === resourceTenantId;
 }
 

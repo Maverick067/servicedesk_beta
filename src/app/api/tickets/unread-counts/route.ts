@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// GET /api/tickets/unread-counts - Получить количество непрочитанных комментариев для всех тикетов
+// GET /api/tickets/unread-counts - Get count of unread comments for all tickets
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -11,9 +11,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Находим все комментарии, которые не были прочитаны текущим пользователем
+    // Find all comments that haven't been read by current user
     const where: any = {
-      authorId: { not: session.user.id }, // Не считаем свои комментарии
+      authorId: { not: session.user.id }, // Don't count own comments
       readBy: {
         none: {
           userId: session.user.id,
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
       },
     };
 
-    // Глобальный ADMIN видит комментарии всех тикетов, остальные - только своего тенанта
+    // Global ADMIN sees comments for all tickets, others - only their tenant
     if (session.user.role !== "ADMIN" && session.user.tenantId) {
       where.ticket = {
         tenantId: session.user.tenantId,
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
       },
     });
 
-    // Группируем по ticketId
+    // Group by ticketId
     const unreadCounts: Record<string, number> = {};
     for (const comment of unreadComments) {
       if (!unreadCounts[comment.ticketId]) {

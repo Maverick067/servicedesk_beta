@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// GET /api/tickets/[id]/unread-comments - Получить количество непрочитанных комментариев
+// GET /api/tickets/[id]/unread-comments - Get count of unread comments
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -14,11 +14,11 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Находим все комментарии тикета, которые не были прочитаны текущим пользователем
+    // Find all ticket comments that haven't been read by current user
     const unreadCount = await prisma.comment.count({
       where: {
         ticketId: params.id,
-        authorId: { not: session.user.id }, // Не считаем свои комментарии
+        authorId: { not: session.user.id }, // Don't count own comments
         readBy: {
           none: {
             userId: session.user.id,
@@ -37,7 +37,7 @@ export async function GET(
   }
 }
 
-// POST /api/tickets/[id]/unread-comments - Пометить комментарии как прочитанные
+// POST /api/tickets/[id]/unread-comments - Mark comments as read
 export async function POST(
   request: Request,
   { params }: { params: { id: string } }
@@ -48,7 +48,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Находим все непрочитанные комментарии тикета
+    // Find all unread comments for ticket
     const unreadComments = await prisma.comment.findMany({
       where: {
         ticketId: params.id,
@@ -64,7 +64,7 @@ export async function POST(
       },
     });
 
-    // Помечаем их как прочитанные
+    // Mark them as read
     if (unreadComments.length > 0) {
       await prisma.commentRead.createMany({
         data: unreadComments.map((comment) => ({
