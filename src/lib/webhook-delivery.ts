@@ -1,5 +1,5 @@
 /**
- * Система доставки webhook событий с retry механизмом
+ * Webhook event delivery system with retry mechanism
  */
 
 import { prisma } from "./prisma";
@@ -15,14 +15,14 @@ interface WebhookPayload {
 }
 
 /**
- * Создаёт подпись HMAC для payload
+ * Creates HMAC signature for payload
  */
 function createSignature(payload: string, secret: string): string {
   return crypto.createHmac("sha256", secret).update(payload).digest("hex");
 }
 
 /**
- * Отправляет webhook запрос
+ * Sends webhook request
  */
 async function sendWebhookRequest(url: string, payload: WebhookPayload, secret?: string, headers?: Record<string, string>): Promise<{ success: boolean; statusCode?: number; response?: string; error?: string; duration: number }> {
   const startTime = Date.now();
@@ -35,7 +35,7 @@ async function sendWebhookRequest(url: string, payload: WebhookPayload, secret?:
       ...(headers || {}),
     };
 
-    // Добавляем подпись если есть secret
+    // Add signature if secret exists
     if (secret) {
       requestHeaders["X-Webhook-Signature"] = createSignature(payloadString, secret);
     }
@@ -62,7 +62,7 @@ async function sendWebhookRequest(url: string, payload: WebhookPayload, secret?:
 }
 
 /**
- * Доставляет webhook с retry механизмом
+ * Delivers webhook with retry mechanism
  */
 async function deliverWebhook(webhookId: string, event: string, payload: any): Promise<void> {
   try {
@@ -74,7 +74,7 @@ async function deliverWebhook(webhookId: string, event: string, payload: any): P
       return;
     }
 
-    // Создаём запись о доставке
+    // Create delivery record
     const delivery = await prisma.webhookDelivery.create({
       data: {
         webhookId: webhook.id,
@@ -91,7 +91,7 @@ async function deliverWebhook(webhookId: string, event: string, payload: any): P
       data: payload,
     };
 
-    // Попытка отправки
+    // Attempt delivery
     const result = await sendWebhookRequest(
       webhook.url,
       webhookPayload,
@@ -99,7 +99,7 @@ async function deliverWebhook(webhookId: string, event: string, payload: any): P
       webhook.headers as Record<string, string> | undefined
     );
 
-    // Обновляем запись о доставке
+    // Update delivery record
     await prisma.webhookDelivery.update({
       where: { id: delivery.id },
       data: {
@@ -111,7 +111,7 @@ async function deliverWebhook(webhookId: string, event: string, payload: any): P
       },
     });
 
-    // Обновляем статистику webhook
+    // Update webhook statistics
     if (result.success) {
       await prisma.webhook.update({
         where: { id: webhook.id },
@@ -130,10 +130,10 @@ async function deliverWebhook(webhookId: string, event: string, payload: any): P
         },
       });
 
-      // Если есть ретраи, планируем повторную попытку (можно использовать очереди)
+      // If retries left, schedule retry (can use queues)
       if (delivery.retriesLeft > 0) {
         console.log(`[Webhook] Scheduled retry for delivery ${delivery.id}, retries left: ${delivery.retriesLeft}`);
-        // TODO: Добавить в очередь для повторной отправки через BullMQ/Redis
+        // TODO: Add to queue for retry via BullMQ/Redis
       }
     }
 
@@ -144,11 +144,11 @@ async function deliverWebhook(webhookId: string, event: string, payload: any): P
 }
 
 /**
- * Триггерит webhooks для определённого события
+ * Triggers webhooks for specific event
  */
 export async function triggerWebhooks(event: WebhookEvent, tenantId: string, payload: any): Promise<void> {
   try {
-    // Находим все активные webhooks для данного события
+    // Find all active webhooks for this event
     const webhooks = await prisma.webhook.findMany({
       where: {
         tenantId,
@@ -166,10 +166,10 @@ export async function triggerWebhooks(event: WebhookEvent, tenantId: string, pay
 
     console.log(`[Webhook] Triggering ${webhooks.length} webhooks for event ${event}`);
 
-    // Отправляем webhooks параллельно (не блокируем основной поток)
+    // Send webhooks in parallel (don't block main thread)
     const deliveryPromises = webhooks.map((webhook) => deliverWebhook(webhook.id, event, payload));
     
-    // Fire and forget - не ждём завершения
+    // Fire and forget - don't wait for completion
     Promise.all(deliveryPromises).catch((error) => {
       console.error("[Webhook] Error in parallel webhook delivery:", error);
     });
@@ -179,11 +179,11 @@ export async function triggerWebhooks(event: WebhookEvent, tenantId: string, pay
 }
 
 /**
- * Повторяет неудавшиеся доставки (можно вызывать по cron)
+ * Retries failed deliveries (can be called via cron)
  */
 export async function retryFailedDeliveries(): Promise<void> {
   try {
-    // Находим все доставки с оставшимися ретраями
+    // Find all deliveries with remaining retries
     const failedDeliveries = await prisma.webhookDelivery.findMany({
       where: {
         retriesLeft: { gt: 0 },
@@ -192,7 +192,7 @@ export async function retryFailedDeliveries(): Promise<void> {
       include: {
         webhook: true,
       },
-      take: 100, // Ограничиваем количество за раз
+      take: 100, // Limit batch size
     });
 
     console.log(`[Webhook] Retrying ${failedDeliveries.length} failed deliveries`);

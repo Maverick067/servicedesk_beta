@@ -26,7 +26,7 @@ export interface TelegramUpdate {
 }
 
 /**
- * Отправка сообщения в Telegram
+ * Send message to Telegram
  */
 export async function sendTelegramMessage(
   botToken: string,
@@ -60,7 +60,7 @@ export async function sendTelegramMessage(
 }
 
 /**
- * Установка webhook для бота
+ * Set webhook for bot
  */
 export async function setTelegramWebhook(
   botToken: string,
@@ -85,7 +85,7 @@ export async function setTelegramWebhook(
 }
 
 /**
- * Удаление webhook
+ * Delete webhook
  */
 export async function deleteTelegramWebhook(botToken: string): Promise<void> {
   const url = `https://api.telegram.org/bot${botToken}/deleteWebhook`;
@@ -101,7 +101,7 @@ export async function deleteTelegramWebhook(botToken: string): Promise<void> {
 }
 
 /**
- * Получение информации о боте
+ * Get bot information
  */
 export async function getTelegramBotInfo(botToken: string): Promise<{
   id: number;
@@ -125,7 +125,7 @@ export async function getTelegramBotInfo(botToken: string): Promise<{
 }
 
 /**
- * Форматирование сообщения о новом тикете
+ * Format new ticket message
  */
 export function formatNewTicketMessage(ticket: {
   number: string;
@@ -136,20 +136,20 @@ export function formatNewTicketMessage(ticket: {
   tenant: { name: string };
 }): string {
   return `
-🎫 *Новый тикет: ${ticket.number}*
+🎫 *New Ticket: ${ticket.number}*
 
-*Название:* ${ticket.title}
-*Приоритет:* ${ticket.priority}
-*Создатель:* ${ticket.creator.name} (${ticket.creator.email})
-*Организация:* ${ticket.tenant.name}
+*Title:* ${ticket.title}
+*Priority:* ${ticket.priority}
+*Creator:* ${ticket.creator.name} (${ticket.creator.email})
+*Organization:* ${ticket.tenant.name}
 
-*Описание:*
+*Description:*
 ${ticket.description}
   `.trim();
 }
 
 /**
- * Форматирование сообщения об обновлении тикета
+ * Format ticket update message
  */
 export function formatTicketUpdateMessage(ticket: {
   number: string;
@@ -158,20 +158,20 @@ export function formatTicketUpdateMessage(ticket: {
   assignee?: { name: string } | null;
 }): string {
   const assigneeText = ticket.assignee 
-    ? `*Исполнитель:* ${ticket.assignee.name}`
-    : "*Исполнитель:* Не назначен";
+    ? `*Assignee:* ${ticket.assignee.name}`
+    : "*Assignee:* Not assigned";
 
   return `
-🔄 *Тикет обновлен: ${ticket.number}*
+🔄 *Ticket Updated: ${ticket.number}*
 
-*Название:* ${ticket.title}
-*Статус:* ${ticket.status}
+*Title:* ${ticket.title}
+*Status:* ${ticket.status}
 ${assigneeText}
   `.trim();
 }
 
 /**
- * Форматирование сообщения о новом комментарии
+ * Format new comment message
  */
 export function formatNewCommentMessage(comment: {
   ticket: { number: string; title: string };
@@ -179,12 +179,12 @@ export function formatNewCommentMessage(comment: {
   content: string;
 }): string {
   return `
-💬 *Новый комментарий к ${comment.ticket.number}*
+💬 *New Comment on ${comment.ticket.number}*
 
-*Автор:* ${comment.author.name}
-*Тикет:* ${comment.ticket.title}
+*Author:* ${comment.author.name}
+*Ticket:* ${comment.ticket.title}
 
-*Комментарий:*
+*Comment:*
 ${comment.content}
   `.trim();
 }
