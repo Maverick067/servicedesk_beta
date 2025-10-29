@@ -17,30 +17,30 @@ const planConfig = {
   FREE: {
     name: "Free",
     price: "$0",
-    description: "Для начала работы",
+    description: "To get started",
     icon: Zap,
     features: [
-      "До 5 пользователей",
-      "До 2 агентов",
-      "1 GB хранилища",
-      "100 тикетов/месяц",
-      "Базовая поддержка",
+      "Up to 5 users",
+      "Up to 2 agents",
+      "1 GB storage",
+      "100 tickets/month",
+      "Basic support",
     ],
     color: "bg-gray-500",
   },
   PRO: {
     name: "Pro",
     price: "$49",
-    description: "Для растущих команд",
+    description: "For growing teams",
     icon: Crown,
     features: [
-      "До 50 пользователей",
-      "До 10 агентов",
-      "50 GB хранилища",
-      "Безлимитные тикеты",
-      "Приоритетная поддержка",
-      "SSO/LDAP интеграция",
-      "API доступ",
+      "Up to 50 users",
+      "Up to 10 agents",
+      "50 GB storage",
+      "Unlimited tickets",
+      "Priority support",
+      "SSO/LDAP integration",
+      "API access",
       "Webhooks",
     ],
     color: "bg-blue-500",
@@ -48,20 +48,20 @@ const planConfig = {
   ENTERPRISE: {
     name: "Enterprise",
     price: "$199",
-    description: "Для крупных организаций",
+    description: "For large organizations",
     icon: Building2,
     features: [
-      "Безлимитные пользователи",
-      "Безлимитные агенты",
-      "500 GB хранилища",
-      "Безлимитные тикеты",
-      "VIP поддержка 24/7",
-      "SSO/SAML интеграция",
-      "API доступ",
+      "Unlimited users",
+      "Unlimited agents",
+      "500 GB storage",
+      "Unlimited tickets",
+      "VIP support 24/7",
+      "SSO/SAML integration",
+      "API access",
       "Webhooks",
-      "Кастомные домены",
-      "Белый лейбл",
-      "Персональный менеджер",
+      "Custom domains",
+      "White label",
+      "Dedicated manager",
     ],
     color: "bg-purple-500",
   },
@@ -82,7 +82,7 @@ export function PlanCard({ plan, currentPlan, onSelect, loading }: PlanCardProps
     }`}>
       {isCurrent && (
         <div className="absolute top-4 right-4">
-          <Badge variant="default">Текущий план</Badge>
+          <Badge variant="default">Current Plan</Badge>
         </div>
       )}
       
@@ -94,7 +94,7 @@ export function PlanCard({ plan, currentPlan, onSelect, loading }: PlanCardProps
         <CardDescription>{config.description}</CardDescription>
         <div className="mt-4">
           <span className="text-4xl font-bold">{config.price}</span>
-          {plan !== "FREE" && <span className="text-muted-foreground ml-2">/месяц</span>}
+          {plan !== "FREE" && <span className="text-muted-foreground ml-2">/month</span>}
         </div>
       </CardHeader>
       
@@ -116,7 +116,7 @@ export function PlanCard({ plan, currentPlan, onSelect, loading }: PlanCardProps
             className="w-full"
             disabled={isCurrent || loading}
           >
-            {isCurrent ? "Текущий план" : "Базовый план"}
+            {isCurrent ? "Current Plan" : "Basic Plan"}
           </Button>
         ) : (
           <Button
@@ -126,13 +126,13 @@ export function PlanCard({ plan, currentPlan, onSelect, loading }: PlanCardProps
             disabled={isCurrent || loading}
           >
             {loading ? (
-              "Загрузка..."
+              "Loading..."
             ) : isCurrent ? (
-              "Текущий план"
+              "Current Plan"
             ) : isUpgrade ? (
-              "Апгрейд"
+              "Upgrade"
             ) : (
-              "Выбрать план"
+              "Select Plan"
             )}
           </Button>
         )}
