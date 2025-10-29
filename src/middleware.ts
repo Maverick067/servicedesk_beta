@@ -6,12 +6,12 @@ export default withAuth(
     const token = req.nextauth.token;
     const path = req.nextUrl.pathname;
 
-    // Редирект на дашборд если авторизован и пытается зайти на /login
+    // Redirect to dashboard if authenticated and trying to access /login
     if (path === "/login" && token) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
-    // Проверка прав доступа для админских роутов
+    // Check access rights for admin routes
     if (path.startsWith("/admin") && token?.role !== "ADMIN") {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
@@ -23,17 +23,17 @@ export default withAuth(
       authorized: ({ token, req }) => {
         const path = req.nextUrl.pathname;
         
-        // Публичные страницы (включая главную)
+        // Public pages (including homepage)
         if (path === "/" || path === "/login" || path === "/register") {
           return true;
         }
 
-        // API routes для support tickets
+        // API routes for support tickets
         if (path.startsWith("/api/support-tickets")) {
           return !!token && (token.role === "ADMIN" || token.role === "TENANT_ADMIN");
         }
 
-        // Все остальные страницы требуют авторизации
+        // All other pages require authentication
         return !!token;
       },
     },
@@ -42,6 +42,6 @@ export default withAuth(
 
 export const config = {
   matcher: ["/dashboard/:path*", "/admin/:path*", "/tickets/:path*", "/login"],
-  // Главная страница (/) доступна без авторизации
+  // Homepage (/) is accessible without authentication
 };
 

@@ -5,8 +5,8 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 /**
- * POST /api/users/[id]/reset-password - Сброс пароля пользователя
- * Только для глобальных ADMIN
+ * POST /api/users/[id]/reset-password - Reset user password
+ * Only for global ADMIN
  */
 export async function POST(
   request: NextRequest,
@@ -15,7 +15,7 @@ export async function POST(
   try {
     const session = await getServerSession(authOptions);
     
-    // Только глобальные админы могут сбрасывать пароли
+    // Only global admins can reset passwords
     if (!session?.user || session.user.role !== "ADMIN") {
       return NextResponse.json(
         { error: "Unauthorized. Only global admins can reset passwords." },
@@ -32,7 +32,7 @@ export async function POST(
       );
     }
 
-    // Проверяем, существует ли пользователь
+    // Check if user exists
     const user = await prisma.user.findUnique({
       where: { id: params.id },
       select: {
@@ -46,10 +46,10 @@ export async function POST(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Хешируем новый пароль
+    // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-    // Обновляем пароль
+    // Update password
     await prisma.user.update({
       where: { id: params.id },
       data: {
@@ -57,7 +57,7 @@ export async function POST(
       },
     });
 
-    // Логируем действие
+    // Log action
     console.log(
       `[ADMIN ACTION] Admin ${session.user.email} reset password for user ${user.email}`
     );

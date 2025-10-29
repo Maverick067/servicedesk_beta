@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import type { FeatureFlag, TenantModules } from "@/lib/feature-flags";
 
 /**
- * Hook для проверки доступности модулей на клиенте
+ * Hook for checking module availability on client
  */
 export function useModules() {
   const { data: session } = useSession();
@@ -14,10 +14,10 @@ export function useModules() {
 
   useEffect(() => {
     async function fetchModules() {
-      // Для глобального ADMIN все модули доступны
+      // For global ADMIN all modules are available
       if (!session?.user.tenantId) {
         if (session?.user.role === "ADMIN") {
-          // Включаем все модули для глобального ADMIN
+          // Enable all modules for global ADMIN
           setModules({
             queues: true,
             sla: true,
@@ -52,7 +52,7 @@ export function useModules() {
   }, [session?.user.tenantId, session?.user.role]);
 
   const isModuleEnabled = (module: FeatureFlag): boolean => {
-    // Для глобального ADMIN все модули доступны
+    // For global ADMIN all modules are available
     if (session?.user.role === "ADMIN" && !session?.user.tenantId) {
       return true;
     }

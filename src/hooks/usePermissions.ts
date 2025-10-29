@@ -15,7 +15,7 @@ export interface AgentPermissions {
 export function usePermissions() {
   const { data: session } = useSession();
 
-  // Если пользователь ADMIN или TENANT_ADMIN - полный доступ
+  // If user is ADMIN or TENANT_ADMIN - full access
   if (session?.user.role === "ADMIN" || session?.user.role === "TENANT_ADMIN") {
     return {
       canCreateCategories: true,
@@ -30,7 +30,7 @@ export function usePermissions() {
     };
   }
 
-  // Для агентов проверяем их разрешения
+  // For agents check their permissions
   if (session?.user.role === "AGENT") {
     const permissions = (session.user as any).permissions as AgentPermissions | null;
     
@@ -38,7 +38,7 @@ export function usePermissions() {
       return permissions;
     }
 
-    // По умолчанию агент имеет минимальные права
+    // By default agent has minimal permissions
     return {
       canCreateCategories: false,
       canEditCategories: false,
@@ -52,7 +52,7 @@ export function usePermissions() {
     };
   }
 
-  // Обычные пользователи не имеют прав
+  // Regular users have no permissions
   return {
     canCreateCategories: false,
     canEditCategories: false,
