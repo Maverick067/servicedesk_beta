@@ -11,7 +11,7 @@ const createCommentSchema = z.object({
 
 /**
  * POST /api/support-tickets/[id]/comments
- * Добавить комментарий к support тикету
+ * Add comment to support ticket
  */
 export async function POST(
   request: NextRequest,
@@ -24,7 +24,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Проверяем существование тикета
+    // Check ticket existence
     const ticket = await prisma.supportTicket.findUnique({
       where: { id: params.id },
     });
@@ -33,7 +33,7 @@ export async function POST(
       return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
     }
 
-    // Проверка прав доступа
+    // Check access rights
     if (
       session.user.role === "TENANT_ADMIN" &&
       ticket.tenantId !== session.user.tenantId
@@ -44,7 +44,7 @@ export async function POST(
     const body = await request.json();
     const validatedData = createCommentSchema.parse(body);
 
-    // Только SUPER_ADMIN может создавать internal комментарии
+    // Only SUPER_ADMIN can create internal comments
     const isInternal =
       validatedData.isInternal && session.user.role === "ADMIN";
 
@@ -57,7 +57,7 @@ export async function POST(
       },
     });
 
-    // Обновляем updatedAt тикета
+    // Update ticket updatedAt
     await prisma.supportTicket.update({
       where: { id: params.id },
       data: { updatedAt: new Date() },

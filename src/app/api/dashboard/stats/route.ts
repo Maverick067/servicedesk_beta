@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getTenantWhereClause } from "@/lib/api-utils";
 
-// GET /api/dashboard/stats - Получить статистику для дашборда
+// GET /api/dashboard/stats - Get dashboard statistics
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -12,13 +12,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Супер-админ работает с support тикетами
+    // Super-admin works with support tickets
     const isSuperAdmin = session.user.role === "ADMIN" && !session.user.tenantId;
 
     const { searchParams } = new URL(request.url);
     const period = searchParams.get("period") || "7d"; // 7d, 30d, 90d
 
-    // Вычисляем дату начала периода
+    // Calculate period start date
     const now = new Date();
     let startDate = new Date();
     
@@ -36,7 +36,7 @@ export async function GET(request: Request) {
         startDate.setDate(now.getDate() - 7);
     }
 
-    // Если супер-админ, возвращаем статистику по support тикетам
+    // If super-admin, return statistics for support tickets
     if (isSuperAdmin) {
       const supportTickets = await prisma.supportTicket.findMany({
         where: {
@@ -115,7 +115,7 @@ export async function GET(request: Request) {
       });
     }
 
-    // Условие для фильтрации по ролям (для обычных пользователей)
+    // Condition for filtering by roles (for regular users)
     const whereCondition: any = {
       ...getTenantWhereClause(session),
       createdAt: {
@@ -123,7 +123,7 @@ export async function GET(request: Request) {
       },
     };
 
-    // USER видит только свои тикеты
+    // USER sees only their own tickets
     if (session.user.role === "USER") {
       whereCondition.creatorId = session.user.id;
     } else if (session.user.role === "AGENT" && !session.user.permissions?.canViewAllTickets) {
@@ -133,7 +133,7 @@ export async function GET(request: Request) {
       ];
     }
 
-    // Получаем тикеты за период
+    // Get tickets for period
     const tickets = await prisma.ticket.findMany({
       where: whereCondition,
       select: {
@@ -147,14 +147,14 @@ export async function GET(request: Request) {
       },
     });
 
-    // Общая статистика
+    // General statistics
     const totalTickets = tickets.length;
     const openTickets = tickets.filter(t => t.status === "OPEN").length;
     const inProgressTickets = tickets.filter(t => t.status === "IN_PROGRESS").length;
     const resolvedTickets = tickets.filter(t => t.status === "RESOLVED" || t.status === "CLOSED").length;
     const pendingTickets = tickets.filter(t => t.status === "PENDING").length;
 
-    // Статистика по приоритетам
+    // Priority statistics
     const priorityStats = {
       LOW: tickets.filter(t => t.priority === "LOW").length,
       MEDIUM: tickets.filter(t => t.priority === "MEDIUM").length,
@@ -162,7 +162,7 @@ export async function GET(request: Request) {
       URGENT: tickets.filter(t => t.priority === "URGENT").length,
     };
 
-    // Тренд по дням
+    // Daily trend
     const dailyTrend = [];
     const daysInPeriod = period === "7d" ? 7 : period === "30d" ? 30 : 90;
     
@@ -186,7 +186,7 @@ export async function GET(request: Request) {
       });
     }
 
-    // Статистика по категориям (топ 5)
+    // Category statistics (top 5)
     const categoryStats = session.user.tenantId ? await prisma.category.findMany({
       where: {
         tenantId: session.user.tenantId,
@@ -209,7 +209,7 @@ export async function GET(request: Request) {
       take: 5,
     }) : [];
 
-    // Статистика по очередям (топ 5)
+    // Queue statistics (top 5)
     const queueStats = session.user.tenantId ? await prisma.queue.findMany({
       where: {
         tenantId: session.user.tenantId,
@@ -233,7 +233,7 @@ export async function GET(request: Request) {
       take: 5,
     }) : [];
 
-    // Среднее время решения
+    // Average resolution time
     const resolvedTicketsWithTime = tickets.filter(t => t.resolvedAt && t.createdAt);
     const avgResolutionTime = resolvedTicketsWithTime.length > 0
       ? resolvedTicketsWithTime.reduce((sum, t) => {
@@ -243,7 +243,7 @@ export async function GET(request: Request) {
         }, 0) / resolvedTicketsWithTime.length
       : 0;
 
-    // Конвертируем в часы
+    // Convert to hours
     const avgResolutionHours = Math.round(avgResolutionTime / (1000 * 60 * 60));
 
     return NextResponse.json({

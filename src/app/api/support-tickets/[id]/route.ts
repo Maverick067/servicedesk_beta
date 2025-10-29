@@ -54,7 +54,7 @@ export async function GET(
       return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
     }
 
-    // Проверка прав доступа
+    // Check access rights
     if (
       session.user.role === "TENANT_ADMIN" &&
       ticket.tenantId !== session.user.tenantId
@@ -62,7 +62,7 @@ export async function GET(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Если тенант админ открывает свой тикет - обновляем время последнего просмотра
+    // If tenant admin opens their ticket - update last viewed time
     if (session.user.role === "TENANT_ADMIN" && ticket.creatorId === session.user.id) {
       await prisma.supportTicket.update({
         where: { id: params.id },
@@ -70,7 +70,7 @@ export async function GET(
       });
     }
 
-    // Если супер-админ открывает тикет - обновляем время последнего просмотра
+    // If super-admin opens ticket - update last viewed time
     if (session.user.role === "ADMIN") {
       await prisma.supportTicket.update({
         where: { id: params.id },
@@ -110,7 +110,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
     }
 
-    // Проверка прав доступа
+    // Check access rights
     if (
       session.user.role === "TENANT_ADMIN" &&
       ticket.tenantId !== session.user.tenantId

@@ -26,7 +26,7 @@ const ALLOWED_TYPES = [
 
 /**
  * POST /api/attachments/upload
- * Загрузка файла и сохранение метаданных в базу
+ * Upload file and save metadata to database
  */
 export async function POST(request: NextRequest) {
   try {
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const ticketId = formData.get("ticketId") as string | null;
-    const ticketType = formData.get("ticketType") as string | "regular"; // "regular" или "support"
+    const ticketType = formData.get("ticketType") as string | "regular"; // "regular" or "support"
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Ticket ID is required" }, { status: 400 });
     }
 
-    // Проверка типа файла
+    // Check file type
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
         { error: `File type ${file.type} is not allowed` },
@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Проверка размера файла
+    // Check file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
         { error: `File size exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit` },
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Проверка прав доступа к тикету
+    // Check ticket access rights
     if (ticketType === "support") {
       const supportTicket = await prisma.supportTicket.findUnique({
         where: { id: ticketId },
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Support ticket not found" }, { status: 404 });
       }
 
-      // Только создатель или супер-админ могут загружать файлы
+      // Only creator or super-admin can upload files
       if (
         session.user.role !== "ADMIN" &&
         supportTicket.creatorId !== session.user.id
@@ -91,35 +91,35 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
       }
 
-      // Проверка прав доступа к обычному тикету
+      // Check access rights to regular ticket
       if (session.user.role === "USER" && ticket.creatorId !== session.user.id) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
     }
 
-    // Создаем директорию uploads если её нет
+    // Create uploads directory if it doesn't exist
     if (!existsSync(UPLOAD_DIR)) {
       await mkdir(UPLOAD_DIR, { recursive: true });
     }
 
-    // Генерируем уникальное имя файла
+    // Generate unique filename
     const timestamp = Date.now();
     const randomString = Math.random().toString(36).substring(2, 15);
     const extension = file.name.split(".").pop();
     const filename = `${timestamp}-${randomString}.${extension}`;
     const filepath = join(UPLOAD_DIR, filename);
 
-    // Сохраняем файл на диск
+    // Save file to disk
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     await writeFile(filepath, buffer);
 
-    // Сохраняем метаданные в базу
+    // Save metadata to database
     if (ticketType === "support") {
       const attachment = await prisma.supportAttachment.create({
         data: {
           filename: file.name,
-          filepath: filename, // Сохраняем только имя файла, не полный путь
+          filepath: filename, // Save only filename, not full path
           mimetype: file.type,
           size: file.size,
           ticketId,

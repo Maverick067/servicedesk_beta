@@ -10,7 +10,7 @@ const UPLOAD_DIR = join(process.cwd(), "uploads");
 
 /**
  * GET /api/attachments/[id]
- * Скачивание файла
+ * Download file
  */
 export async function GET(
   request: NextRequest,
@@ -23,7 +23,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Пытаемся найти вложение в обычных тикетах
+    // Try to find attachment in regular tickets
     let attachment = await prisma.attachment.findUnique({
       where: { id: params.id },
       include: { ticket: true },
@@ -31,7 +31,7 @@ export async function GET(
 
     let isSupportTicket = false;
 
-    // Если не нашли, ищем в support тикетах
+    // If not found, search in support tickets
     if (!attachment) {
       const supportAttachment = await prisma.supportAttachment.findUnique({
         where: { id: params.id },
@@ -46,7 +46,7 @@ export async function GET(
       isSupportTicket = true;
     }
 
-    // Проверка прав доступа
+    // Check access rights
     if (isSupportTicket) {
       const supportTicket = attachment.ticket as any;
       if (
@@ -65,7 +65,7 @@ export async function GET(
       }
     }
 
-    // Читаем файл с диска
+    // Read file from disk
     const filepath = join(UPLOAD_DIR, attachment.filepath);
 
     if (!existsSync(filepath)) {
@@ -74,7 +74,7 @@ export async function GET(
 
     const file = await readFile(filepath);
 
-    // Возвращаем файл с правильными заголовками
+    // Return file with correct headers
     return new NextResponse(file, {
       status: 200,
       headers: {
@@ -94,7 +94,7 @@ export async function GET(
 
 /**
  * DELETE /api/attachments/[id]
- * Удаление файла
+ * Delete file
  */
 export async function DELETE(
   request: NextRequest,
@@ -107,7 +107,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Пытаемся найти вложение в обычных тикетах
+    // Try to find attachment in regular tickets
     let attachment = await prisma.attachment.findUnique({
       where: { id: params.id },
       include: { ticket: true },
@@ -115,7 +115,7 @@ export async function DELETE(
 
     let isSupportTicket = false;
 
-    // Если не нашли, ищем в support тикетах
+    // If not found, search in support tickets
     if (!attachment) {
       const supportAttachment = await prisma.supportAttachment.findUnique({
         where: { id: params.id },
@@ -130,7 +130,7 @@ export async function DELETE(
       isSupportTicket = true;
     }
 
-    // Проверка прав доступа (только создатель тикета или админы могут удалять)
+    // Check access rights (only ticket creator or admins can delete)
     if (isSupportTicket) {
       const supportTicket = attachment.ticket as any;
       if (
@@ -150,14 +150,14 @@ export async function DELETE(
       }
     }
 
-    // Удаляем файл с диска
+    // Delete file from disk
     const filepath = join(UPLOAD_DIR, attachment.filepath);
     if (existsSync(filepath)) {
       const { unlink } = await import("fs/promises");
       await unlink(filepath);
     }
 
-    // Удаляем запись из базы
+    // Delete record from database
     if (isSupportTicket) {
       await prisma.supportAttachment.delete({
         where: { id: params.id },

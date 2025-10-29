@@ -5,9 +5,9 @@ import { prisma } from "@/lib/prisma";
 
 /**
  * GET /api/support-tickets/unread-count
- * Получить количество непрочитанных support тикетов
- * - Для TENANT_ADMIN: новые ответы от супер-админа
- * - Для ADMIN (супер-админ): новые комментарии от tenant-админов
+ * Get count of unread support tickets
+ * - For TENANT_ADMIN: new replies from super-admin
+ * - For ADMIN (super-admin): new comments from tenant-admins
  */
 export async function GET() {
   try {
@@ -17,9 +17,9 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // ====== ДЛЯ СУПЕР-АДМИНА (ADMIN) ======
+    // ====== FOR SUPER-ADMIN (ADMIN) ======
     if (session.user.role === "ADMIN") {
-      // Получаем все support тикеты с комментариями (не от самого супер-админа)
+      // Get all support tickets with comments (not from super-admin themselves)
       const tickets = await prisma.supportTicket.findMany({
         select: {
           id: true,
@@ -27,11 +27,11 @@ export async function GET() {
           creatorId: true,
           comments: {
             where: {
-              // Комментарии НЕ от супер-админа
+              // Comments NOT from super-admin
               authorId: {
                 not: session.user.id,
               },
-              isInternal: false, // Не внутренние заметки
+              isInternal: false, // Not internal notes
             },
             select: {
               createdAt: true,
@@ -44,18 +44,18 @@ export async function GET() {
         },
       });
 
-      // Считаем КОЛИЧЕСТВО непрочитанных комментариев
+      // Count the NUMBER of unread comments
       let unreadCount = 0;
       for (const ticket of tickets) {
         if (ticket.comments.length === 0) continue;
         
-        // Если супер-админ никогда не открывал тикет - все комментарии непрочитанные
+        // If super-admin never opened ticket - all comments are unread
         if (!ticket.lastViewedByAdminAt) {
           unreadCount += ticket.comments.length;
           continue;
         }
         
-        // Считаем комментарии новее lastViewedByAdminAt
+        // Count comments newer than lastViewedByAdminAt
         const newComments = ticket.comments.filter(
           (comment) => comment.createdAt > ticket.lastViewedByAdminAt!
         );
@@ -66,9 +66,9 @@ export async function GET() {
       return NextResponse.json({ count: unreadCount });
     }
 
-    // ====== ДЛЯ TENANT-АДМИНА ======
+    // ====== FOR TENANT-ADMIN ======
     if (session.user.role === "TENANT_ADMIN") {
-      // Получаем все тикеты пользователя с комментариями
+      // Get all user tickets with comments
       const tickets = await prisma.supportTicket.findMany({
         where: {
           creatorId: session.user.id,
@@ -80,9 +80,9 @@ export async function GET() {
           comments: {
             where: {
               authorId: {
-                not: session.user.id, // Не от самого пользователя
+                not: session.user.id, // Not from the user themselves
               },
-              isInternal: false, // Не внутренние заметки
+              isInternal: false, // Not internal notes
             },
             select: {
               createdAt: true,
@@ -94,18 +94,18 @@ export async function GET() {
         },
       });
 
-      // Считаем КОЛИЧЕСТВО непрочитанных комментариев (не тикетов!)
+      // Count the NUMBER of unread comments (not tickets!)
       let unreadCount = 0;
       for (const ticket of tickets) {
         if (ticket.comments.length === 0) continue;
         
-        // Если тикет никогда не открывался - все комментарии непрочитанные
+        // If ticket was never opened - all comments are unread
         if (!ticket.lastViewedByCreatorAt) {
           unreadCount += ticket.comments.length;
           continue;
         }
         
-        // Считаем комментарии новее lastViewedByCreatorAt
+        // Count comments newer than lastViewedByCreatorAt
         const newComments = ticket.comments.filter(
           (comment) => comment.createdAt > ticket.lastViewedByCreatorAt!
         );
@@ -116,7 +116,7 @@ export async function GET() {
       return NextResponse.json({ count: unreadCount });
     }
 
-    // Для других ролей - 0
+    // For other roles - 0
     return NextResponse.json({ count: 0 });
   } catch (error: any) {
     console.error("Error counting unread support tickets:", error);
