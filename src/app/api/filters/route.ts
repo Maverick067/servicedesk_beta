@@ -5,17 +5,17 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const createFilterSchema = z.object({
-  name: z.string().min(1, "Название обязательно"),
+  name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
   icon: z.string().optional(),
   color: z.string().optional(),
   isDefault: z.boolean().optional(),
   isPublic: z.boolean().optional(),
   sortOrder: z.number().optional(),
-  filters: z.record(z.any()), // JSON объект с условиями фильтрации
+  filters: z.record(z.any()), // JSON object with filtering conditions
 });
 
-// GET /api/filters - Получить все фильтры
+// GET /api/filters - Get all filters
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -23,13 +23,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Получить личные фильтры пользователя и общие фильтры команды
+    // Get user's personal filters and team's public filters
     const filters = await prisma.savedFilter.findMany({
       where: {
         tenantId: session.user.tenantId,
         OR: [
-          { userId: session.user.id }, // Личные фильтры
-          { isPublic: true }, // Общие фильтры
+          { userId: session.user.id }, // Personal filters
+          { isPublic: true }, // Public filters
         ],
       },
       orderBy: [
@@ -57,7 +57,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/filters - Создать новый фильтр
+// POST /api/filters - Create new filter
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = createFilterSchema.parse(body);
 
-    // Если фильтр помечен как default, снять флаг с других фильтров пользователя
+    // If filter is marked as default, remove flag from other user filters
     if (validatedData.isDefault) {
       await prisma.savedFilter.updateMany({
         where: {

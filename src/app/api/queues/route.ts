@@ -7,14 +7,14 @@ import { createAuditLog, getClientIp, getUserAgent } from "@/lib/audit-log";
 import { getTenantWhereClause, getTenantIdForCreate } from "@/lib/api-utils";
 
 const createQueueSchema = z.object({
-  name: z.string().min(2, "Название должно содержать минимум 2 символа"),
+  name: z.string().min(2, "Name must contain at least 2 characters"),
   description: z.string().optional(),
-  color: z.string().regex(/^#[0-9A-F]{6}$/i, "Неверный формат цвета").optional(),
+  color: z.string().regex(/^#[0-9A-F]{6}$/i, "Invalid color format").optional(),
   icon: z.string().optional(),
   priority: z.number().int().min(0).optional(),
 });
 
-// GET /api/queues - Получить все очереди
+// GET /api/queues - Get all queues
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/queues - Создать новую очередь
+// POST /api/queues - Create new queue
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только TENANT_ADMIN и ADMIN могут создавать очереди
+    // Only TENANT_ADMIN and ADMIN can create queues
     if (session.user.role !== "TENANT_ADMIN" && session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -82,7 +82,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // Логируем создание очереди
+    // Log queue creation
     await createAuditLog({
       tenantId,
       userId: session.user.id,

@@ -18,7 +18,7 @@ const updateArticleSchema = z.object({
   attachments: z.array(z.string()).optional(),
 });
 
-// GET /api/knowledge/[id] - Получить статью по ID или slug
+// GET /api/knowledge/[id] - Get article by ID or slug
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -29,7 +29,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Пытаемся найти по ID или slug
+    // Try to find by ID or slug
     const article = await prisma.knowledgeArticle.findFirst({
       where: {
         tenantId: session.user.tenantId,
@@ -41,12 +41,12 @@ export async function GET(
       return NextResponse.json({ error: "Article not found" }, { status: 404 });
     }
 
-    // Проверка доступа
+    // Access check
     if (session.user.role === "USER" && (!article.isPublic || article.status !== "PUBLISHED")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Увеличиваем счетчик просмотров
+    // Increment view counter
     await prisma.knowledgeArticle.update({
       where: { id: article.id },
       data: { views: { increment: 1 } },
@@ -62,7 +62,7 @@ export async function GET(
   }
 }
 
-// PATCH /api/knowledge/[id] - Обновить статью
+// PATCH /api/knowledge/[id] - Update article
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
@@ -73,7 +73,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только админы и tenant админы могут редактировать статьи
+    // Only admins and tenant admins can edit articles
     if (!["ADMIN", "TENANT_ADMIN"].includes(session.user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -81,7 +81,7 @@ export async function PATCH(
     const body = await request.json();
     const validated = updateArticleSchema.parse(body);
 
-    // Проверяем существование статьи
+    // Check article existence
     const existingArticle = await prisma.knowledgeArticle.findFirst({
       where: {
         id: params.id,
@@ -93,7 +93,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Article not found" }, { status: 404 });
     }
 
-    // Если меняется название, обновляем slug
+    // If title changes, update slug
     let slug = existingArticle.slug;
     if (validated.title && validated.title !== existingArticle.title) {
       const baseSlug = slugify(validated.title, { lower: true, strict: true });
@@ -114,16 +114,16 @@ export async function PATCH(
       }
     }
 
-    // Если статус меняется на PUBLISHED и publishedAt не установлен, устанавливаем
+    // If status changes to PUBLISHED and publishedAt is not set, set it
     const publishedAt =
       validated.status === "PUBLISHED" && !existingArticle.publishedAt
         ? new Date()
         : undefined;
 
-    // Увеличиваем версию
+    // Increment version
     const version = existingArticle.version + 1;
 
-    // Обновляем статью
+    // Update article
     const article = await prisma.knowledgeArticle.update({
       where: { id: params.id },
       data: {
@@ -134,7 +134,7 @@ export async function PATCH(
       },
     });
 
-    // Аудит лог
+    // Audit log
     await createAuditLog({
       tenantId: session.user.tenantId,
       userId: session.user.id,
@@ -164,7 +164,7 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/knowledge/[id] - Удалить статью
+// DELETE /api/knowledge/[id] - Delete article
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
@@ -175,12 +175,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только админы и tenant админы могут удалять статьи
+    // Only admins and tenant admins can delete articles
     if (!["ADMIN", "TENANT_ADMIN"].includes(session.user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Проверяем существование статьи
+    // Check article existence
     const article = await prisma.knowledgeArticle.findFirst({
       where: {
         id: params.id,
@@ -192,12 +192,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Article not found" }, { status: 404 });
     }
 
-    // Удаляем статью
+    // Delete article
     await prisma.knowledgeArticle.delete({
       where: { id: params.id },
     });
 
-    // Аудит лог
+    // Audit log
     await createAuditLog({
       tenantId: session.user.tenantId,
       userId: session.user.id,

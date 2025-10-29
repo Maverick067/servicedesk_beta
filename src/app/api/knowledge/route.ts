@@ -19,7 +19,7 @@ const createArticleSchema = z.object({
   attachments: z.array(z.string()).default([]),
 });
 
-// GET /api/knowledge - Получить все статьи
+// GET /api/knowledge - Get all articles
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -37,30 +37,30 @@ export async function GET(request: Request) {
       ...getTenantWhereClause(session),
     };
 
-    // Фильтр по статусу
+    // Filter by status
     if (status && status !== "ALL") {
       where.status = status;
     }
 
-    // Показывать только опубликованные статьи обычным пользователям
+    // Show only published articles to regular users
     if (session.user.role === "USER") {
       where.status = "PUBLISHED";
       where.isPublic = true;
     }
 
-    // Фильтр по категории
+    // Filter by category
     if (categoryId) {
       where.categoryId = categoryId;
     }
 
-    // Фильтр по тегу
+    // Filter by tag
     if (tag) {
       where.tags = {
         has: tag,
       };
     }
 
-    // Поиск по названию и содержимому
+    // Search by title and content
     if (search) {
       where.OR = [
         { title: { contains: search, mode: "insensitive" } },
@@ -85,7 +85,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/knowledge - Создать новую статью
+// POST /api/knowledge - Create new article
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только админы и tenant админы могут создавать статьи
+    // Only admins and tenant admins can create articles
     if (!["ADMIN", "TENANT_ADMIN"].includes(session.user.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -101,12 +101,12 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validated = createArticleSchema.parse(body);
 
-    // Генерируем slug
+    // Generate slug
     const baseSlug = slugify(validated.title, { lower: true, strict: true });
     let slug = baseSlug;
     let counter = 1;
 
-    // Проверяем уникальность slug
+    // Check slug uniqueness
     while (
       await prisma.knowledgeArticle.findUnique({
         where: {
@@ -121,7 +121,7 @@ export async function POST(request: Request) {
       counter++;
     }
 
-    // Создаем статью
+    // Create article
     const article = await prisma.knowledgeArticle.create({
       data: {
         ...validated,
@@ -132,7 +132,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // Аудит лог
+    // Audit log
     await createAuditLog({
       tenantId: session.user.tenantId,
       userId: session.user.id,

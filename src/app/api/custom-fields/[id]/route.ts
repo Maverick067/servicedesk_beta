@@ -14,7 +14,7 @@ const updateCustomFieldSchema = z.object({
   order: z.number().int().min(0).optional(),
 });
 
-// GET /api/custom-fields/[id] - Получить одно кастомное поле
+// GET /api/custom-fields/[id] - Get single custom field
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -46,7 +46,7 @@ export async function GET(
   }
 }
 
-// PATCH /api/custom-fields/[id] - Обновить кастомное поле
+// PATCH /api/custom-fields/[id] - Update custom field
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
@@ -57,7 +57,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только TENANT_ADMIN может обновлять кастомные поля
+    // Only TENANT_ADMIN can update custom fields
     if (session.user.role !== "TENANT_ADMIN" && session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -65,7 +65,7 @@ export async function PATCH(
     const body = await request.json();
     const validatedData = updateCustomFieldSchema.parse(body);
 
-    // Проверяем существование и принадлежность
+    // Check existence and ownership
     const existingField = await prisma.customField.findFirst({
       where: {
         id: params.id,
@@ -82,7 +82,7 @@ export async function PATCH(
       data: validatedData,
     });
 
-    // Логируем обновление
+    // Log update
     await createAuditLog({
       tenantId: session.user.tenantId,
       userId: session.user.id,
@@ -114,7 +114,7 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/custom-fields/[id] - Удалить кастомное поле
+// DELETE /api/custom-fields/[id] - Delete custom field
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
@@ -125,12 +125,12 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только TENANT_ADMIN может удалять кастомные поля
+    // Only TENANT_ADMIN can delete custom fields
     if (session.user.role !== "TENANT_ADMIN" && session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Проверяем существование и принадлежность
+    // Check existence and ownership
     const existingField = await prisma.customField.findFirst({
       where: {
         id: params.id,
@@ -146,7 +146,7 @@ export async function DELETE(
       where: { id: params.id },
     });
 
-    // Логируем удаление
+    // Log deletion
     await createAuditLog({
       tenantId: session.user.tenantId,
       userId: session.user.id,

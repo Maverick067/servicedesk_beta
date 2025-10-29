@@ -7,8 +7,8 @@ import { createAuditLog, getClientIp, getUserAgent } from "@/lib/audit-log";
 import { getTenantWhereClause, getTenantIdForCreate } from "@/lib/api-utils";
 
 const createCustomFieldSchema = z.object({
-  name: z.string().min(1, "Название поля обязательно").regex(/^[a-zA-Z0-9_]+$/, "Название поля может содержать только латинские буквы, цифры и подчеркивания"),
-  label: z.string().min(1, "Метка поля обязательна"),
+  name: z.string().min(1, "Field name is required").regex(/^[a-zA-Z0-9_]+$/, "Field name can only contain Latin letters, numbers and underscores"),
+  label: z.string().min(1, "Field label is required"),
   description: z.string().optional(),
   type: z.enum(["TEXT", "NUMBER", "DATE", "CHECKBOX", "SELECT", "MULTI_SELECT", "URL", "EMAIL"]),
   options: z.array(z.string()).optional(),
@@ -16,7 +16,7 @@ const createCustomFieldSchema = z.object({
   order: z.number().int().min(0).default(0),
 });
 
-// GET /api/custom-fields - Получить все кастомные поля tenant
+// GET /api/custom-fields - Get all custom fields for tenant
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
   }
 }
 
-// POST /api/custom-fields - Создать новое кастомное поле
+// POST /api/custom-fields - Create new custom field
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только TENANT_ADMIN может создавать кастомные поля
+    // Only TENANT_ADMIN can create custom fields
     if (session.user.role !== "TENANT_ADMIN" && session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
 
     const tenantId = getTenantIdForCreate(session, body.tenantId);
 
-    // Проверяем уникальность имени
+    // Check name uniqueness
     const existing = await prisma.customField.findUnique({
       where: {
         tenantId_name: {
@@ -81,7 +81,7 @@ export async function POST(request: Request) {
 
     if (existing) {
       return NextResponse.json(
-        { error: "Поле с таким именем уже существует" },
+        { error: "Field with this name already exists" },
         { status: 400 }
       );
     }
@@ -99,7 +99,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // Логируем создание
+    // Log creation
     await createAuditLog({
       tenantId,
       userId: session.user.id,

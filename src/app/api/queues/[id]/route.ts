@@ -14,7 +14,7 @@ const updateQueueSchema = z.object({
   isActive: z.boolean().optional(),
 });
 
-// GET /api/queues/[id] - Получить одну очередь
+// GET /api/queues/[id] - Get single queue
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -53,7 +53,7 @@ export async function GET(
   }
 }
 
-// PATCH /api/queues/[id] - Обновить очередь
+// PATCH /api/queues/[id] - Update queue
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
@@ -64,7 +64,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только TENANT_ADMIN и ADMIN могут обновлять очереди
+    // Only TENANT_ADMIN and ADMIN can update queues
     if (session.user.role !== "TENANT_ADMIN" && session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -72,7 +72,7 @@ export async function PATCH(
     const body = await request.json();
     const validatedData = updateQueueSchema.parse(body);
 
-    // Проверяем, что очередь существует и принадлежит к той же организации
+    // Check that queue exists and belongs to the same organization
     const existingQueue = await prisma.queue.findFirst({
       where: {
         id: params.id,
@@ -96,7 +96,7 @@ export async function PATCH(
       },
     });
 
-    // Логируем обновление
+    // Log update
     await createAuditLog({
       tenantId: session.user.tenantId,
       userId: session.user.id,
@@ -126,7 +126,7 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/queues/[id] - Удалить очередь
+// DELETE /api/queues/[id] - Delete queue
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
@@ -137,7 +137,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только TENANT_ADMIN и ADMIN могут удалять очереди
+    // Only TENANT_ADMIN and ADMIN can delete queues
     if (session.user.role !== "TENANT_ADMIN" && session.user.role !== "ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -157,7 +157,7 @@ export async function DELETE(
       where: { id: params.id },
     });
 
-    // Логируем удаление
+    // Log deletion
     await createAuditLog({
       tenantId: session.user.tenantId,
       userId: session.user.id,

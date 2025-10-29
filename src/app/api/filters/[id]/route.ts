@@ -15,7 +15,7 @@ const updateFilterSchema = z.object({
   filters: z.record(z.any()).optional(),
 });
 
-// GET /api/filters/[id] - Получить конкретный фильтр
+// GET /api/filters/[id] - Get specific filter
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -60,7 +60,7 @@ export async function GET(
   }
 }
 
-// PATCH /api/filters/[id] - Обновить фильтр
+// PATCH /api/filters/[id] - Update filter
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
@@ -71,12 +71,12 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Проверить права доступа
+    // Check access rights
     const existingFilter = await prisma.savedFilter.findFirst({
       where: {
         id: params.id,
         tenantId: session.user.tenantId,
-        userId: session.user.id, // Только владелец может редактировать
+        userId: session.user.id, // Only owner can edit
       },
     });
 
@@ -90,7 +90,7 @@ export async function PATCH(
     const body = await request.json();
     const validatedData = updateFilterSchema.parse(body);
 
-    // Если фильтр помечен как default, снять флаг с других фильтров пользователя
+    // If filter is marked as default, remove flag from other user filters
     if (validatedData.isDefault) {
       await prisma.savedFilter.updateMany({
         where: {
@@ -135,7 +135,7 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/filters/[id] - Удалить фильтр
+// DELETE /api/filters/[id] - Delete filter
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
@@ -146,7 +146,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Проверить права доступа
+    // Check access rights
     const existingFilter = await prisma.savedFilter.findFirst({
       where: {
         id: params.id,
