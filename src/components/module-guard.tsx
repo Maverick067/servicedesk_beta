@@ -16,74 +16,74 @@ interface ModuleGuardProps {
 }
 
 /**
- * Компонент для защиты страниц модулей
- * Проверяет, включен ли модуль для tenant'а, и перенаправляет на dashboard, если нет
+ * Component for protecting module pages
+ * Checks if module is enabled for tenant and redirects to dashboard if not
  */
 export function ModuleGuard({ module, children, moduleName }: ModuleGuardProps) {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { isModuleEnabled, isLoading: modulesLoading } = useModules();
 
-  // Проверяем доступ к модулю
+  // Check module access
   useEffect(() => {
-    // Ждем загрузки сессии и модулей
+    // Wait for session and modules to load
     if (status === "loading" || modulesLoading) {
       return;
     }
 
-    // Если не авторизован, редирект на логин
+    // If not authorized, redirect to login
     if (!session?.user) {
       router.replace("/login");
       return;
     }
 
-    // Глобальный ADMIN имеет доступ ко всем модулям
+    // Global ADMIN has access to all modules
     if (session.user.role === "ADMIN" && !session.user.tenantId) {
       return;
     }
 
-    // Проверяем, включен ли модуль
+    // Check if module is enabled
     if (!isModuleEnabled(module)) {
       router.replace("/dashboard");
     }
   }, [session, status, modulesLoading, module, isModuleEnabled, router]);
 
-  // Показываем loader во время загрузки
+  // Show loader during loading
   if (status === "loading" || modulesLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="mt-4 text-muted-foreground">Загрузка...</p>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // Если не авторизован, не показываем контент
+  // If not authorized, don't show content
   if (!session?.user) {
     return null;
   }
 
-  // Глобальный ADMIN видит всё
+  // Global ADMIN sees everything
   if (session.user.role === "ADMIN" && !session.user.tenantId) {
     return <>{children}</>;
   }
 
-  // Если модуль не включен, показываем заглушку (пока идет редирект)
+  // If module not enabled, show placeholder (while redirecting)
   if (!isModuleEnabled(module)) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Card className="max-w-md">
           <CardHeader>
-            <CardTitle>Модуль недоступен</CardTitle>
+            <CardTitle>Module Unavailable</CardTitle>
             <CardDescription>
-              {moduleName ? `Модуль "${moduleName}" отключен` : "Этот модуль отключен"} для вашей организации.
+              {moduleName ? `Module "${moduleName}" is disabled` : "This module is disabled"} for your organization.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={() => router.push("/dashboard")} className="w-full">
-              Вернуться на главную
+              Back to Dashboard
             </Button>
           </CardContent>
         </Card>
@@ -91,7 +91,7 @@ export function ModuleGuard({ module, children, moduleName }: ModuleGuardProps) 
     );
   }
 
-  // Модуль включен, показываем контент
+  // Module enabled, show content
   return <>{children}</>;
 }
 

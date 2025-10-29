@@ -22,14 +22,14 @@ interface Tenant {
 }
 
 const AVAILABLE_MODULES = [
-  { key: "queues", name: "Очереди", description: "Система очередей для группировки тикетов" },
-  { key: "sla", name: "SLA Политики", description: "Управление временем реакции и решения" },
-  { key: "knowledge", name: "База знаний", description: "Статьи и документация" },
-  { key: "automation", name: "Автоматизация", description: "Правила автоматической обработки" },
-  { key: "assets", name: "IT Активы (CMDB)", description: "Управление оборудованием" },
-  { key: "reports", name: "Отчёты", description: "Расширенная аналитика и экспорт" },
-  { key: "webhooks", name: "Webhooks", description: "Интеграция с внешними системами" },
-  { key: "ldap", name: "LDAP/SSO", description: "Active Directory интеграция" },
+  { key: "queues", name: "Queues", description: "Queue system for grouping tickets" },
+  { key: "sla", name: "SLA Policies", description: "Response and resolution time management" },
+  { key: "knowledge", name: "Knowledge Base", description: "Articles and documentation" },
+  { key: "automation", name: "Automation", description: "Automatic processing rules" },
+  { key: "assets", name: "IT Assets (CMDB)", description: "Equipment management" },
+  { key: "reports", name: "Reports", description: "Advanced analytics and export" },
+  { key: "webhooks", name: "Webhooks", description: "Integration with external systems" },
+  { key: "ldap", name: "LDAP/SSO", description: "Active Directory integration" },
 ];
 
 export default function AdminModulesPage() {
@@ -59,7 +59,7 @@ export default function AdminModulesPage() {
         setTenants(data);
       } catch (error) {
         console.error("Error fetching tenants:", error);
-        toast.error("Ошибка загрузки организаций");
+        toast.error("Error loading organizations");
       } finally {
         setIsLoading(false);
       }
@@ -89,7 +89,7 @@ export default function AdminModulesPage() {
 
       if (!response.ok) throw new Error("Failed to update module");
 
-      // Обновляем локальное состояние
+      // Update local state
       setTenants(prev =>
         prev.map(t =>
           t.id === tenantId
@@ -104,9 +104,9 @@ export default function AdminModulesPage() {
         )
       );
 
-      toast.success(`Модуль ${!currentValue ? "включён" : "выключен"}`);
+      toast.success(`Module ${!currentValue ? "enabled" : "disabled"}`);
     } catch (error: any) {
-      toast.error("Ошибка обновления модуля", { description: error.message });
+      toast.error("Error updating module", { description: error.message });
     } finally {
       setUpdatingModules(prev => ({ ...prev, [updateKey]: false }));
     }
@@ -141,16 +141,16 @@ export default function AdminModulesPage() {
         )
       );
 
-      toast.success("Все модули включены");
+      toast.success("All modules enabled");
     } catch (error: any) {
-      toast.error("Ошибка", { description: error.message });
+      toast.error("Error", { description: error.message });
     }
   };
 
   if (status === "loading" || isLoading) {
     return (
       <div className="space-y-6 p-6">
-        <h1 className="text-3xl font-bold">Управление модулями</h1>
+        <h1 className="text-3xl font-bold">Module Management</h1>
         <div className="animate-pulse space-y-4">
           {[1, 2].map(i => (
             <Card key={i}>
@@ -167,10 +167,10 @@ export default function AdminModulesPage() {
       <div>
         <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent flex items-center gap-3">
           <Settings className="h-8 w-8 text-purple-600" />
-          Управление модулями
+          Module Management
         </h1>
         <p className="text-muted-foreground mt-2">
-          Активируйте или деактивируйте функции для каждой организации
+          Activate or deactivate features for each organization
         </p>
       </div>
 
@@ -195,14 +195,14 @@ export default function AdminModulesPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <Badge variant={enabledCount === AVAILABLE_MODULES.length ? "default" : "secondary"}>
-                      {enabledCount} / {AVAILABLE_MODULES.length} модулей
+                      {enabledCount} / {AVAILABLE_MODULES.length} modules
                     </Badge>
                     <Button
                       size="sm"
                       onClick={() => enableAllModules(tenant.id)}
                       disabled={enabledCount === AVAILABLE_MODULES.length}
                     >
-                      Включить все
+                      Enable All
                     </Button>
                   </div>
                 </div>
@@ -256,9 +256,9 @@ export default function AdminModulesPage() {
           <Card>
             <CardContent className="py-12 text-center">
               <Building2 className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">Нет организаций</h3>
+              <h3 className="text-lg font-semibold mb-2">No Organizations</h3>
               <p className="text-muted-foreground">
-                Создайте организацию для управления модулями
+                Create an organization to manage modules
               </p>
             </CardContent>
           </Card>
