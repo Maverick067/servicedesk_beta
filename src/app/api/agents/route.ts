@@ -8,7 +8,7 @@ const updateAgentStatusSchema = z.object({
   agentStatus: z.enum(["AVAILABLE", "BUSY", "AWAY", "ON_LEAVE"]),
 });
 
-// GET /api/agents - Получить всех агентов организации
+// GET /api/agents - Get all organization agents
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только админы, tenant админы и агенты могут видеть агентов
+    // Only admins, tenant admins and agents can view agents
     if (session.user.role !== "ADMIN" && session.user.role !== "TENANT_ADMIN" && session.user.role !== "AGENT") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -62,7 +62,7 @@ export async function GET(request: Request) {
   }
 }
 
-// PATCH /api/agents/[id]/status - Обновить статус агента
+// PATCH /api/agents/[id]/status - Update agent status
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
@@ -73,8 +73,8 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Агент может обновить только свой статус
-    // Админы и tenant админы могут обновлять статусы всех агентов
+    // Agent can update only their own status
+    // Admins and tenant admins can update all agents' statuses
     if (session.user.role === "AGENT" && session.user.id !== params.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -86,7 +86,7 @@ export async function PATCH(
     const body = await request.json();
     const validatedData = updateAgentStatusSchema.parse(body);
 
-    // Проверяем, что агент существует и принадлежит к той же организации
+    // Check that agent exists and belongs to the same organization
     const agent = await prisma.user.findFirst({
       where: {
         id: params.id,
@@ -103,7 +103,7 @@ export async function PATCH(
       );
     }
 
-    // Обновляем статус агента
+    // Update agent status
     const updatedAgent = await prisma.user.update({
       where: { id: params.id },
       data: { agentStatus: validatedData.agentStatus },

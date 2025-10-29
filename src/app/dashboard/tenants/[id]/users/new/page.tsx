@@ -37,9 +37,9 @@ export default function NewTenantUserPage() {
     role: "USER",
   });
 
-  // Проверяем, что пользователь - админ или tenant админ
+  // Check that user is admin or tenant admin
   useEffect(() => {
-    if (status === "loading") return; // Ждем загрузки сессии
+    if (status === "loading") return; // Wait for session load
     
     if (!session || (session.user.role !== "ADMIN" && session.user.role !== "TENANT_ADMIN")) {
       router.push("/dashboard");
@@ -95,12 +95,12 @@ export default function NewTenantUserPage() {
       <div className="flex items-center gap-4">
         <Button variant="ghost" onClick={() => router.back()}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Назад
+          Back
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">Добавить пользователя</h1>
+          <h1 className="text-3xl font-bold">Add User</h1>
           <p className="text-muted-foreground mt-2">
-            {tenantName && `Добавить пользователя в "${tenantName}"`}
+            {tenantName && `Add user to "${tenantName}"`}
           </p>
         </div>
       </div>
@@ -108,17 +108,17 @@ export default function NewTenantUserPage() {
       <Card>
         <form onSubmit={handleSubmit}>
           <CardHeader>
-            <CardTitle>Данные пользователя</CardTitle>
+            <CardTitle>User Data</CardTitle>
             <CardDescription>
-              Создайте нового пользователя для организации
+              Create a new user for the organization
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Имя пользователя *</Label>
+              <Label htmlFor="name">User Name *</Label>
               <Input
                 id="name"
-                placeholder="Имя Фамилия"
+                placeholder="First Last"
                 value={formData.name}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
@@ -142,7 +142,7 @@ export default function NewTenantUserPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Пароль *</Label>
+              <Label htmlFor="password">Password *</Label>
               <Input
                 id="password"
                 type="password"
@@ -156,7 +156,7 @@ export default function NewTenantUserPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="role">Роль *</Label>
+              <Label htmlFor="role">Role *</Label>
               <Select
                 value={formData.role}
                 onValueChange={(value) =>
@@ -168,10 +168,10 @@ export default function NewTenantUserPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="USER">Пользователь</SelectItem>
-                  <SelectItem value="AGENT">Агент</SelectItem>
+                  <SelectItem value="USER">User</SelectItem>
+                  <SelectItem value="AGENT">Agent</SelectItem>
                   {session?.user.role === "ADMIN" && (
-                    <SelectItem value="TENANT_ADMIN">Администратор организации</SelectItem>
+                    <SelectItem value="TENANT_ADMIN">Organization Administrator</SelectItem>
                   )}
                 </SelectContent>
               </Select>
@@ -189,16 +189,16 @@ export default function NewTenantUserPage() {
               onClick={() => router.back()}
               disabled={isLoading}
             >
-              Отмена
+              Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Создание...
+                  Creating...
                 </>
               ) : (
-                "Создать пользователя"
+                "Create User"
               )}
             </Button>
           </CardFooter>

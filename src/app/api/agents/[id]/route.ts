@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// GET /api/agents/[id] - Получить информацию об агенте
+// GET /api/agents/[id] - Get agent information
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -14,8 +14,8 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Агент может получить свою информацию
-    // Админы и tenant админы могут получить информацию о любом агенте
+    // Agent can get their own information
+    // Admins and tenant admins can get information about any agent
     if (
       session.user.id !== params.id &&
       session.user.role !== "ADMIN" &&

@@ -5,12 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 
 const createCategorySchema = z.object({
-  name: z.string().min(2, "Название должно содержать минимум 2 символа"),
+  name: z.string().min(2, "Name must contain at least 2 characters"),
   description: z.string().optional(),
-  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Некорректный цвет"),
+  color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid color"),
 });
 
-// GET /api/categories - Получить все категории
+// GET /api/categories - Get all categories
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
@@ -18,8 +18,8 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Все пользователи могут видеть категории своей организации
-    // Глобальный ADMIN видит категории всех организаций
+    // All users can view categories of their organization
+    // Global ADMIN sees categories of all organizations
     const where: any = {};
     if (session.user.role !== "ADMIN") {
       if (!session.user.tenantId) {
@@ -63,7 +63,7 @@ export async function GET() {
   }
 }
 
-// POST /api/categories - Создать новую категорию
+// POST /api/categories - Create new category
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Проверяем права на создание категорий
+    // Check permissions to create categories
     const canCreate = 
       session.user.role === "ADMIN" || 
       session.user.role === "TENANT_ADMIN" ||
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const validatedData = createCategorySchema.parse(body);
 
-    // Проверяем уникальность названия в рамках организации
+    // Check name uniqueness within organization
     const existingCategory = await prisma.category.findFirst({
       where: {
         name: validatedData.name,
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
 
     if (existingCategory) {
       return NextResponse.json(
-        { error: "Категория с таким названием уже существует" },
+        { error: "Category with this name already exists" },
         { status: 400 }
       );
     }
