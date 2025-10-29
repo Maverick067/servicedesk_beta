@@ -112,12 +112,12 @@ export function EditSlaPolicyDialog({
         throw new Error(error.error || "Failed to update SLA policy");
       }
 
-      toast.success("SLA политика обновлена");
+      toast.success("SLA policy updated");
       onSuccess();
       onClose();
     } catch (error: any) {
       console.error("Error updating SLA policy:", error);
-      toast.error(error.message || "Ошибка при обновлении SLA политики");
+      toast.error(error.message || "Error updating SLA policy");
     } finally {
       setIsSubmitting(false);
     }
@@ -160,29 +160,29 @@ export function EditSlaPolicyDialog({
   };
 
   const weekDays = [
-    { value: 1, label: "Пн" },
-    { value: 2, label: "Вт" },
-    { value: 3, label: "Ср" },
-    { value: 4, label: "Чт" },
-    { value: 5, label: "Пт" },
-    { value: 6, label: "Сб" },
-    { value: 7, label: "Вс" },
+    { value: 1, label: "Mon" },
+    { value: 2, label: "Tue" },
+    { value: 3, label: "Wed" },
+    { value: 4, label: "Thu" },
+    { value: 5, label: "Fri" },
+    { value: 6, label: "Sat" },
+    { value: 7, label: "Sun" },
   ];
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Редактировать SLA политику</DialogTitle>
+          <DialogTitle>Edit SLA Policy</DialogTitle>
           <DialogDescription>
-            Обновите настройки времени ответа и решения
+            Update response and resolution time settings
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Info */}
           <div className="space-y-4">
             <div>
-              <Label htmlFor="name">Название *</Label>
+              <Label htmlFor="name">Name *</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -192,7 +192,7 @@ export function EditSlaPolicyDialog({
             </div>
 
             <div>
-              <Label htmlFor="description">Описание</Label>
+              <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
                 value={formData.description}
@@ -210,30 +210,30 @@ export function EditSlaPolicyDialog({
                 }
               />
               <Label htmlFor="isActive" className="font-normal">
-                Активна
+                Active
               </Label>
             </div>
           </div>
 
           {/* Time Settings */}
           <div className="space-y-4 border-t pt-4">
-            <h3 className="font-semibold">Временные рамки</h3>
-
+            <h3 className="font-semibold">Time Settings</h3>
+            
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="responseTime">Время первого ответа (мин)</Label>
+                <Label htmlFor="responseTime">First Response Time (min)</Label>
                 <Input
                   id="responseTime"
                   type="number"
                   min="1"
                   value={formData.responseTime}
                   onChange={(e) => setFormData({ ...formData, responseTime: e.target.value })}
-                  placeholder="Опционально"
+                  placeholder="Optional"
                 />
               </div>
 
               <div>
-                <Label htmlFor="resolutionTime">Время решения (мин) *</Label>
+                <Label htmlFor="resolutionTime">Resolution Time (min) *</Label>
                 <Input
                   id="resolutionTime"
                   type="number"
@@ -248,7 +248,7 @@ export function EditSlaPolicyDialog({
 
           {/* Priorities */}
           <div className="space-y-2 border-t pt-4">
-            <Label>Приоритеты (оставьте пустым для всех)</Label>
+            <Label>Priorities (leave empty for all)</Label>
             <div className="flex flex-wrap gap-2">
               {["LOW", "MEDIUM", "HIGH", "URGENT"].map((priority) => (
                 <div key={priority} className="flex items-center space-x-2">
@@ -268,7 +268,7 @@ export function EditSlaPolicyDialog({
           {/* Categories */}
           {categories.length > 0 && (
             <div className="space-y-2 border-t pt-4">
-              <Label>Категории (оставьте пустым для всех)</Label>
+              <Label>Categories (leave empty for all)</Label>
               <div className="grid grid-cols-2 gap-2">
                 {categories.map((category) => (
                   <div key={category.id} className="flex items-center space-x-2">
@@ -289,7 +289,7 @@ export function EditSlaPolicyDialog({
           {/* Queues */}
           {queues.length > 0 && (
             <div className="space-y-2 border-t pt-4">
-              <Label>Очереди (оставьте пустым для всех)</Label>
+              <Label>Queues (leave empty for all)</Label>
               <div className="grid grid-cols-2 gap-2">
                 {queues.map((queue) => (
                   <div key={queue.id} className="flex items-center space-x-2">
@@ -318,7 +318,7 @@ export function EditSlaPolicyDialog({
                 }
               />
               <Label htmlFor="businessHoursOnly" className="font-normal">
-                Учитывать только рабочее время
+                Consider business hours only
               </Label>
             </div>
 
@@ -326,7 +326,7 @@ export function EditSlaPolicyDialog({
               <>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="businessHoursStart">Начало рабочего дня</Label>
+                    <Label htmlFor="businessHoursStart">Business Day Start</Label>
                     <Input
                       id="businessHoursStart"
                       type="time"
@@ -338,7 +338,7 @@ export function EditSlaPolicyDialog({
                   </div>
 
                   <div>
-                    <Label htmlFor="businessHoursEnd">Конец рабочего дня</Label>
+                    <Label htmlFor="businessHoursEnd">Business Day End</Label>
                     <Input
                       id="businessHoursEnd"
                       type="time"
@@ -351,7 +351,7 @@ export function EditSlaPolicyDialog({
                 </div>
 
                 <div>
-                  <Label>Рабочие дни</Label>
+                  <Label>Business Days</Label>
                   <div className="flex gap-2 mt-2">
                     {weekDays.map((day) => (
                       <div key={day.value} className="flex items-center space-x-1">
@@ -373,10 +373,10 @@ export function EditSlaPolicyDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              Отмена
+              Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Сохранение..." : "Сохранить"}
+              {isSubmitting ? "Saving..." : "Save"}
             </Button>
           </DialogFooter>
         </form>

@@ -35,10 +35,10 @@ interface EditUserDialogProps {
 }
 
 const roleLabels = {
-  ADMIN: "Глобальный админ",
-  TENANT_ADMIN: "Админ организации",
-  AGENT: "Агент",
-  USER: "Пользователь",
+  ADMIN: "Global Admin",
+  TENANT_ADMIN: "Organization Admin",
+  AGENT: "Agent",
+  USER: "User",
 };
 
 export function EditUserDialog({ user, children, onUserUpdated }: EditUserDialogProps) {
@@ -47,7 +47,7 @@ export function EditUserDialog({ user, children, onUserUpdated }: EditUserDialog
   const [role, setRole] = useState(user.role);
   const [isActive, setIsActive] = useState(user.isActive);
 
-  // Обновляем состояние при изменении пользователя
+  // Update state when user changes
   useEffect(() => {
     setRole(user.role);
     setIsActive(user.isActive);
@@ -72,14 +72,14 @@ export function EditUserDialog({ user, children, onUserUpdated }: EditUserDialog
         throw new Error(error.error || "Failed to update user");
       }
 
-      toast.success("Пользователь обновлен", {
-        description: `Роль: ${roleLabels[role]}, Статус: ${isActive ? "Активен" : "Неактивен"}`,
+      toast.success("User updated", {
+        description: `Role: ${roleLabels[role]}, Status: ${isActive ? "Active" : "Inactive"}`,
       });
 
       setIsOpen(false);
       onUserUpdated?.();
     } catch (error: any) {
-      toast.error("Ошибка", {
+      toast.error("Error", {
         description: error.message,
       });
     } finally {
@@ -92,7 +92,7 @@ export function EditUserDialog({ user, children, onUserUpdated }: EditUserDialog
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Редактировать пользователя</DialogTitle>
+          <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
             {user.name || user.email}
           </DialogDescription>
@@ -100,32 +100,32 @@ export function EditUserDialog({ user, children, onUserUpdated }: EditUserDialog
 
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
           <div className="space-y-4">
-            {/* Роль */}
+            {/* Role */}
             <div className="space-y-2">
-              <Label htmlFor="role">Роль</Label>
+              <Label htmlFor="role">Role</Label>
               <Select value={role} onValueChange={(value: any) => setRole(value)}>
                 <SelectTrigger id="role">
-                  <SelectValue placeholder="Выберите роль" />
+                  <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="USER">👤 Пользователь</SelectItem>
-                  <SelectItem value="AGENT">🎧 Агент</SelectItem>
-                  <SelectItem value="TENANT_ADMIN">👨‍💼 Админ организации</SelectItem>
+                  <SelectItem value="USER">👤 User</SelectItem>
+                  <SelectItem value="AGENT">🎧 Agent</SelectItem>
+                  <SelectItem value="TENANT_ADMIN">👨‍💼 Organization Admin</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                {role === "USER" && "Может создавать тикеты и комментировать"}
-                {role === "AGENT" && "Может обрабатывать тикеты"}
-                {role === "TENANT_ADMIN" && "Полный доступ к настройкам организации"}
+                {role === "USER" && "Can create tickets and comment"}
+                {role === "AGENT" && "Can process tickets"}
+                {role === "TENANT_ADMIN" && "Full access to organization settings"}
               </p>
             </div>
 
-            {/* Статус */}
+            {/* Status */}
             <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
               <div className="space-y-0.5">
-                <Label htmlFor="isActive">Статус аккаунта</Label>
+                <Label htmlFor="isActive">Account Status</Label>
                 <p className="text-xs text-muted-foreground">
-                  {isActive ? "Пользователь может входить в систему" : "Вход заблокирован"}
+                  {isActive ? "User can sign in" : "Login blocked"}
                 </p>
               </div>
               <Switch
@@ -136,7 +136,7 @@ export function EditUserDialog({ user, children, onUserUpdated }: EditUserDialog
             </div>
           </div>
 
-          {/* Кнопки */}
+          {/* Buttons */}
           <div className="flex justify-end gap-3">
             <Button
               type="button"
@@ -144,16 +144,16 @@ export function EditUserDialog({ user, children, onUserUpdated }: EditUserDialog
               onClick={() => setIsOpen(false)}
               disabled={isSubmitting}
             >
-              Отмена
+              Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Сохранение...
+                  Saving...
                 </>
               ) : (
-                "Сохранить"
+                "Save"
               )}
             </Button>
           </div>

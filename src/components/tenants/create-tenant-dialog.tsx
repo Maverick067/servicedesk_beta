@@ -27,9 +27,9 @@ export function CreateTenantDialog() {
     domain: "",
   });
 
-  // Проверяем, что пользователь - админ
+  // Check that user is admin
   useEffect(() => {
-    if (status === "loading") return; // Ждем загрузки сессии
+    if (status === "loading") return; // Wait for session to load
     
     if (!session || session.user.role !== "ADMIN") {
       router.push("/dashboard");
@@ -38,12 +38,12 @@ export function CreateTenantDialog() {
   }, [session, status, router]);
 
   const handleSlugChange = (value: string) => {
-    // Автоматически генерируем slug из названия
+    // Automatically generate slug from name
     const slug = value
       .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "") // Убираем спецсимволы
-      .replace(/\s+/g, "-") // Заменяем пробелы на дефисы
-      .replace(/-+/g, "-") // Убираем повторяющиеся дефисы
+      .replace(/[^a-z0-9\s-]/g, "") // Remove special characters
+      .replace(/\s+/g, "-") // Replace spaces with hyphens
+      .replace(/-+/g, "-") // Remove duplicate hyphens
       .trim();
     
     setFormData({ ...formData, name: value, slug });
@@ -84,17 +84,17 @@ export function CreateTenantDialog() {
     <Card>
       <form onSubmit={handleSubmit}>
         <CardHeader>
-          <CardTitle>Создать новую организацию</CardTitle>
+          <CardTitle>Create New Organization</CardTitle>
           <CardDescription>
-            Добавьте новую организацию в систему
+            Add a new organization to the system
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Название организации *</Label>
+            <Label htmlFor="name">Organization Name *</Label>
             <Input
               id="name"
-              placeholder="Название компании"
+              placeholder="Company name"
               value={formData.name}
               onChange={(e) => handleSlugChange(e.target.value)}
               required
@@ -102,7 +102,7 @@ export function CreateTenantDialog() {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="slug">Slug (идентификатор) *</Label>
+            <Label htmlFor="slug">Slug (identifier) *</Label>
             <Input
               id="slug"
               placeholder="company-slug"
@@ -114,11 +114,11 @@ export function CreateTenantDialog() {
               disabled={isLoading}
             />
             <p className="text-xs text-muted-foreground">
-              Используется в URL. Только строчные буквы, цифры и дефисы
+              Used in URL. Lowercase letters, numbers and hyphens only
             </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="domain">Домен (опционально)</Label>
+            <Label htmlFor="domain">Domain (optional)</Label>
             <Input
               id="domain"
               placeholder="company.com"
@@ -129,7 +129,7 @@ export function CreateTenantDialog() {
               disabled={isLoading}
             />
             <p className="text-xs text-muted-foreground">
-              Домен для автоматического определения организации
+              Domain for automatic organization detection
             </p>
           </div>
           {error && (
@@ -145,16 +145,16 @@ export function CreateTenantDialog() {
             onClick={() => router.back()}
             disabled={isLoading}
           >
-            Отмена
+            Cancel
           </Button>
           <Button type="submit" disabled={isLoading}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Создание...
+                Creating...
               </>
             ) : (
-              "Создать организацию"
+              "Create Organization"
             )}
           </Button>
         </CardFooter>
