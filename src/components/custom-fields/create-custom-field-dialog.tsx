@@ -17,13 +17,13 @@ interface CreateCustomFieldDialogProps {
 }
 
 const fieldTypes = [
-  { value: "TEXT", label: "Текст" },
-  { value: "NUMBER", label: "Число" },
-  { value: "DATE", label: "Дата" },
-  { value: "CHECKBOX", label: "Чекбокс" },
-  { value: "SELECT", label: "Выбор из списка" },
-  { value: "MULTI_SELECT", label: "Множественный выбор" },
-  { value: "URL", label: "Ссылка" },
+  { value: "TEXT", label: "Text" },
+  { value: "NUMBER", label: "Number" },
+  { value: "DATE", label: "Date" },
+  { value: "CHECKBOX", label: "Checkbox" },
+  { value: "SELECT", label: "Select from list" },
+  { value: "MULTI_SELECT", label: "Multi-select" },
+  { value: "URL", label: "URL" },
   { value: "EMAIL", label: "Email" },
 ];
 
@@ -53,7 +53,7 @@ export function CreateCustomFieldDialog({ open, onOpenChange, onSuccess }: Creat
         order: formData.order,
       };
 
-      // Добавляем опции для SELECT и MULTI_SELECT
+      // Add options for SELECT and MULTI_SELECT
       if ((formData.type === "SELECT" || formData.type === "MULTI_SELECT") && formData.options) {
         payload.options = formData.options.split(",").map((opt) => opt.trim()).filter(Boolean);
       }
@@ -65,7 +65,7 @@ export function CreateCustomFieldDialog({ open, onOpenChange, onSuccess }: Creat
       });
 
       if (response.ok) {
-        toast.success("Поле успешно создано");
+        toast.success("Field created successfully");
         setFormData({
           name: "",
           label: "",
@@ -79,11 +79,11 @@ export function CreateCustomFieldDialog({ open, onOpenChange, onSuccess }: Creat
         onOpenChange(false);
       } else {
         const error = await response.json();
-        toast.error(error.error || "Не удалось создать поле");
+        toast.error(error.error || "Failed to create field");
       }
     } catch (error) {
       console.error("Error creating custom field:", error);
-      toast.error("Ошибка при создании поля");
+      toast.error("Error creating field");
     } finally {
       setIsLoading(false);
     }
@@ -95,12 +95,12 @@ export function CreateCustomFieldDialog({ open, onOpenChange, onSuccess }: Creat
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Создать кастомное поле</DialogTitle>
+          <DialogTitle>Create Custom Field</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="name">Имя поля (внутреннее)</Label>
+              <Label htmlFor="name">Field Name (internal)</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -108,35 +108,35 @@ export function CreateCustomFieldDialog({ open, onOpenChange, onSuccess }: Creat
                 placeholder="client_code"
                 required
                 pattern="[a-zA-Z0-9_]+"
-                title="Только латинские буквы, цифры и подчеркивания"
+                title="Only Latin letters, numbers and underscores"
               />
             </div>
             <div>
-              <Label htmlFor="label">Отображаемое название</Label>
+              <Label htmlFor="label">Display Label</Label>
               <Input
                 id="label"
                 value={formData.label}
                 onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                placeholder="Код клиента"
+                placeholder="Client Code"
                 required
               />
             </div>
           </div>
 
           <div>
-            <Label htmlFor="description">Описание</Label>
+            <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Необязательное описание поля"
+              placeholder="Optional field description"
               rows={2}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="type">Тип поля</Label>
+              <Label htmlFor="type">Field Type</Label>
               <Select
                 value={formData.type}
                 onValueChange={(value) => setFormData({ ...formData, type: value })}
@@ -154,7 +154,7 @@ export function CreateCustomFieldDialog({ open, onOpenChange, onSuccess }: Creat
               </Select>
             </div>
             <div>
-              <Label htmlFor="order">Порядок отображения</Label>
+              <Label htmlFor="order">Display Order</Label>
               <Input
                 id="order"
                 type="number"
@@ -167,12 +167,12 @@ export function CreateCustomFieldDialog({ open, onOpenChange, onSuccess }: Creat
 
           {showOptionsField && (
             <div>
-              <Label htmlFor="options">Опции (через запятую)</Label>
+              <Label htmlFor="options">Options (comma-separated)</Label>
               <Input
                 id="options"
                 value={formData.options}
                 onChange={(e) => setFormData({ ...formData, options: e.target.value })}
-                placeholder="Опция 1, Опция 2, Опция 3"
+                placeholder="Option 1, Option 2, Option 3"
                 required={showOptionsField}
               />
             </div>
@@ -184,15 +184,15 @@ export function CreateCustomFieldDialog({ open, onOpenChange, onSuccess }: Creat
               checked={formData.isRequired}
               onCheckedChange={(checked) => setFormData({ ...formData, isRequired: checked })}
             />
-            <Label htmlFor="isRequired">Обязательное поле</Label>
+            <Label htmlFor="isRequired">Required Field</Label>
           </div>
 
           <div className="flex gap-2 justify-end">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Отмена
+              Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Создание..." : "Создать"}
+              {isLoading ? "Creating..." : "Create"}
             </Button>
           </div>
         </form>

@@ -63,7 +63,7 @@ export function EditCustomFieldDialog({ open, onOpenChange, field, onSuccess }: 
         order: formData.order,
       };
 
-      // Добавляем опции для SELECT и MULTI_SELECT
+      // Add options for SELECT and MULTI_SELECT
       if ((field.type === "SELECT" || field.type === "MULTI_SELECT") && formData.options) {
         payload.options = formData.options.split(",").map((opt) => opt.trim()).filter(Boolean);
       }
@@ -75,16 +75,16 @@ export function EditCustomFieldDialog({ open, onOpenChange, field, onSuccess }: 
       });
 
       if (response.ok) {
-        toast.success("Поле успешно обновлено");
+        toast.success("Field updated successfully");
         onSuccess();
         onOpenChange(false);
       } else {
         const error = await response.json();
-        toast.error(error.error || "Не удалось обновить поле");
+        toast.error(error.error || "Failed to update field");
       }
     } catch (error) {
       console.error("Error updating custom field:", error);
-      toast.error("Ошибка при обновлении поля");
+      toast.error("Error updating field");
     } finally {
       setIsLoading(false);
     }
@@ -96,11 +96,11 @@ export function EditCustomFieldDialog({ open, onOpenChange, field, onSuccess }: 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Редактировать поле: {field.name}</DialogTitle>
+          <DialogTitle>Edit Field: {field.name}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="label">Отображаемое название</Label>
+            <Label htmlFor="label">Display Label</Label>
             <Input
               id="label"
               value={formData.label}
@@ -110,7 +110,7 @@ export function EditCustomFieldDialog({ open, onOpenChange, field, onSuccess }: 
           </div>
 
           <div>
-            <Label htmlFor="description">Описание</Label>
+            <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
               value={formData.description}
@@ -121,7 +121,7 @@ export function EditCustomFieldDialog({ open, onOpenChange, field, onSuccess }: 
 
           {showOptionsField && (
             <div>
-              <Label htmlFor="options">Опции (через запятую)</Label>
+              <Label htmlFor="options">Options (comma-separated)</Label>
               <Input
                 id="options"
                 value={formData.options}
@@ -132,7 +132,7 @@ export function EditCustomFieldDialog({ open, onOpenChange, field, onSuccess }: 
           )}
 
           <div>
-            <Label htmlFor="order">Порядок отображения</Label>
+            <Label htmlFor="order">Display Order</Label>
             <Input
               id="order"
               type="number"
@@ -149,7 +149,7 @@ export function EditCustomFieldDialog({ open, onOpenChange, field, onSuccess }: 
                 checked={formData.isRequired}
                 onCheckedChange={(checked) => setFormData({ ...formData, isRequired: checked })}
               />
-              <Label htmlFor="isRequired">Обязательное поле</Label>
+              <Label htmlFor="isRequired">Required Field</Label>
             </div>
 
             <div className="flex items-center gap-2">
@@ -158,16 +158,16 @@ export function EditCustomFieldDialog({ open, onOpenChange, field, onSuccess }: 
                 checked={formData.isActive}
                 onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
               />
-              <Label htmlFor="isActive">Активно</Label>
+              <Label htmlFor="isActive">Active</Label>
             </div>
           </div>
 
           <div className="flex gap-2 justify-end">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Отмена
+              Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Сохранение..." : "Сохранить"}
+              {isLoading ? "Saving..." : "Save"}
             </Button>
           </div>
         </form>
