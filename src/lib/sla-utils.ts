@@ -1,7 +1,7 @@
 import { prisma } from "./prisma";
 
 /**
- * Вычисляет SLA due date для тикета
+ * Calculates SLA due date for ticket
  */
 export async function calculateSlaDueDate(
   ticket: {
@@ -12,13 +12,13 @@ export async function calculateSlaDueDate(
     createdAt: Date;
   }
 ): Promise<{ slaId: string; slaDueDate: Date; responseTime?: Date } | null> {
-  // Находим подходящую SLA политику
+  // Find matching SLA policy
   const slaPolicy = await prisma.slaPolicy.findFirst({
     where: {
       tenantId: ticket.tenantId,
       isActive: true,
       OR: [
-        // Проверяем соответствие по приоритету
+        // Check priority match
         {
           AND: [
             { priorities: { has: ticket.priority } },
@@ -26,7 +26,7 @@ export async function calculateSlaDueDate(
             { queueIds: { isEmpty: true } },
           ],
         },
-        // Проверяем соответствие по категории
+        // Check category match
         ...(ticket.categoryId
           ? [
               {
@@ -37,7 +37,7 @@ export async function calculateSlaDueDate(
               },
             ]
           : []),
-        // Проверяем соответствие по очереди
+        // Check queue match
         ...(ticket.queueId
           ? [
               {
@@ -45,7 +45,7 @@ export async function calculateSlaDueDate(
               },
             ]
           : []),
-        // Универсальная политика (без условий)
+        // Universal policy (no conditions)
         {
           AND: [
             { priorities: { isEmpty: true } },
@@ -56,7 +56,7 @@ export async function calculateSlaDueDate(
       ],
     },
     orderBy: [
-      // Приоритет: очередь > категория > приоритет > универсальная
+      // Priority: queue > category > priority > universal
       { queueIds: "desc" },
       { categoryIds: "desc" },
       { priorities: "desc" },
@@ -69,7 +69,7 @@ export async function calculateSlaDueDate(
 
   const now = ticket.createdAt;
   
-  // Вычисляем время ответа (response time)
+  // Calculate response time
   let responseDate: Date | undefined;
   if (slaPolicy.responseTime) {
     responseDate = addBusinessMinutes(
@@ -82,7 +82,7 @@ export async function calculateSlaDueDate(
     );
   }
 
-  // Вычисляем время решения (resolution time)
+  // Calculate resolution time
   const dueDate = addBusinessMinutes(
     now,
     slaPolicy.resolutionTime,
@@ -100,7 +100,7 @@ export async function calculateSlaDueDate(
 }
 
 /**
- * Добавляет минуты с учетом рабочего времени
+ * Adds minutes considering business hours
  */
 function addBusinessMinutes(
   startDate: Date,
@@ -111,11 +111,11 @@ function addBusinessMinutes(
   businessDays: number[]
 ): Date {
   if (!businessHoursOnly) {
-    // Простое добавление минут
+    // Simple addition of minutes
     return new Date(startDate.getTime() + minutes * 60000);
   }
 
-  // Рабочие часы
+  // Business hours
   const [startHour, startMinute] = (businessHoursStart || "09:00")
     .split(":")
     .map(Number);
@@ -130,44 +130,44 @@ function addBusinessMinutes(
   let remainingMinutes = minutes;
 
   while (remainingMinutes > 0) {
-    const dayOfWeek = currentDate.getDay() || 7; // 0 = Воскресенье, преобразуем в 7
+    const dayOfWeek = currentDate.getDay() || 7; // 0 = Sunday, convert to 7
 
-    // Проверяем, является ли день рабочим
+    // Check if day is business day
     if (!businessDays.includes(dayOfWeek)) {
-      // Переходим к следующему дню
+      // Move to next day
       currentDate.setDate(currentDate.getDate() + 1);
       currentDate.setHours(startHour, startMinute, 0, 0);
       continue;
     }
 
-    // Текущее время в минутах от начала дня
+    // Current time in minutes from start of day
     const currentMinutes = currentDate.getHours() * 60 + currentDate.getMinutes();
     const businessStartMinutes = startHour * 60 + startMinute;
     const businessEndMinutes = endHour * 60 + endMinute;
 
-    // Если сейчас до начала рабочего дня
+    // If before business hours start
     if (currentMinutes < businessStartMinutes) {
       currentDate.setHours(startHour, startMinute, 0, 0);
       continue;
     }
 
-    // Если сейчас после окончания рабочего дня
+    // If after business hours end
     if (currentMinutes >= businessEndMinutes) {
-      // Переходим к следующему рабочему дню
+      // Move to next business day
       currentDate.setDate(currentDate.getDate() + 1);
       currentDate.setHours(startHour, startMinute, 0, 0);
       continue;
     }
 
-    // Сколько минут осталось до конца рабочего дня
+    // Minutes remaining until end of business day
     const minutesUntilEnd = businessEndMinutes - currentMinutes;
 
     if (remainingMinutes <= minutesUntilEnd) {
-      // Все оставшиеся минуты помещаются в текущий рабочий день
+      // All remaining minutes fit in current business day
       currentDate.setMinutes(currentDate.getMinutes() + remainingMinutes);
       remainingMinutes = 0;
     } else {
-      // Переходим к следующему рабочему дню
+      // Move to next business day
       remainingMinutes -= minutesUntilEnd;
       currentDate.setDate(currentDate.getDate() + 1);
       currentDate.setHours(startHour, startMinute, 0, 0);
@@ -178,7 +178,7 @@ function addBusinessMinutes(
 }
 
 /**
- * Проверяет нарушение SLA для тикетов
+ * Checks SLA breaches for tickets
  */
 export async function checkSlaBreaches(tenantId: string): Promise<string[]> {
   const now = new Date();
@@ -205,7 +205,7 @@ export async function checkSlaBreaches(tenantId: string): Promise<string[]> {
 
   const ticketIds = breachedTickets.map((t) => t.id);
 
-  // Обновляем статус нарушения
+  // Update breach status
   await prisma.ticket.updateMany({
     where: {
       id: { in: ticketIds },
@@ -219,11 +219,11 @@ export async function checkSlaBreaches(tenantId: string): Promise<string[]> {
 }
 
 /**
- * Получает статистику SLA для дашборда
+ * Gets SLA statistics for dashboard
  */
 export async function getSlaStat(tenantId: string) {
   const [total, breached, nearBreach] = await Promise.all([
-    // Всего активных тикетов с SLA
+    // Total active tickets with SLA
     prisma.ticket.count({
       where: {
         tenantId,
@@ -231,7 +231,7 @@ export async function getSlaStat(tenantId: string) {
         status: { notIn: ["RESOLVED", "CLOSED"] },
       },
     }),
-    // Нарушенные SLA
+    // Breached SLA
     prisma.ticket.count({
       where: {
         tenantId,
@@ -239,7 +239,7 @@ export async function getSlaStat(tenantId: string) {
         status: { notIn: ["RESOLVED", "CLOSED"] },
       },
     }),
-    // Близкие к нарушению (менее 1 часа)
+    // Near breach (less than 1 hour)
     prisma.ticket.count({
       where: {
         tenantId,

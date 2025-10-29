@@ -1,12 +1,12 @@
 /**
- * Утилиты для работы с тикетами
+ * Utilities for working with tickets
  */
 
 /**
- * Форматирует номер тикета с префиксом tenant
- * @param tenantSlug - Slug организации
- * @param ticketNumber - Номер тикета
- * @returns Отформатированный номер тикета (например, "COMPANY-001")
+ * Formats ticket number with tenant prefix
+ * @param tenantSlug - Organization slug
+ * @param ticketNumber - Ticket number
+ * @returns Formatted ticket number (e.g., "COMPANY-001")
  */
 export function formatTicketNumber(tenantSlug: string, ticketNumber: number | null | undefined): string {
   if (!ticketNumber) {
@@ -20,9 +20,9 @@ export function formatTicketNumber(tenantSlug: string, ticketNumber: number | nu
 }
 
 /**
- * Получает префикс для номеров тикетов из настроек tenant
- * @param settings - Настройки tenant (JSON)
- * @returns Префикс для тикетов
+ * Gets ticket prefix from tenant settings
+ * @param settings - Tenant settings (JSON)
+ * @returns Ticket prefix
  */
 export function getTicketPrefix(settings: any): string {
   try {
@@ -34,10 +34,10 @@ export function getTicketPrefix(settings: any): string {
 }
 
 /**
- * Проверяет, включен ли модуль для tenant
- * @param settings - Настройки tenant (JSON)
- * @param moduleName - Название модуля
- * @returns true если модуль включен
+ * Checks if module is enabled for tenant
+ * @param settings - Tenant settings (JSON)
+ * @param moduleName - Module name
+ * @returns true if module is enabled
  */
 export function isModuleEnabled(settings: any, moduleName: string): boolean {
   try {
