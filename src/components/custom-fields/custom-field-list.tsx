@@ -24,13 +24,13 @@ interface CustomField {
 }
 
 const fieldTypeLabels: Record<string, string> = {
-  TEXT: "Текст",
-  NUMBER: "Число",
-  DATE: "Дата",
-  CHECKBOX: "Чекбокс",
-  SELECT: "Выбор",
-  MULTI_SELECT: "Множественный выбор",
-  URL: "Ссылка",
+  TEXT: "Text",
+  NUMBER: "Number",
+  DATE: "Date",
+  CHECKBOX: "Checkbox",
+  SELECT: "Select",
+  MULTI_SELECT: "Multi-select",
+  URL: "URL",
   EMAIL: "Email",
 };
 
@@ -60,7 +60,7 @@ export function CustomFieldList() {
       }
     } catch (error) {
       console.error("Error fetching custom fields:", error);
-      toast.error("Не удалось загрузить кастомные поля");
+      toast.error("Failed to load custom fields");
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +71,7 @@ export function CustomFieldList() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Вы уверены, что хотите удалить это поле? Все существующие значения будут потеряны.")) {
+    if (!confirm("Are you sure you want to delete this field? All existing values will be lost.")) {
       return;
     }
 
@@ -81,14 +81,14 @@ export function CustomFieldList() {
       });
 
       if (response.ok) {
-        toast.success("Поле успешно удалено");
+        toast.success("Field deleted successfully");
         fetchFields();
       } else {
-        toast.error("Не удалось удалить поле");
+        toast.error("Failed to delete field");
       }
     } catch (error) {
       console.error("Error deleting custom field:", error);
-      toast.error("Ошибка при удалении поля");
+      toast.error("Error deleting field");
     }
   };
 
@@ -101,14 +101,14 @@ export function CustomFieldList() {
       });
 
       if (response.ok) {
-        toast.success(`Поле ${field.isActive ? "деактивировано" : "активировано"}`);
+        toast.success(`Field ${field.isActive ? "deactivated" : "activated"}`);
         fetchFields();
       } else {
-        toast.error("Не удалось изменить статус поля");
+        toast.error("Failed to change field status");
       }
     } catch (error) {
       console.error("Error toggling field status:", error);
-      toast.error("Ошибка при изменении статуса");
+      toast.error("Error changing status");
     }
   };
 
@@ -129,10 +129,10 @@ export function CustomFieldList() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            Кастомные поля
+            Custom Fields
           </h2>
           <p className="text-muted-foreground mt-1">
-            Настройте дополнительные поля для тикетов
+            Configure additional fields for tickets
           </p>
         </div>
         <Button
@@ -140,7 +140,7 @@ export function CustomFieldList() {
           className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Создать поле
+          Create Field
         </Button>
       </div>
 
@@ -148,7 +148,7 @@ export function CustomFieldList() {
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground">
-              Нет кастомных полей. Создайте первое поле для тикетов.
+              No custom fields. Create the first field for tickets.
             </p>
           </CardContent>
         </Card>
@@ -173,12 +173,12 @@ export function CustomFieldList() {
                           <CardTitle className="text-lg">{field.label}</CardTitle>
                           {field.isRequired && (
                             <Badge variant="destructive" className="text-xs">
-                              Обязательное
+                              Required
                             </Badge>
                           )}
                           {!field.isActive && (
                             <Badge variant="secondary" className="text-xs">
-                              Неактивно
+                              Inactive
                             </Badge>
                           )}
                         </div>
@@ -219,7 +219,7 @@ export function CustomFieldList() {
                 {field.options && field.options.length > 0 && (
                   <CardContent>
                     <div className="text-sm text-muted-foreground">
-                      <span className="font-medium">Опции:</span>{" "}
+                      <span className="font-medium">Options:</span>{" "}
                       {field.options.join(", ")}
                     </div>
                   </CardContent>
