@@ -3,7 +3,7 @@
 import { Badge } from "@/components/ui/badge";
 import { Clock, AlertTriangle } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { ru } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 
 interface SlaBadgeProps {
   slaDueDate: string | Date | null;
@@ -18,18 +18,18 @@ export function SlaBadge({ slaDueDate, slaBreached }: SlaBadgeProps) {
   const dueDate = new Date(slaDueDate);
   const now = new Date();
   const isOverdue = dueDate < now;
-  const timeLeft = formatDistanceToNow(dueDate, { locale: ru, addSuffix: true });
+  const timeLeft = formatDistanceToNow(dueDate, { locale: enUS, addSuffix: true });
 
   if (slaBreached || isOverdue) {
     return (
       <Badge variant="destructive" className="gap-1">
         <AlertTriangle className="h-3 w-3" />
-        SLA нарушен
+        SLA Breached
       </Badge>
     );
   }
 
-  // Менее 1 часа до нарушения
+  // Less than 1 hour until breach
   const oneHourFromNow = new Date(now.getTime() + 60 * 60 * 1000);
   const isNearBreach = dueDate < oneHourFromNow;
 

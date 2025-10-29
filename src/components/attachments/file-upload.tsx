@@ -38,9 +38,9 @@ export function FileUpload({
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Проверка размера (10MB)
+    // Check file size (10MB)
     if (file.size > 10 * 1024 * 1024) {
-      toast.error("Файл слишком большой. Максимум 10MB");
+      toast.error("File too large. Maximum 10MB");
       return;
     }
 
@@ -62,14 +62,14 @@ export function FileUpload({
         throw new Error(error.error || "Failed to upload file");
       }
 
-      toast.success("Файл успешно загружен");
+      toast.success("File uploaded successfully");
       onUploadComplete?.();
       
-      // Очищаем input
+      // Clear input
       event.target.value = "";
     } catch (error: any) {
       console.error("Error uploading file:", error);
-      toast.error(error.message || "Ошибка загрузки файла");
+      toast.error(error.message || "Error uploading file");
     } finally {
       setUploading(false);
     }
@@ -94,12 +94,12 @@ export function FileUpload({
       document.body.removeChild(a);
     } catch (error) {
       console.error("Error downloading file:", error);
-      toast.error("Ошибка скачивания файла");
+      toast.error("Error downloading file");
     }
   };
 
   const handleDelete = async (attachmentId: string) => {
-    if (!confirm("Удалить файл?")) return;
+    if (!confirm("Delete file?")) return;
 
     setDeletingId(attachmentId);
 
@@ -112,11 +112,11 @@ export function FileUpload({
         throw new Error("Failed to delete file");
       }
 
-      toast.success("Файл удален");
+      toast.success("File deleted");
       onDeleteComplete?.();
     } catch (error) {
       console.error("Error deleting file:", error);
-      toast.error("Ошибка удаления файла");
+      toast.error("Error deleting file");
     } finally {
       setDeletingId(null);
     }
@@ -130,7 +130,7 @@ export function FileUpload({
 
   return (
     <div className="space-y-4">
-      {/* Кнопка загрузки */}
+      {/* Upload button */}
       <div>
         <label htmlFor={`file-upload-${ticketId}`}>
           <Button
@@ -141,7 +141,7 @@ export function FileUpload({
           >
             <span className="cursor-pointer">
               <Upload className="mr-2 h-4 w-4" />
-              {uploading ? "Загрузка..." : "Прикрепить файл"}
+              {uploading ? "Uploading..." : "Attach File"}
             </span>
           </Button>
         </label>
@@ -154,14 +154,14 @@ export function FileUpload({
           accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip,.jpg,.jpeg,.png,.gif,.webp"
         />
         <p className="text-xs text-muted-foreground mt-1">
-          Максимум 10MB. Разрешены: PDF, DOC, XLS, TXT, изображения, ZIP
+          Maximum 10MB. Allowed: PDF, DOC, XLS, TXT, images, ZIP
         </p>
       </div>
 
-      {/* Список прикрепленных файлов */}
+      {/* List of attached files */}
       {attachments.length > 0 && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium">Прикрепленные файлы:</h4>
+          <h4 className="text-sm font-medium">Attached Files:</h4>
           <div className="space-y-2">
             {attachments.map((attachment) => (
               <div
@@ -176,7 +176,7 @@ export function FileUpload({
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {formatFileSize(attachment.size)} •{" "}
-                      {new Date(attachment.createdAt).toLocaleDateString("ru-RU")}
+                      {new Date(attachment.createdAt).toLocaleDateString("en-US")}
                     </p>
                   </div>
                 </div>
