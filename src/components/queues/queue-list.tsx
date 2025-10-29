@@ -53,7 +53,7 @@ export function QueueList() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Вы уверены, что хотите удалить эту очередь?")) {
+    if (!confirm("Are you sure you want to delete this queue?")) {
       return;
     }
 
@@ -69,7 +69,7 @@ export function QueueList() {
       setQueues(queues.filter((q) => q.id !== id));
     } catch (error) {
       console.error("Error deleting queue:", error);
-      alert("Не удалось удалить очередь");
+      alert("Failed to delete queue");
     }
   };
 
@@ -90,10 +90,10 @@ export function QueueList() {
       <Card>
         <CardContent className="py-12 text-center">
           <Inbox className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-          <p className="text-muted-foreground">Нет очередей</p>
+          <p className="text-muted-foreground">No queues</p>
           {canManage && (
             <p className="text-sm text-muted-foreground mt-2">
-              Создайте первую очередь для организации тикетов
+              Create your first queue to organize tickets
             </p>
           )}
         </CardContent>
@@ -135,7 +135,7 @@ export function QueueList() {
                     </div>
                     {!queue.isActive && (
                       <Badge variant="outline" className="text-xs">
-                        Неактивна
+                        Inactive
                       </Badge>
                     )}
                   </div>
@@ -161,10 +161,10 @@ export function QueueList() {
                       color: queue.color,
                     }}
                   >
-                    {queue._count.tickets} тикетов
+                    {queue._count.tickets} tickets
                   </Badge>
                   <Badge variant="outline" className="text-xs">
-                    Приоритет: {queue.priority}
+                    Priority: {queue.priority}
                   </Badge>
                 </div>
                 {canManage && (

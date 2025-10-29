@@ -48,7 +48,7 @@ export function CreateQueueDialog({ onSuccess }: CreateQueueDialogProps) {
         throw new Error(data.error || "Failed to create queue");
       }
 
-      // Успешно создано
+      // Successfully created
       setOpen(false);
       setFormData({ name: "", description: "", color: "#8b5cf6", priority: 0 });
       
@@ -59,7 +59,7 @@ export function CreateQueueDialog({ onSuccess }: CreateQueueDialogProps) {
       }
     } catch (error) {
       console.error("Error creating queue:", error);
-      alert(error instanceof Error ? error.message : "Не удалось создать очередь");
+      alert(error instanceof Error ? error.message : "Failed to create queue");
     } finally {
       setIsLoading(false);
     }
@@ -70,43 +70,43 @@ export function CreateQueueDialog({ onSuccess }: CreateQueueDialogProps) {
       <DialogTrigger asChild>
         <Button className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700">
           <Plus className="mr-2 h-4 w-4" />
-          Создать очередь
+          Create Queue
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Создать очередь</DialogTitle>
+            <DialogTitle>Create Queue</DialogTitle>
             <DialogDescription>
-              Очереди помогают организовать тикеты по группам
+              Queues help organize tickets into groups
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Название *</Label>
+              <Label htmlFor="name">Name *</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Например: Техподдержка"
+                placeholder="e.g. Technical Support"
                 required
                 disabled={isLoading}
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="description">Описание</Label>
+              <Label htmlFor="description">Description</Label>
               <Textarea
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Описание очереди"
+                placeholder="Queue description"
                 rows={3}
                 disabled={isLoading}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="color">Цвет</Label>
+                <Label htmlFor="color">Color</Label>
                 <div className="flex gap-2">
                   <Input
                     id="color"
@@ -126,7 +126,7 @@ export function CreateQueueDialog({ onSuccess }: CreateQueueDialogProps) {
                 </div>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="priority">Приоритет</Label>
+                <Label htmlFor="priority">Priority</Label>
                 <Input
                   id="priority"
                   type="number"
@@ -145,16 +145,16 @@ export function CreateQueueDialog({ onSuccess }: CreateQueueDialogProps) {
               onClick={() => setOpen(false)}
               disabled={isLoading}
             >
-              Отмена
+              Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Создание...
+                  Creating...
                 </>
               ) : (
-                "Создать"
+                "Create"
               )}
             </Button>
           </DialogFooter>

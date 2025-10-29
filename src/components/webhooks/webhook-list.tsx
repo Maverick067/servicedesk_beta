@@ -35,7 +35,7 @@ export function WebhookList() {
         setWebhooks(data);
       }
     } catch (e: any) {
-      toast.error("Ошибка при загрузке webhooks");
+      toast.error("Error loading webhooks");
     } finally {
       setIsLoading(false);
     }
@@ -53,24 +53,24 @@ export function WebhookList() {
         body: JSON.stringify({ isActive: !webhook.isActive }),
       });
       if (response.ok) {
-        toast.success(webhook.isActive ? "Webhook деактивирован" : "Webhook активирован");
+        toast.success(webhook.isActive ? "Webhook deactivated" : "Webhook activated");
         fetchWebhooks();
       }
     } catch (e: any) {
-      toast.error("Ошибка");
+      toast.error("Error");
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Удалить webhook?")) return;
+    if (!confirm("Delete webhook?")) return;
     try {
       const response = await fetch(`/api/webhooks/${id}`, { method: "DELETE" });
       if (response.ok) {
-        toast.success("Webhook удалён");
+        toast.success("Webhook deleted");
         fetchWebhooks();
       }
     } catch (e: any) {
-      toast.error("Ошибка при удалении");
+      toast.error("Error deleting");
     }
   };
 
@@ -80,7 +80,7 @@ export function WebhookList() {
     return (
       <div className="text-center py-8">
         <Webhook className="mx-auto h-12 w-12 mb-4 text-muted-foreground" />
-        <h3 className="text-lg font-semibold">Webhooks не настроены</h3>
+        <h3 className="text-lg font-semibold">No webhooks configured</h3>
       </div>
     );
   }
@@ -89,13 +89,13 @@ export function WebhookList() {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Название</TableHead>
+          <TableHead>Name</TableHead>
           <TableHead>URL</TableHead>
-          <TableHead>События</TableHead>
-          <TableHead>Успешно</TableHead>
-          <TableHead>Ошибок</TableHead>
-          <TableHead>Статус</TableHead>
-          <TableHead className="text-right">Действия</TableHead>
+          <TableHead>Events</TableHead>
+          <TableHead>Success</TableHead>
+          <TableHead>Errors</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -113,7 +113,7 @@ export function WebhookList() {
             </TableCell>
             <TableCell><Badge variant="secondary">{webhook.successCount}</Badge></TableCell>
             <TableCell><Badge variant={webhook.failureCount > 0 ? "destructive" : "outline"}>{webhook.failureCount}</Badge></TableCell>
-            <TableCell><Badge variant={webhook.isActive ? "default" : "outline"}>{webhook.isActive ? "Активен" : "Неактивен"}</Badge></TableCell>
+            <TableCell><Badge variant={webhook.isActive ? "default" : "outline"}>{webhook.isActive ? "Active" : "Inactive"}</Badge></TableCell>
             <TableCell className="text-right">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -121,10 +121,10 @@ export function WebhookList() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => handleToggle(webhook)}>
-                    {webhook.isActive ? <><Pause className="mr-2 h-4 w-4" />Деактивировать</> : <><Play className="mr-2 h-4 w-4" />Активировать</>}
+                    {webhook.isActive ? <><Pause className="mr-2 h-4 w-4" />Deactivate</> : <><Play className="mr-2 h-4 w-4" />Activate</>}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleDelete(webhook.id)} className="text-red-600">
-                    <Trash2 className="mr-2 h-4 w-4" />Удалить
+                    <Trash2 className="mr-2 h-4 w-4" />Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
