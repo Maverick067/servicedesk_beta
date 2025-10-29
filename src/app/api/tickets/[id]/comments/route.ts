@@ -6,11 +6,11 @@ import { z } from "zod";
 import { createCommentNotification } from "@/lib/notifications";
 
 const createCommentSchema = z.object({
-  content: z.string().min(1, "Комментарий не может быть пустым"),
+  content: z.string().min(1, "Comment cannot be empty"),
   isInternal: z.boolean().optional().default(false),
 });
 
-// POST /api/tickets/[id]/comments - Добавить комментарий
+// POST /api/tickets/[id]/comments - Add comment
 export async function POST(
   request: Request,
   { params }: { params: { id: string } }
@@ -24,7 +24,7 @@ export async function POST(
     const body = await request.json();
     const validatedData = createCommentSchema.parse(body);
 
-    // Проверяем доступ к тикету
+    // Check ticket access
     const ticket = await prisma.ticket.findFirst({
       where: {
         id: params.id,
@@ -36,16 +36,16 @@ export async function POST(
       return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
     }
 
-    // Логика доступа к комментариям:
-    // - USER: может комментировать только свои тикеты
-    // - AGENT: может комментировать все тикеты организации
-    // - TENANT_ADMIN: может комментировать все тикеты организации
-    // - ADMIN: может комментировать все тикеты организации
+    // Comment access logic:
+    // - USER: can comment only their own tickets
+    // - AGENT: can comment all organization tickets
+    // - TENANT_ADMIN: can comment all organization tickets
+    // - ADMIN: can comment all organization tickets
     if (session.user.role === "USER" && ticket.creatorId !== session.user.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Только агенты и админы могут создавать внутренние комментарии
+    // Only agents and admins can create internal comments
     const isInternal =
       session.user.role !== "USER" ? validatedData.isInternal : false;
 
@@ -69,7 +69,7 @@ export async function POST(
       },
     });
 
-    // Создаем уведомления о новом комментарии
+    // Create notifications for new comment
     try {
       await createCommentNotification(
         params.id,
@@ -78,7 +78,7 @@ export async function POST(
       );
     } catch (error) {
       console.error("Error creating comment notifications:", error);
-      // Не прерываем создание комментария из-за ошибки уведомлений
+      // Don't interrupt comment creation due to notification error
     }
 
     return NextResponse.json(comment, { status: 201 });

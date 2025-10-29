@@ -2,13 +2,13 @@ import { prisma } from "./prisma";
 import { AgentStatus, UserRole } from "@prisma/client";
 
 /**
- * Автоматическое распределение тикета между агентами
+ * Automatic ticket distribution among agents
  * 
- * Логика:
- * 1. Если указана категория с назначенным агентом - назначаем ему (если он доступен)
- * 2. Если агент категории недоступен или категория без агента - ищем наименее загруженного агента
- * 3. Доступные агенты: статус AVAILABLE или BUSY
- * 4. Недоступные агенты: статус AWAY или ON_LEAVE
+ * Logic:
+ * 1. If category with assigned agent is specified - assign to them (if available)
+ * 2. If category agent is unavailable or category has no agent - find least loaded agent
+ * 3. Available agents: status AVAILABLE or BUSY
+ * 4. Unavailable agents: status AWAY or ON_LEAVE
  */
 export async function autoAssignTicket(params: {
   tenantId: string;
@@ -17,7 +17,7 @@ export async function autoAssignTicket(params: {
   const { tenantId, categoryId } = params;
 
   try {
-    // Шаг 1: Если указана категория, проверяем назначенного агента
+    // Step 1: If category is specified, check assigned agent
     if (categoryId) {
       const categoryAgent = await prisma.categoryAgentAssignment.findFirst({
         where: {
@@ -36,7 +36,7 @@ export async function autoAssignTicket(params: {
         },
       });
 
-      // Если есть агент категории и он доступен
+      // If category agent exists and is available
       if (
         categoryAgent &&
         categoryAgent.agent.isActive &&
@@ -52,7 +52,7 @@ export async function autoAssignTicket(params: {
       }
     }
 
-    // Шаг 2: Ищем наименее загруженного доступного агента
+    // Step 2: Find least loaded available agent
     const agents = await prisma.user.findMany({
       where: {
         tenantId,
@@ -71,7 +71,7 @@ export async function autoAssignTicket(params: {
             assignedTickets: {
               where: {
                 status: {
-                  in: ["OPEN", "IN_PROGRESS"], // Только активные тикеты
+                  in: ["OPEN", "IN_PROGRESS"], // Only active tickets
                 },
               },
             },
@@ -85,17 +85,17 @@ export async function autoAssignTicket(params: {
       return null;
     }
 
-    // Сортируем агентов по количеству активных тикетов (наименее загруженные первыми)
-    // Приоритет: AVAILABLE > BUSY
+    // Sort agents by number of active tickets (least loaded first)
+    // Priority: AVAILABLE > BUSY
     agents.sort((a, b) => {
-      // Сначала сортируем по статусу (AVAILABLE первые)
+      // First sort by status (AVAILABLE first)
       if (a.agentStatus === AgentStatus.AVAILABLE && b.agentStatus !== AgentStatus.AVAILABLE) {
         return -1;
       }
       if (a.agentStatus !== AgentStatus.AVAILABLE && b.agentStatus === AgentStatus.AVAILABLE) {
         return 1;
       }
-      // Затем по количеству активных тикетов
+      // Then by number of active tickets
       return a._count.assignedTickets - b._count.assignedTickets;
     });
 
@@ -112,7 +112,7 @@ export async function autoAssignTicket(params: {
 }
 
 /**
- * Проверка доступности агента
+ * Check agent availability
  */
 export async function isAgentAvailable(agentId: string): Promise<boolean> {
   try {
@@ -140,11 +140,11 @@ export async function isAgentAvailable(agentId: string): Promise<boolean> {
 }
 
 /**
- * Переназначение тикетов при изменении статуса агента на недоступный
+ * Reassign tickets when agent status changes to unavailable
  */
 export async function reassignAgentTickets(agentId: string): Promise<number> {
   try {
-    // Получаем все активные тикеты агента
+    // Get all active tickets of agent
     const activeTickets = await prisma.ticket.findMany({
       where: {
         assigneeId: agentId,
@@ -165,7 +165,7 @@ export async function reassignAgentTickets(agentId: string): Promise<number> {
 
     let reassignedCount = 0;
 
-    // Переназначаем каждый тикет
+    // Reassign each ticket
     for (const ticket of activeTickets) {
       const newAgentId = await autoAssignTicket({
         tenantId: ticket.tenantId,

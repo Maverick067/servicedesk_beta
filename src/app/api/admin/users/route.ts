@@ -4,8 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 /**
- * GET /api/admin/users - Получить всех пользователей
- * Только для глобальных ADMIN
+ * GET /api/admin/users - Get all users
+ * Only for global ADMIN
  */
 export async function GET() {
   try {
@@ -15,7 +15,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Супер-админ видит только TENANT_ADMIN'ов (не обычных пользователей и агентов)
+    // Super-admin sees only TENANT_ADMINs (not regular users and agents)
     const users = await prisma.user.findMany({
       where: {
         role: "TENANT_ADMIN",

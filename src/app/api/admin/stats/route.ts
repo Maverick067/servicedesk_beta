@@ -4,8 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 /**
- * GET /api/admin/stats - Получить статистику для админ-панели
- * Только для глобальных ADMIN
+ * GET /api/admin/stats - Get statistics for admin panel
+ * Only for global ADMIN
  */
 export async function GET() {
   try {
@@ -15,7 +15,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Получаем статистику
+    // Get statistics
     const [totalTenants, totalUsers, totalTickets, totalAgents] = await Promise.all([
       prisma.tenant.count(),
       prisma.user.count(),
@@ -27,7 +27,7 @@ export async function GET() {
       })
     ]);
 
-    // Считаем активные тенанты (с хотя бы одним тикетом за последние 30 дней)
+    // Count active tenants (with at least one ticket in last 30 days)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 

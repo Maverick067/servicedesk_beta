@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getTenantWhereClause } from "@/lib/api-utils";
 
-// GET /api/users - Получить всех пользователей организации
+// GET /api/users - Get all organization users
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Проверяем права доступа
+    // Check access rights
     const canView = 
       session.user.role === "ADMIN" || 
       session.user.role === "TENANT_ADMIN" ||
@@ -26,11 +26,11 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Супер-админ видит только TENANT_ADMIN'ов (не обычных пользователей и агентов)
+    // Super-admin sees only TENANT_ADMINs (not regular users and agents)
     let whereClause: any = getTenantWhereClause(session);
     
     if (session.user.role === "ADMIN" && !session.user.tenantId) {
-      // Глобальный админ видит только TENANT_ADMIN'ов
+      // Global admin sees only TENANT_ADMINs
       whereClause = {
         role: "TENANT_ADMIN",
       };
