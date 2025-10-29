@@ -13,17 +13,17 @@ import { Loader2, Bell, Mail, Smartphone, Clock, Filter } from "lucide-react";
 
 interface NotificationSettings {
   id: string;
-  // Каналы
+  // Channels
   enableInApp: boolean;
   enableEmail: boolean;
   enablePush: boolean;
-  // Группировка
+  // Grouping
   groupSimilar: boolean;
   groupingInterval: number;
   // Email
   emailFrequency: string;
   emailDigestTime: string | null;
-  // Типы
+  // Types
   notifyTicketCreated: boolean;
   notifyTicketAssigned: boolean;
   notifyTicketStatusChanged: boolean;
@@ -31,7 +31,7 @@ interface NotificationSettings {
   notifyTicketMentioned: boolean;
   notifyTicketEscalated: boolean;
   notifySlaBreach: boolean;
-  // Прочее
+  // Other
   priorityOverride: boolean;
   quietHoursEnabled: boolean;
   quietHoursStart: string | null;
@@ -56,7 +56,7 @@ export function NotificationSettings() {
       }
     } catch (error) {
       console.error("Error fetching settings:", error);
-      toast.error("Не удалось загрузить настройки");
+      toast.error("Failed to load settings");
     } finally {
       setIsLoading(false);
     }
@@ -74,13 +74,13 @@ export function NotificationSettings() {
       });
 
       if (response.ok) {
-        toast.success("Настройки сохранены");
+        toast.success("Settings saved");
       } else {
-        toast.error("Ошибка при сохранении");
+        toast.error("Error saving");
       }
     } catch (error) {
       console.error("Error saving settings:", error);
-      toast.error("Не удалось сохранить настройки");
+      toast.error("Failed to save settings");
     } finally {
       setIsSaving(false);
     }
@@ -108,7 +108,7 @@ export function NotificationSettings() {
     return (
       <Card>
         <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">Настройки не найдены</p>
+          <p className="text-muted-foreground">Settings not found</p>
         </CardContent>
       </Card>
     );
@@ -116,23 +116,23 @@ export function NotificationSettings() {
 
   return (
     <div className="space-y-6">
-      {/* Каналы доставки */}
+      {/* Delivery channels */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="h-5 w-5" />
-            Каналы доставки
+            Delivery Channels
           </CardTitle>
           <CardDescription>
-            Выберите, как вы хотите получать уведомления
+            Choose how you want to receive notifications
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>В приложении</Label>
+              <Label>In App</Label>
               <p className="text-sm text-muted-foreground">
-                Показывать уведомления в интерфейсе
+                Show notifications in interface
               </p>
             </div>
             <Switch
@@ -147,10 +147,10 @@ export function NotificationSettings() {
             <div className="space-y-0.5">
               <Label className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                Email уведомления
+                Email Notifications
               </Label>
               <p className="text-sm text-muted-foreground">
-                Получать уведомления на email
+                Receive notifications via email
               </p>
             </div>
             <Switch
@@ -162,7 +162,7 @@ export function NotificationSettings() {
           {settings.enableEmail && (
             <div className="ml-6 space-y-4">
               <div className="space-y-2">
-                <Label>Частота отправки</Label>
+                <Label>Email Frequency</Label>
                 <Select
                   value={settings.emailFrequency}
                   onValueChange={(value) => updateSetting("emailFrequency", value)}
@@ -171,17 +171,17 @@ export function NotificationSettings() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="instant">Мгновенно</SelectItem>
-                    <SelectItem value="hourly">Раз в час</SelectItem>
-                    <SelectItem value="daily">Ежедневный дайджест</SelectItem>
-                    <SelectItem value="off">Отключено</SelectItem>
+                    <SelectItem value="instant">Instant</SelectItem>
+                    <SelectItem value="hourly">Hourly</SelectItem>
+                    <SelectItem value="daily">Daily Digest</SelectItem>
+                    <SelectItem value="off">Disabled</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               {settings.emailFrequency === "daily" && (
                 <div className="space-y-2">
-                  <Label>Время отправки дайджеста</Label>
+                  <Label>Digest Time</Label>
                   <Input
                     type="time"
                     value={settings.emailDigestTime || "09:00"}
@@ -198,10 +198,10 @@ export function NotificationSettings() {
             <div className="space-y-0.5">
               <Label className="flex items-center gap-2">
                 <Smartphone className="h-4 w-4" />
-                Push-уведомления
+                Push Notifications
               </Label>
               <p className="text-sm text-muted-foreground">
-                Скоро будет доступно
+                Coming soon
               </p>
             </div>
             <Switch disabled checked={false} />
@@ -209,23 +209,23 @@ export function NotificationSettings() {
         </CardContent>
       </Card>
 
-      {/* Группировка */}
+      {/* Grouping */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Filter className="h-5 w-5" />
-            Группировка уведомлений
+            Notification Grouping
           </CardTitle>
           <CardDescription>
-            Объединять похожие уведомления для удобства
+            Combine similar notifications for convenience
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Группировать похожие</Label>
+              <Label>Group Similar</Label>
               <p className="text-sm text-muted-foreground">
-                Объединять уведомления одного типа
+                Combine notifications of the same type
               </p>
             </div>
             <Switch
@@ -236,7 +236,7 @@ export function NotificationSettings() {
 
           {settings.groupSimilar && (
             <div className="space-y-2">
-              <Label>Интервал группировки (минут)</Label>
+              <Label>Grouping Interval (minutes)</Label>
               <Input
                 type="number"
                 min="5"
@@ -247,30 +247,30 @@ export function NotificationSettings() {
                 }
               />
               <p className="text-xs text-muted-foreground">
-                Уведомления в течение этого времени будут объединены
+                Notifications within this time will be combined
               </p>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Типы уведомлений */}
+      {/* Notification types */}
       <Card>
         <CardHeader>
-          <CardTitle>Типы уведомлений</CardTitle>
+          <CardTitle>Notification Types</CardTitle>
           <CardDescription>
-            Выберите, о каких событиях вы хотите получать уведомления
+            Choose which events you want to receive notifications for
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {[
-            { key: "notifyTicketCreated", label: "Создание тикета", desc: "Новый тикет создан" },
-            { key: "notifyTicketAssigned", label: "Назначение тикета", desc: "Тикет назначен на вас" },
-            { key: "notifyTicketStatusChanged", label: "Изменение статуса", desc: "Статус тикета изменён" },
-            { key: "notifyTicketCommented", label: "Новый комментарий", desc: "Комментарий добавлен к тикету" },
-            { key: "notifyTicketMentioned", label: "Упоминание", desc: "Вас упомянули в комментарии" },
-            { key: "notifyTicketEscalated", label: "Эскалация тикета", desc: "Тикет эскалирован" },
-            { key: "notifySlaBreach", label: "Нарушение SLA", desc: "SLA тикета нарушен или скоро будет нарушен" },
+            { key: "notifyTicketCreated", label: "Ticket Created", desc: "New ticket created" },
+            { key: "notifyTicketAssigned", label: "Ticket Assigned", desc: "Ticket assigned to you" },
+            { key: "notifyTicketStatusChanged", label: "Status Changed", desc: "Ticket status changed" },
+            { key: "notifyTicketCommented", label: "New Comment", desc: "Comment added to ticket" },
+            { key: "notifyTicketMentioned", label: "Mentioned", desc: "You were mentioned in a comment" },
+            { key: "notifyTicketEscalated", label: "Ticket Escalated", desc: "Ticket escalated" },
+            { key: "notifySlaBreach", label: "SLA Breach", desc: "Ticket SLA breached or about to breach" },
           ].map((item, index) => (
             <div key={item.key}>
               {index > 0 && <Separator />}
@@ -291,23 +291,23 @@ export function NotificationSettings() {
         </CardContent>
       </Card>
 
-      {/* Тихий режим */}
+      {/* Quiet hours */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            Тихий режим
+            Quiet Hours
           </CardTitle>
           <CardDescription>
-            Не получать уведомления в определённое время
+            Don't receive notifications during specific time
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Включить тихий режим</Label>
+              <Label>Enable Quiet Hours</Label>
               <p className="text-sm text-muted-foreground">
-                Отключать уведомления ночью
+                Disable notifications at night
               </p>
             </div>
             <Switch
@@ -319,7 +319,7 @@ export function NotificationSettings() {
           {settings.quietHoursEnabled && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Начало (с)</Label>
+                <Label>Start (from)</Label>
                 <Input
                   type="time"
                   value={settings.quietHoursStart || "22:00"}
@@ -327,7 +327,7 @@ export function NotificationSettings() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Конец (до)</Label>
+                <Label>End (until)</Label>
                 <Input
                   type="time"
                   value={settings.quietHoursEnd || "08:00"}
@@ -341,9 +341,9 @@ export function NotificationSettings() {
 
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Приоритетные уведомления</Label>
+              <Label>Priority Notifications</Label>
               <p className="text-sm text-muted-foreground">
-                Всегда получать срочные уведомления
+                Always receive urgent notifications
               </p>
             </div>
             <Switch
@@ -354,16 +354,16 @@ export function NotificationSettings() {
         </CardContent>
       </Card>
 
-      {/* Кнопка сохранения */}
+      {/* Save button */}
       <div className="flex justify-end">
         <Button onClick={saveSettings} disabled={isSaving} size="lg">
           {isSaving ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Сохранение...
+              Saving...
             </>
           ) : (
-            "Сохранить настройки"
+            "Save Settings"
           )}
         </Button>
       </div>

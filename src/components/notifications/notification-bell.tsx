@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
-import { ru } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 
 interface Notification {
   id: string;
@@ -88,7 +88,7 @@ export function NotificationBell() {
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000); // Обновлять каждые 60 секунд
+    const interval = setInterval(fetchNotifications, 60000); // Update every 60 seconds
     return () => clearInterval(interval);
   }, [session]);
 
@@ -144,7 +144,7 @@ export function NotificationBell() {
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-80 p-0" align="end">
         <div className="flex items-center justify-between p-3 border-b">
-          <h3 className="text-md font-semibold">Уведомления</h3>
+          <h3 className="text-md font-semibold">Notifications</h3>
           {unreadCount > 0 && (
             <Button
               variant="ghost"
@@ -158,14 +158,14 @@ export function NotificationBell() {
               ) : (
                 <CheckCircle className="mr-1 h-3 w-3" />
               )}
-              Прочитать все
+              Mark All Read
             </Button>
           )}
         </div>
         <ScrollArea className="h-[300px]">
           {notifications.length === 0 && !isLoading ? (
             <p className="text-center text-muted-foreground p-4 text-sm">
-              Нет новых уведомлений
+              No new notifications
             </p>
           ) : isLoading ? (
             <div className="flex justify-center items-center h-full p-4">
@@ -200,7 +200,7 @@ export function NotificationBell() {
                   <p className="text-xs text-gray-400 mt-1">
                     {formatDistanceToNow(new Date(notification.createdAt), {
                       addSuffix: true,
-                      locale: ru,
+                      locale: enUS,
                     })}
                   </p>
                 </div>
@@ -211,10 +211,10 @@ export function NotificationBell() {
         {notifications.length > 0 && (
           <DropdownMenuSeparator />
         )}
-        {/* Можно добавить ссылку на страницу всех уведомлений */}
+        {/* Can add link to all notifications page */}
         {/* <DropdownMenuItem className="justify-center p-2">
           <Button variant="link" size="sm" className="text-sm">
-            Показать все
+            Show All
           </Button>
         </DropdownMenuItem> */}
       </DropdownMenuContent>
