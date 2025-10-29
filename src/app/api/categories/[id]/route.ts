@@ -10,7 +10,7 @@ const updateCategorySchema = z.object({
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional(),
 });
 
-// GET /api/categories/[id] - Получить категорию
+// GET /api/categories/[id] - Get category
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -21,7 +21,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только админы и tenant админы могут видеть категории
+    // Only admins and tenant admins can view categories
     if (session.user.role !== "ADMIN" && session.user.role !== "TENANT_ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -54,7 +54,7 @@ export async function GET(
   }
 }
 
-// PATCH /api/categories/[id] - Обновить категорию
+// PATCH /api/categories/[id] - Update category
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }
@@ -65,7 +65,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Проверяем права на редактирование категорий
+    // Check permissions to edit categories
     const canEdit = 
       session.user.role === "ADMIN" || 
       session.user.role === "TENANT_ADMIN" ||
@@ -78,7 +78,7 @@ export async function PATCH(
     const body = await request.json();
     const validatedData = updateCategorySchema.parse(body);
 
-    // Проверяем существование категории
+    // Check category existence
     const existingCategory = await prisma.category.findFirst({
       where: {
         id: params.id,
@@ -90,7 +90,7 @@ export async function PATCH(
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
 
-    // Проверяем уникальность названия (если изменяется)
+    // Check name uniqueness (if changed)
     if (validatedData.name && validatedData.name !== existingCategory.name) {
       const nameExists = await prisma.category.findFirst({
         where: {
@@ -102,7 +102,7 @@ export async function PATCH(
 
       if (nameExists) {
         return NextResponse.json(
-          { error: "Категория с таким названием уже существует" },
+          { error: "Category with this name already exists" },
           { status: 400 }
         );
       }
@@ -137,7 +137,7 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/categories/[id] - Удалить категорию
+// DELETE /api/categories/[id] - Delete category
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
@@ -148,7 +148,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Проверяем права на удаление категорий
+    // Check permissions to delete categories
     const canDelete = 
       session.user.role === "ADMIN" || 
       session.user.role === "TENANT_ADMIN" ||
@@ -169,7 +169,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
 
-    // Проверяем, есть ли тикеты в этой категории
+    // Check if there are tickets in this category
     const ticketsCount = await prisma.ticket.count({
       where: {
         categoryId: params.id,
@@ -178,7 +178,7 @@ export async function DELETE(
 
     if (ticketsCount > 0) {
       return NextResponse.json(
-        { error: "Нельзя удалить категорию, в которой есть тикеты" },
+        { error: "Cannot delete category that has tickets" },
         { status: 400 }
       );
     }

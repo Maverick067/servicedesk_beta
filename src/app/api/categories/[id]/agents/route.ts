@@ -8,7 +8,7 @@ const assignAgentSchema = z.object({
   agentId: z.string().min(1, "Agent ID is required"),
 });
 
-// GET /api/categories/[id]/agents - Получить агентов, назначенных на категорию
+// GET /api/categories/[id]/agents - Get agents assigned to category
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -19,7 +19,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только админы и tenant админы могут управлять назначениями
+    // Only admins and tenant admins can manage assignments
     if (session.user.role !== "ADMIN" && session.user.role !== "TENANT_ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -53,7 +53,7 @@ export async function GET(
   }
 }
 
-// POST /api/categories/[id]/agents - Назначить агента на категорию
+// POST /api/categories/[id]/agents - Assign agent to category
 export async function POST(
   request: Request,
   { params }: { params: { id: string } }
@@ -64,7 +64,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Проверяем права на назначение агентов
+    // Check permissions to assign agents
     const canAssign = 
       session.user.role === "ADMIN" || 
       session.user.role === "TENANT_ADMIN" ||
@@ -77,7 +77,7 @@ export async function POST(
     const body = await request.json();
     const validatedData = assignAgentSchema.parse(body);
 
-    // Проверяем, что агент существует и принадлежит к той же организации
+    // Check that agent exists and belongs to the same organization
     const agent = await prisma.user.findFirst({
       where: {
         id: validatedData.agentId,
@@ -94,7 +94,7 @@ export async function POST(
       );
     }
 
-    // Проверяем, что категория существует
+    // Check that category exists
     const category = await prisma.category.findFirst({
       where: {
         id: params.id,
@@ -109,7 +109,7 @@ export async function POST(
       );
     }
 
-    // Создаем назначение
+    // Create assignment
     const assignment = await prisma.categoryAgentAssignment.create({
       data: {
         categoryId: params.id,
@@ -144,7 +144,7 @@ export async function POST(
   }
 }
 
-// DELETE /api/categories/[id]/agents - Удалить назначение агента на категорию
+// DELETE /api/categories/[id]/agents - Remove agent assignment from category
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
@@ -155,7 +155,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Проверяем права на назначение агентов
+    // Check permissions to assign agents
     const canAssign = 
       session.user.role === "ADMIN" || 
       session.user.role === "TENANT_ADMIN" ||
