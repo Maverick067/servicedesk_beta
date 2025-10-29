@@ -37,7 +37,7 @@ export function LdapConfigList() {
       const response = await fetch(`/api/ldap`);
       if (response.ok) setConfigs(await response.json());
     } catch (e: any) {
-      toast.error("Ошибка при загрузке конфигураций");
+      toast.error("Error loading configurations");
     } finally {
       setIsLoading(false);
     }
@@ -62,24 +62,24 @@ export function LdapConfigList() {
       const result = await response.json();
       
       const messages = [
-        `Найдено: ${result.usersFound}`,
-        `Создано: ${result.usersCreated}`,
-        `Обновлено: ${result.usersUpdated}`,
+        `Found: ${result.usersFound}`,
+        `Created: ${result.usersCreated}`,
+        `Updated: ${result.usersUpdated}`,
       ];
       
       if (result.usersDeactivated > 0) {
-        messages.push(`Деактивировано: ${result.usersDeactivated}`);
+        messages.push(`Deactivated: ${result.usersDeactivated}`);
       }
 
-      toast.success("Синхронизация завершена!", {
+      toast.success("Synchronization completed!", {
         description: messages.join(', '),
         duration: 5000,
       });
 
-      // Обновляем список конфигураций
+      // Refresh configs list
       fetchConfigs();
     } catch (error: any) {
-      toast.error("Ошибка синхронизации", {
+      toast.error("Sync error", {
         description: error.message,
       });
     } finally {
@@ -93,10 +93,10 @@ export function LdapConfigList() {
     return (
       <div className="text-center py-12 border-2 border-dashed rounded-lg">
         <Shield className="mx-auto h-16 w-16 mb-4 text-muted-foreground" />
-        <h3 className="text-lg font-semibold mb-2">Active Directory не подключен</h3>
+        <h3 className="text-lg font-semibold mb-2">Active Directory Not Connected</h3>
         <p className="text-muted-foreground max-w-md mx-auto">
-          Подключите корпоративный домен, чтобы сотрудники могли входить 
-          используя свои учетные данные Windows
+          Connect your corporate domain so employees can sign in 
+          using their Windows credentials
         </p>
       </div>
     );
@@ -106,10 +106,10 @@ export function LdapConfigList() {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Подключение</TableHead>
-          <TableHead>Сервер</TableHead>
-          <TableHead>Статус</TableHead>
-          <TableHead className="text-right">Действия</TableHead>
+          <TableHead>Connection</TableHead>
+          <TableHead>Server</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -126,7 +126,7 @@ export function LdapConfigList() {
                 <span className="font-mono text-sm">{config.host || "—"}</span>
                 {config.port && (
                   <span className="text-xs text-muted-foreground">
-                    Порт: {config.port} {config.useSSL && <Badge variant="secondary" className="ml-1 text-xs">SSL</Badge>}
+                    Port: {config.port} {config.useSSL && <Badge variant="secondary" className="ml-1 text-xs">SSL</Badge>}
                   </span>
                 )}
               </div>
@@ -134,16 +134,16 @@ export function LdapConfigList() {
             <TableCell>
               <div className="flex flex-col gap-1">
                 <Badge variant={config.isActive ? "default" : "outline"}>
-                  {config.isActive ? "✓ Активен" : "Отключен"}
+                  {config.isActive ? "✓ Active" : "Disabled"}
                 </Badge>
                 {config.syncEnabled && (
                   <Badge variant="secondary" className="text-xs">
-                    🔄 Автосинхр.
+                    🔄 Auto-sync
                   </Badge>
                 )}
                 {config.lastSyncAt && (
                   <span className="text-xs text-muted-foreground">
-                    Синхр: {new Date(config.lastSyncAt).toLocaleDateString()}
+                    Synced: {new Date(config.lastSyncAt).toLocaleDateString()}
                   </span>
                 )}
               </div>
@@ -169,12 +169,12 @@ export function LdapConfigList() {
                       disabled={syncingId === config.id}
                     >
                       <RefreshCw className={`mr-2 h-4 w-4 ${syncingId === config.id ? "animate-spin" : ""}`} />
-                      {syncingId === config.id ? "Синхронизация..." : "Синхронизировать сейчас"}
+                      {syncingId === config.id ? "Syncing..." : "Sync Now"}
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="text-red-600">
                       <Trash2 className="mr-2 h-4 w-4" />
-                      Удалить
+                      Delete
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
