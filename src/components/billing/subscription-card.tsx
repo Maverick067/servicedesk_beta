@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, CreditCard, AlertCircle } from "lucide-react";
 import { Subscription } from "@prisma/client";
 import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { enUS } from "date-fns/locale";
 
 interface SubscriptionCardProps {
   subscription: Subscription | null;
@@ -19,13 +19,13 @@ export function SubscriptionCard({ subscription, onManage, loading }: Subscripti
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Текущая подписка</CardTitle>
-          <CardDescription>У вас пока нет активной подписки</CardDescription>
+          <CardTitle>Current Subscription</CardTitle>
+          <CardDescription>You don't have an active subscription yet</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-2 text-muted-foreground">
             <AlertCircle className="w-5 h-5" />
-            <p className="text-sm">Вы используете бесплатный план FREE</p>
+            <p className="text-sm">You are using the FREE plan</p>
           </div>
         </CardContent>
       </Card>
@@ -33,11 +33,11 @@ export function SubscriptionCard({ subscription, onManage, loading }: Subscripti
   }
 
   const statusMap = {
-    ACTIVE: { label: "Активна", variant: "default" as const, color: "text-green-500" },
-    TRIALING: { label: "Пробная", variant: "secondary" as const, color: "text-blue-500" },
-    PAST_DUE: { label: "Просрочена", variant: "destructive" as const, color: "text-red-500" },
-    CANCELED: { label: "Отменена", variant: "outline" as const, color: "text-gray-500" },
-    UNPAID: { label: "Неоплачена", variant: "destructive" as const, color: "text-red-500" },
+    ACTIVE: { label: "Active", variant: "default" as const, color: "text-green-500" },
+    TRIALING: { label: "Trial", variant: "secondary" as const, color: "text-blue-500" },
+    PAST_DUE: { label: "Past Due", variant: "destructive" as const, color: "text-red-500" },
+    CANCELED: { label: "Canceled", variant: "outline" as const, color: "text-gray-500" },
+    UNPAID: { label: "Unpaid", variant: "destructive" as const, color: "text-red-500" },
   };
 
   const status = statusMap[subscription.status];
@@ -47,9 +47,9 @@ export function SubscriptionCard({ subscription, onManage, loading }: Subscripti
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Текущая подписка</CardTitle>
+            <CardTitle>Current Subscription</CardTitle>
             <CardDescription className="mt-2">
-              План <span className="font-semibold text-foreground">{subscription.plan}</span>
+              Plan <span className="font-semibold text-foreground">{subscription.plan}</span>
             </CardDescription>
           </div>
           <Badge variant={status.variant}>{status.label}</Badge>
@@ -60,18 +60,18 @@ export function SubscriptionCard({ subscription, onManage, loading }: Subscripti
           <div className="flex items-center gap-3">
             <Calendar className="w-5 h-5 text-muted-foreground" />
             <div>
-              <p className="text-sm text-muted-foreground">Начало</p>
+              <p className="text-sm text-muted-foreground">Start</p>
               <p className="text-sm font-medium">
-                {format(new Date(subscription.currentPeriodStart), "d MMMM yyyy", { locale: ru })}
+                {format(new Date(subscription.currentPeriodStart), "MMMM d, yyyy", { locale: enUS })}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <Calendar className="w-5 h-5 text-muted-foreground" />
             <div>
-              <p className="text-sm text-muted-foreground">Окончание</p>
+              <p className="text-sm text-muted-foreground">End</p>
               <p className="text-sm font-medium">
-                {format(new Date(subscription.currentPeriodEnd), "d MMMM yyyy", { locale: ru })}
+                {format(new Date(subscription.currentPeriodEnd), "MMMM d, yyyy", { locale: enUS })}
               </p>
             </div>
           </div>
@@ -81,7 +81,7 @@ export function SubscriptionCard({ subscription, onManage, loading }: Subscripti
           <div className="flex items-center gap-2 p-3 bg-destructive/10 rounded-lg border border-destructive/20">
             <AlertCircle className="w-5 h-5 text-destructive" />
             <p className="text-sm text-destructive">
-              Подписка будет отменена {format(new Date(subscription.currentPeriodEnd), "d MMMM yyyy", { locale: ru })}
+              Subscription will be canceled on {format(new Date(subscription.currentPeriodEnd), "MMMM d, yyyy", { locale: enUS })}
             </p>
           </div>
         )}
@@ -94,10 +94,10 @@ export function SubscriptionCard({ subscription, onManage, loading }: Subscripti
             disabled={loading}
           >
             <CreditCard className="w-4 h-4 mr-2" />
-            {loading ? "Загрузка..." : "Управление подпиской"}
+            {loading ? "Loading..." : "Manage Subscription"}
           </Button>
           <p className="text-xs text-muted-foreground text-center mt-2">
-            Управляйте способами оплаты, счетами и подпиской
+            Manage payment methods, invoices and subscription
           </p>
         </div>
       </CardContent>

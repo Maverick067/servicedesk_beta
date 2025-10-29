@@ -32,7 +32,7 @@ interface UsageCardProps {
 export function UsageCard({ data }: UsageCardProps) {
   const metrics = [
     {
-      label: "Пользователи",
+      label: "Users",
       icon: Users,
       current: data.usage.users,
       max: data.limits.maxUsers,
@@ -40,7 +40,7 @@ export function UsageCard({ data }: UsageCardProps) {
       color: "text-blue-500",
     },
     {
-      label: "Агенты",
+      label: "Agents",
       icon: Shield,
       current: data.usage.agents,
       max: data.limits.maxAgents,
@@ -48,7 +48,7 @@ export function UsageCard({ data }: UsageCardProps) {
       color: "text-purple-500",
     },
     {
-      label: "Хранилище",
+      label: "Storage",
       icon: HardDrive,
       current: `${data.usage.storageGB.toFixed(2)} GB`,
       max: `${data.limits.maxStorageGB} GB`,
@@ -56,7 +56,7 @@ export function UsageCard({ data }: UsageCardProps) {
       color: "text-green-500",
     },
     {
-      label: "Тикеты (месяц)",
+      label: "Tickets (month)",
       icon: Ticket,
       current: data.usage.ticketsThisMonth,
       max: data.limits.maxTicketsPerMonth || "∞",
@@ -68,7 +68,7 @@ export function UsageCard({ data }: UsageCardProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Использование ресурсов</CardTitle>
+        <CardTitle>Resource Usage</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {metrics.map((metric) => {
@@ -94,7 +94,7 @@ export function UsageCard({ data }: UsageCardProps) {
               />
               {isNearLimit && (
                 <p className="text-xs text-destructive">
-                  Приближается лимит! Рассмотрите апгрейд плана.
+                  Approaching limit! Consider upgrading your plan.
                 </p>
               )}
             </div>
