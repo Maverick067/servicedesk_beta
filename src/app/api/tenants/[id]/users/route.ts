@@ -6,13 +6,13 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 
 const createUserSchema = z.object({
-  email: z.string().email("Некорректный email"),
-  name: z.string().min(2, "Имя должно содержать минимум 2 символа"),
-  password: z.string().min(6, "Пароль должен содержать минимум 6 символов"),
+  email: z.string().email("Invalid email"),
+  name: z.string().min(2, "Name must contain at least 2 characters"),
+  password: z.string().min(6, "Password must contain at least 6 characters"),
   role: z.enum(["TENANT_ADMIN", "AGENT", "USER"]),
 });
 
-// GET /api/tenants/[id]/users - Получить всех пользователей организации
+// GET /api/tenants/[id]/users - Get all organization users
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -23,12 +23,12 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Только админы и tenant админы могут видеть пользователей
+    // Only admins and tenant admins can view users
     if (session.user.role !== "ADMIN" && session.user.role !== "TENANT_ADMIN") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    // Проверяем, что пользователь запрашивает пользователей своей организации
+    // Check that user requests users of their organization
     if (session.user.tenantId !== params.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -67,7 +67,7 @@ export async function GET(
   }
 }
 
-// POST /api/tenants/[id]/users - Создать нового пользователя в организации
+// POST /api/tenants/[id]/users - Create new user in organization
 export async function POST(
   request: Request,
   { params }: { params: { id: string } }
@@ -84,13 +84,13 @@ export async function POST(
     console.log("User role:", session.user.role, "Expected: ADMIN");
     console.log("User tenantId:", session.user.tenantId, "Requested tenantId:", params.id);
 
-    // Только админы и tenant админы могут создавать пользователей
+    // Only admins and tenant admins can create users
     if (session.user.role !== "ADMIN" && session.user.role !== "TENANT_ADMIN") {
       console.log("User role is not ADMIN or TENANT_ADMIN:", session.user.role);
       return NextResponse.json({ error: "Forbidden - Not an admin" }, { status: 403 });
     }
 
-    // Проверяем, что пользователь создает пользователя в своей организации
+    // Check that user creates user in their organization
     if (session.user.tenantId !== params.id) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -98,15 +98,15 @@ export async function POST(
     const body = await request.json();
     const validatedData = createUserSchema.parse(body);
 
-    // TENANT_ADMIN может создавать только USER и AGENT
+    // TENANT_ADMIN can only create USER and AGENT
     if (session.user.role === "TENANT_ADMIN" && validatedData.role === "TENANT_ADMIN") {
       return NextResponse.json(
-        { error: "TENANT_ADMIN не может создавать других TENANT_ADMIN" },
+        { error: "TENANT_ADMIN cannot create other TENANT_ADMINs" },
         { status: 403 }
       );
     }
 
-    // Проверяем уникальность email в рамках организации
+    // Check email uniqueness within organization
     const existingUser = await prisma.user.findFirst({
       where: {
         email: validatedData.email,
@@ -116,12 +116,12 @@ export async function POST(
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "Пользователь с таким email уже существует" },
+        { error: "User with this email already exists" },
         { status: 400 }
       );
     }
 
-    // Хешируем пароль
+    // Hash password
     const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
     const user = await prisma.user.create({

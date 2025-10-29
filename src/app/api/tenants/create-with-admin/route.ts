@@ -7,15 +7,15 @@ import bcrypt from "bcryptjs";
 import slugify from "slugify";
 
 const createTenantWithAdminSchema = z.object({
-  tenantName: z.string().min(2, "Название организации должно содержать минимум 2 символов"),
+  tenantName: z.string().min(2, "Organization name must contain at least 2 characters"),
   tenantSlug: z.string().optional(),
   tenantDomain: z.string().nullable().optional(),
-  adminName: z.string().min(2, "Имя должно содержать минимум 2 символа"),
-  adminEmail: z.string().email("Некорректный email"),
-  adminPassword: z.string().min(6, "Пароль должен содержать минимум 6 символов"),
+  adminName: z.string().min(2, "Name must contain at least 2 characters"),
+  adminEmail: z.string().email("Invalid email"),
+  adminPassword: z.string().min(6, "Password must contain at least 6 characters"),
 });
 
-// POST /api/tenants/create-with-admin - Создать tenant с автоматическим админом
+// POST /api/tenants/create-with-admin - Create tenant with automatic admin
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
       tenantSlug = slugify(validatedData.tenantName, { lower: true, strict: true });
     }
 
-    // Проверяем уникальность slug и domain
+    // Check slug and domain uniqueness
     const existingTenant = await prisma.tenant.findFirst({
       where: {
         OR: [
@@ -43,19 +43,19 @@ export async function POST(request: Request) {
 
     if (existingTenant) {
       return NextResponse.json(
-        { error: "Организация с таким slug или доменом уже существует" },
+        { error: "Organization with this slug or domain already exists" },
         { status: 400 }
       );
     }
 
-    // Проверяем уникальность email
+    // Check email uniqueness
     const existingUser = await prisma.user.findFirst({
       where: { email: validatedData.adminEmail },
     });
 
     if (existingUser) {
       return NextResponse.json(
-        { error: "Пользователь с таким email уже существует" },
+        { error: "User with this email already exists" },
         { status: 400 }
       );
     }
@@ -63,7 +63,7 @@ export async function POST(request: Request) {
     const hashedPassword = await bcrypt.hash(validatedData.adminPassword, 10);
 
     const result = await prisma.$transaction(async (tx) => {
-      // Создаем tenant
+      // Create tenant
       const tenant = await tx.tenant.create({
         data: {
           name: validatedData.tenantName,
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
         },
       });
 
-          // Создаем админа для tenant'а
+          // Create admin for tenant
           const admin = await tx.user.create({
             data: {
               email: validatedData.adminEmail,
@@ -95,7 +95,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        message: "Организация и администратор успешно созданы",
+        message: "Organization and administrator successfully created",
         tenant: result.tenant,
         admin: result.admin,
         credentials: {
