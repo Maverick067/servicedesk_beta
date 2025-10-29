@@ -56,7 +56,7 @@ export function SimpleADConfigDialog({
 
   const handleTestConnection = async () => {
     if (!serverAddress || !domain || !adminUsername || !adminPassword) {
-      toast.error("Заполните все обязательные поля");
+      toast.error("Fill in all required fields");
       return;
     }
 
@@ -81,20 +81,20 @@ export function SimpleADConfigDialog({
 
       if (response.ok && result.success) {
         setTestSuccess(true);
-        toast.success("Подключение успешно!", {
-          description: `Найдено ${result.usersCount || 0} пользователей`,
+        toast.success("Connection successful!", {
+          description: `Found ${result.usersCount || 0} users`,
         });
       } else {
-        const errorMsg = result.error || "Проверьте настройки";
+        const errorMsg = result.error || "Check settings";
         
-        toast.error("Ошибка подключения", {
+        toast.error("Connection error", {
           description: errorMsg,
-          duration: 8000, // Показываем дольше для таймаутов
+          duration: 8000, // Show longer for timeouts
         });
       }
     } catch (error: any) {
-      toast.error("Ошибка", {
-        description: error.message || "Не удалось подключиться к серверу",
+      toast.error("Error", {
+        description: error.message || "Failed to connect to server",
       });
     } finally {
       setIsTesting(false);
@@ -105,19 +105,19 @@ export function SimpleADConfigDialog({
     e.preventDefault();
 
     if (!name || !serverAddress || !domain || !adminUsername || !adminPassword) {
-      toast.error("Заполните все обязательные поля");
+      toast.error("Fill in all required fields");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // Автоматически формируем правильные настройки LDAP
+      // Automatically generate correct LDAP settings
       const port = parseInt(effectivePort);
       const baseDn = `DC=${domain.split('.').join(',DC=')}`;
       const bindDn = `${adminUsername}@${domain}`;
       const userSearchBase = baseDn;
-      // Правильный фильтр: только пользователи (не компьютеры), только активные
+      // Correct filter: only users (not computers), only active
       const userSearchFilter = "(&(objectClass=user)(objectCategory=person)(!(objectClass=computer))(!(userAccountControl:1.2.840.113556.1.4.803:=2)))";
 
       const response = await fetch(`/api/ldap`, {
@@ -140,14 +140,14 @@ export function SimpleADConfigDialog({
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Не удалось создать подключение");
+        throw new Error(error.message || "Failed to create connection");
       }
 
-      toast.success("Active Directory подключен!", {
-        description: "Пользователи могут входить используя учетные данные домена",
+      toast.success("Active Directory connected!", {
+        description: "Users can sign in using domain credentials",
       });
 
-      // Сбрасываем форму
+      // Reset form
       setName("");
       setServerAddress("");
       setDomain("");
@@ -159,7 +159,7 @@ export function SimpleADConfigDialog({
 
       onConfigCreated?.();
     } catch (error: any) {
-      toast.error("Ошибка", {
+      toast.error("Error", {
         description: error.message,
       });
     } finally {
@@ -174,65 +174,65 @@ export function SimpleADConfigDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Подключить Active Directory
+            Connect Active Directory
           </DialogTitle>
           <DialogDescription>
-            Подключите ваш корпоративный домен для единого входа сотрудников
+            Connect your corporate domain for single sign-on for employees
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6 py-4">
-          {/* Информационный блок */}
+          {/* Info block */}
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              <strong>Быстрая подсказка:</strong> Откройте командную строку на любом компьютере в домене и выполните{" "}
-              <code className="bg-muted px-1 rounded">echo %LOGONSERVER%</code> чтобы узнать адрес сервера и{" "}
-              <code className="bg-muted px-1 rounded">echo %USERDNSDOMAIN%</code> чтобы узнать домен.
+              <strong>Quick tip:</strong> Open command prompt on any computer in the domain and run{" "}
+              <code className="bg-muted px-1 rounded">echo %LOGONSERVER%</code> to find the server address and{" "}
+              <code className="bg-muted px-1 rounded">echo %USERDNSDOMAIN%</code> to find the domain.
             </AlertDescription>
           </Alert>
 
-          {/* Основные настройки */}
+          {/* Basic settings */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Основные настройки</CardTitle>
+              <CardTitle className="text-base">Basic Settings</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">
-                  Название подключения <span className="text-red-500">*</span>
+                  Connection Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Корпоративный Active Directory"
+                  placeholder="Corporate Active Directory"
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Например: "Корпоративный AD" или "Office Domain"
+                  Example: "Corporate AD" or "Office Domain"
                 </p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="serverAddress">
-                  Адрес сервера <span className="text-red-500">*</span>
+                  Server Address <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="serverAddress"
                   value={serverAddress}
                   onChange={(e) => setServerAddress(e.target.value)}
-                  placeholder="dc.company.local или 192.168.1.10"
+                  placeholder="dc.company.local or 192.168.1.10"
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  IP-адрес или имя вашего контроллера домена
+                  IP address or name of your domain controller
                 </p>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="domain">
-                  Домен <span className="text-red-500">*</span>
+                  Domain <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="domain"
@@ -242,14 +242,14 @@ export function SimpleADConfigDialog({
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Ваш доменное имя (например: company.local, office.com)
+                  Your domain name (e.g.: company.local, office.com)
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="adminUsername">
-                    Логин администратора <span className="text-red-500">*</span>
+                    Admin Username <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="adminUsername"
@@ -262,7 +262,7 @@ export function SimpleADConfigDialog({
 
                 <div className="space-y-2">
                   <Label htmlFor="adminPassword">
-                    Пароль <span className="text-red-500">*</span>
+                    Password <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="adminPassword"
@@ -278,10 +278,10 @@ export function SimpleADConfigDialog({
               <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                 <div>
                   <Label htmlFor="isActive" className="text-sm font-medium">
-                    Активировать подключение
+                    Activate Connection
                   </Label>
                   <p className="text-xs text-muted-foreground">
-                    Разрешить вход через домен
+                    Allow sign in via domain
                   </p>
                 </div>
                 <Switch
@@ -293,7 +293,7 @@ export function SimpleADConfigDialog({
             </CardContent>
           </Card>
 
-          {/* Продвинутые настройки (скрыты по умолчанию) */}
+          {/* Advanced settings (hidden by default) */}
           <div>
             <Button
               type="button"
@@ -302,28 +302,28 @@ export function SimpleADConfigDialog({
               onClick={() => setShowAdvanced(!showAdvanced)}
               className="text-sm"
             >
-              {showAdvanced ? "Скрыть" : "Показать"} продвинутые настройки
+              {showAdvanced ? "Hide" : "Show"} advanced settings
             </Button>
 
             {showAdvanced && (
               <Card className="mt-2">
                 <CardHeader>
-                  <CardTitle className="text-base">Продвинутые настройки</CardTitle>
+                  <CardTitle className="text-base">Advanced Settings</CardTitle>
                   <CardDescription>
-                    Обычно не требуется изменять
+                    Usually not required to change
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="useSSL">Защищенное подключение (SSL/TLS)</Label>
+                      <Label htmlFor="useSSL">Secure Connection (SSL/TLS)</Label>
                       <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                         <div>
                           <span className="text-sm font-medium">
-                            Использовать LDAPS
+                            Use LDAPS
                           </span>
                           <p className="text-xs text-muted-foreground">
-                            {useSSL ? "Порт 636 (защищено)" : "Порт 389 (не защищено)"}
+                            {useSSL ? "Port 636 (secured)" : "Port 389 (unsecured)"}
                           </p>
                         </div>
                         <Switch
@@ -335,7 +335,7 @@ export function SimpleADConfigDialog({
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="customPort">Порт (опционально)</Label>
+                      <Label htmlFor="customPort">Port (optional)</Label>
                       <Input
                         id="customPort"
                         value={customPort}
@@ -343,7 +343,7 @@ export function SimpleADConfigDialog({
                         placeholder={effectivePort}
                       />
                       <p className="text-xs text-muted-foreground">
-                        Текущий порт: {effectivePort}
+                        Current port: {effectivePort}
                       </p>
                     </div>
                   </div>
@@ -352,7 +352,7 @@ export function SimpleADConfigDialog({
             )}
           </div>
 
-          {/* Кнопки действий */}
+          {/* Action buttons */}
           <div className="flex items-center gap-3">
             <Button
               type="button"
@@ -364,15 +364,15 @@ export function SimpleADConfigDialog({
               {isTesting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Проверка...
+                  Testing...
                 </>
               ) : testSuccess ? (
                 <>
                   <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />
-                  Подключено
+                  Connected
                 </>
               ) : (
-                "Проверить подключение"
+                "Test Connection"
               )}
             </Button>
 
@@ -384,16 +384,16 @@ export function SimpleADConfigDialog({
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Сохранение...
+                  Saving...
                 </>
               ) : (
-                "Сохранить"
+                "Save"
               )}
             </Button>
           </div>
 
           <p className="text-xs text-muted-foreground text-center">
-            После сохранения пользователи смогут входить используя логин и пароль домена
+            After saving, users will be able to sign in using domain username and password
           </p>
         </form>
       </DialogContent>

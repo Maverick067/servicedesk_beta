@@ -14,8 +14,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 
 const ldapSchema = z.object({
-  name: z.string().min(1, "Название обязательно"),
-  type: z.string().min(1, "Выберите тип"),
+  name: z.string().min(1, "Name is required"),
+  type: z.string().min(1, "Select type"),
   host: z.string().optional(),
   port: z.number().int().optional(),
   baseDn: z.string().optional(),
@@ -45,13 +45,13 @@ export function CreateLdapConfigDialog({ children, onConfigCreated }: { children
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("Не удалось создать конфигурацию");
-      toast.success("LDAP конфигурация создана");
+      if (!response.ok) throw new Error("Failed to create configuration");
+      toast.success("LDAP configuration created");
       reset();
       setIsOpen(false);
       onConfigCreated?.();
     } catch (e: any) {
-      toast.error("Ошибка", { description: e.message });
+      toast.error("Error", { description: e.message });
     } finally {
       setIsSubmitting(false);
     }
@@ -69,20 +69,20 @@ export function CreateLdapConfigDialog({ children, onConfigCreated }: { children
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Добавить LDAP/SSO интеграцию</DialogTitle>
-          <DialogDescription>Настройте интеграцию с внешним провайдером аутентификации.</DialogDescription>
+          <DialogTitle>Add LDAP/SSO Integration</DialogTitle>
+          <DialogDescription>Configure integration with external authentication provider.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">Название</Label>
-            <Input id="name" {...register("name")} className="col-span-3" placeholder="Корпоративный AD" />
+            <Label htmlFor="name" className="text-right">Name</Label>
+            <Input id="name" {...register("name")} className="col-span-3" placeholder="Corporate AD" />
             {errors.name && <p className="col-span-4 text-right text-sm text-red-500">{errors.name.message}</p>}
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="type" className="text-right">Тип</Label>
+            <Label htmlFor="type" className="text-right">Type</Label>
             <Controller name="type" control={control} render={({ field }) => (
               <Select value={field.value} onValueChange={field.onChange}>
-                <SelectTrigger className="col-span-3"><SelectValue placeholder="Выберите тип" /></SelectTrigger>
+                <SelectTrigger className="col-span-3"><SelectValue placeholder="Select type" /></SelectTrigger>
                 <SelectContent>{typeOptions.map((opt) => (<SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>))}</SelectContent>
               </Select>
             )} />
@@ -117,7 +117,7 @@ export function CreateLdapConfigDialog({ children, onConfigCreated }: { children
             <Input id="userSearchFilter" {...register("userSearchFilter")} className="col-span-3" placeholder="(uid={0})" />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="isActive" className="text-right">Активен</Label>
+            <Label htmlFor="isActive" className="text-right">Active</Label>
             <Controller name="isActive" control={control} render={({ field }) => (
               <Switch id="isActive" checked={field.value} onCheckedChange={field.onChange} className="col-span-3 justify-self-start" />
             )} />
@@ -125,7 +125,7 @@ export function CreateLdapConfigDialog({ children, onConfigCreated }: { children
           <div className="flex justify-end">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Создать конфигурацию
+              Create Configuration
             </Button>
           </div>
         </form>
