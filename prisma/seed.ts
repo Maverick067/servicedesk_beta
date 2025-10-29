@@ -4,30 +4,30 @@ import bcrypt from "bcryptjs";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🌱 Начало заполнения базы данных...");
+  console.log("🌱 Starting database seeding...");
 
-  // Хешируем пароли
+  // Hash passwords
   const superAdminPassword = await bcrypt.hash("superadmin", 10);
   const adminPassword = await bcrypt.hash("admin123", 10);
   const agentPassword = await bcrypt.hash("agent123", 10);
   const userPassword = await bcrypt.hash("user123", 10);
 
-  // ВАЖНО: Создаем ГЛОБАЛЬНОГО СУПЕР АДМИНА БЕЗ tenantId
+  // IMPORTANT: Create GLOBAL SUPER ADMIN without tenantId
   const superAdmin = await prisma.user.upsert({
     where: { email: "superadmin@servicedesk.com" },
     update: {},
     create: {
       email: "superadmin@servicedesk.com",
-      name: "Супер Администратор",
+      name: "Super Administrator",
       password: superAdminPassword,
       role: "ADMIN",
-      tenantId: null, // Глобальный админ БЕЗ привязки к tenant
+      tenantId: null, // Global admin WITHOUT tenant binding
     },
   });
 
-  console.log("✅ Создан глобальный супер-админ:", superAdmin.email);
+  console.log("✅ Created global super-admin:", superAdmin.email);
 
-  // Создаем демо организацию (tenant)
+  // Create demo organization (tenant)
   const tenant = await prisma.tenant.upsert({
     where: { slug: "demo" },
     update: {},
@@ -38,17 +38,17 @@ async function main() {
     },
   });
 
-  console.log("✅ Создана организация:", tenant.name);
+  console.log("✅ Created organization:", tenant.name);
 
-  // Создаем пользователей для демо организации
+  // Create users for demo organization
   const admin = await prisma.user.upsert({
     where: { email: "admin@demo.com" },
     update: {},
     create: {
       email: "admin@demo.com",
-      name: "Администратор Организации",
+      name: "Organization Administrator",
       password: adminPassword,
-      role: "TENANT_ADMIN", // Изменили на TENANT_ADMIN
+      role: "TENANT_ADMIN", // Changed to TENANT_ADMIN
       tenantId: tenant.id,
     },
   });
@@ -58,7 +58,7 @@ async function main() {
     update: {},
     create: {
       email: "agent@demo.com",
-      name: "Агент Поддержки",
+      name: "Support Agent",
       password: agentPassword,
       role: "AGENT",
       tenantId: tenant.id,
@@ -70,59 +70,59 @@ async function main() {
     update: {},
     create: {
       email: "user@demo.com",
-      name: "Обычный Пользователь",
+      name: "Regular User",
       password: userPassword,
       role: "USER",
       tenantId: tenant.id,
     },
   });
 
-  console.log("✅ Созданы пользователи организации:");
-  console.log("  - Администратор тенанта:", admin.email);
-  console.log("  - Агент:", agent.email);
-  console.log("  - Пользователь:", user.email);
+  console.log("✅ Created organization users:");
+  console.log("  - Tenant Administrator:", admin.email);
+  console.log("  - Agent:", agent.email);
+  console.log("  - User:", user.email);
 
-  // Создаем категории
+  // Create categories
   const categories = await Promise.all([
     prisma.category.create({
       data: {
-        name: "Техническая поддержка",
+        name: "Technical Support",
         color: "#3b82f6",
         tenantId: tenant.id,
       },
     }),
     prisma.category.create({
       data: {
-        name: "Сеть и подключение",
+        name: "Network and Connectivity",
         color: "#10b981",
         tenantId: tenant.id,
       },
     }),
     prisma.category.create({
       data: {
-        name: "Программное обеспечение",
+        name: "Software",
         color: "#f59e0b",
         tenantId: tenant.id,
       },
     }),
     prisma.category.create({
       data: {
-        name: "Оборудование",
+        name: "Hardware",
         color: "#ef4444",
         tenantId: tenant.id,
       },
     }),
   ]);
 
-  console.log("✅ Созданы категории:", categories.length);
+  console.log("✅ Created categories:", categories.length);
 
-  // Создаем тикеты
+  // Create tickets
   const tickets = await Promise.all([
     prisma.ticket.create({
       data: {
-        title: "Не работает принтер на третьем этаже",
+        title: "Printer not working on third floor",
         description:
-          "Добрый день! У нас в офисе на третьем этаже перестал работать принтер HP LaserJet. При попытке печати выдает ошибку.",
+          "Good day! The HP LaserJet printer on the third floor of our office stopped working. When trying to print, it shows an error.",
         status: "OPEN",
         priority: "HIGH",
         tenantId: tenant.id,
@@ -132,9 +132,9 @@ async function main() {
     }),
     prisma.ticket.create({
       data: {
-        title: "Запрос на установку Adobe Photoshop",
+        title: "Request to install Adobe Photoshop",
         description:
-          "Здравствуйте! Мне нужна установка Adobe Photoshop для работы над дизайном проектов. Когда можно организовать установку?",
+          "Hello! I need Adobe Photoshop installed for working on design projects. When can we schedule the installation?",
         status: "IN_PROGRESS",
         priority: "MEDIUM",
         tenantId: tenant.id,
@@ -145,9 +145,9 @@ async function main() {
     }),
     prisma.ticket.create({
       data: {
-        title: "Проблема с подключением к Wi-Fi",
+        title: "Wi-Fi connection issue",
         description:
-          "После обновления системы не могу подключиться к корпоративной сети Wi-Fi. Пароль вводу правильный, но выдает ошибку аутентификации.",
+          "After updating the system, I cannot connect to the corporate Wi-Fi network. I'm entering the correct password, but it shows an authentication error.",
         status: "RESOLVED",
         priority: "URGENT",
         tenantId: tenant.id,
@@ -159,9 +159,9 @@ async function main() {
     }),
     prisma.ticket.create({
       data: {
-        title: "Медленная работа компьютера",
+        title: "Slow computer performance",
         description:
-          "В последнюю неделю компьютер стал очень медленно работать. Программы открываются долго, система часто зависает.",
+          "For the past week, my computer has been running very slowly. Programs take a long time to open, and the system often freezes.",
         status: "OPEN",
         priority: "LOW",
         tenantId: tenant.id,
@@ -171,39 +171,39 @@ async function main() {
     }),
   ]);
 
-  console.log("✅ Созданы тикеты:", tickets.length);
+  console.log("✅ Created tickets:", tickets.length);
 
-  // Создаем комментарии
+  // Create comments
   await prisma.comment.createMany({
     data: [
       {
         content:
-          "Спасибо за обращение! Мы проверим принтер в ближайшее время.",
+          "Thank you for contacting us! We will check the printer shortly.",
         ticketId: tickets[0].id,
         authorId: agent.id,
         isInternal: false,
       },
       {
-        content: "Начинаю работу над установкой ПО.",
+        content: "Starting work on software installation.",
         ticketId: tickets[1].id,
         authorId: agent.id,
         isInternal: false,
       },
       {
-        content: "Установка завершена. Проверьте, пожалуйста.",
+        content: "Installation completed. Please check.",
         ticketId: tickets[1].id,
         authorId: agent.id,
         isInternal: false,
       },
       {
         content:
-          "Проблема решена. Был изменен тип шифрования на роутере. Попробуйте переподключиться.",
+          "Issue resolved. Encryption type was changed on the router. Please try reconnecting.",
         ticketId: tickets[2].id,
         authorId: agent.id,
         isInternal: false,
       },
       {
-        content: "Спасибо! Все работает отлично!",
+        content: "Thank you! Everything works great!",
         ticketId: tickets[2].id,
         authorId: user.id,
         isInternal: false,
@@ -211,30 +211,30 @@ async function main() {
     ],
   });
 
-  console.log("✅ Созданы комментарии");
+  console.log("✅ Created comments");
 
-  console.log("\n🎉 База данных успешно заполнена демо данными!");
-  console.log("\n📝 Учетные данные для входа:");
+  console.log("\n🎉 Database successfully seeded with demo data!");
+  console.log("\n📝 Login credentials:");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-  console.log("🔥 СУПЕР АДМИНИСТРАТОР (Глобальный доступ):");
+  console.log("🔥 SUPER ADMINISTRATOR (Global access):");
   console.log("   Email: superadmin@servicedesk.com");
-  console.log("   Пароль: superadmin");
-  console.log("   Доступ: Админ-панель, все организации");
-  console.log("\n👑 Администратор организации Demo:");
+  console.log("   Password: superadmin");
+  console.log("   Access: Admin panel, all organizations");
+  console.log("\n👑 Demo Organization Administrator:");
   console.log("   Email: admin@demo.com");
-  console.log("   Пароль: admin123");
-  console.log("\n👨‍💼 Агент поддержки:");
+  console.log("   Password: admin123");
+  console.log("\n👨‍💼 Support Agent:");
   console.log("   Email: agent@demo.com");
-  console.log("   Пароль: agent123");
-  console.log("\n👤 Пользователь:");
+  console.log("   Password: agent123");
+  console.log("\n👤 User:");
   console.log("   Email: user@demo.com");
-  console.log("   Пароль: user123");
+  console.log("   Password: user123");
   console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 }
 
 main()
   .catch((e) => {
-    console.error("❌ Ошибка при заполнении базы данных:", e);
+    console.error("❌ Error seeding database:", e);
     process.exit(1);
   })
   .finally(async () => {

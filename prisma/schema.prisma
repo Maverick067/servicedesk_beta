@@ -729,7 +729,7 @@ model Webhook {
   events          WebhookEvent[] @default([])
   isActive        Boolean        @default(true)
   tenantId        String
-  headers         Json?          // Дополнительные заголовки
+  headers         Json?          // Additional headers
   successCount    Int            @default(0)
   failureCount    Int            @default(0)
   lastTriggeredAt DateTime?
