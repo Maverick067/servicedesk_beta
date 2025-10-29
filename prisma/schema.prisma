@@ -213,7 +213,7 @@ model Ticket {
   comments    Comment[]
   attachments Attachment[]
   notifications Notification[]
-  customFieldValues CustomFieldValue[] // Значения кастомных полей
+  customFieldValues CustomFieldValue[] // Custom field values
   
   @@unique([tenantId, number]) // Number uniqueness within tenant
   @@index([tenantId])
@@ -708,7 +708,7 @@ model Asset {
 // WEBHOOKS
 // ====================
 
-// События webhook
+// Webhook events
 enum WebhookEvent {
   TICKET_CREATED
   TICKET_UPDATED
@@ -717,7 +717,7 @@ enum WebhookEvent {
   COMMENT_ADDED
   USER_CREATED
   CATEGORY_CREATED
-  ALL                 // Все события
+  ALL                 // All events
 }
 
 // Webhooks
@@ -725,7 +725,7 @@ model Webhook {
   id              String         @id @default(cuid())
   name            String
   url             String
-  secret          String?        // Secret для подписи
+  secret          String?        // Secret for signing
   events          WebhookEvent[] @default([])
   isActive        Boolean        @default(true)
   tenantId        String
