@@ -12,13 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Loader2, Building2, RefreshCw, Eye, EyeOff } from "lucide-react";
 
 export default function RegisterPage() {
@@ -29,11 +22,9 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState("");
   const [formData, setFormData] = useState({
-    // Organization data
     tenantName: "",
     tenantSlug: "",
     tenantDomain: "",
-    // User data
     name: "",
     email: "",
     password: "",
@@ -67,7 +58,6 @@ export default function RegisterPage() {
       setError("Fill in all fields");
       return;
     }
-    // Automatically generate password when moving to step 2
     generatePassword();
     setStep(2);
     setError("");
@@ -94,9 +84,6 @@ export default function RegisterPage() {
         password: formData.password,
       };
       
-      console.log("Sending registration data:", requestData);
-      
-      // Create organization and user via a single API
       const response = await fetch("/api/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -108,10 +95,7 @@ export default function RegisterPage() {
         throw new Error(data.error || "Failed to create organization");
       }
 
-      // Show notification with password
       alert(`Organization successfully created!\n\nYour login credentials:\nEmail: ${formData.email}\nPassword: ${formData.password}\n\nPlease save these credentials!`);
-
-      // Redirect to login page
       router.push("/login?message=registration-success");
     } catch (error: any) {
       setError(error.message);
@@ -121,35 +105,66 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
+    <div
+      className="min-h-screen flex items-center justify-center p-4 relative"
+      style={{
+        background: `
+          radial-gradient(circle at 50% 50%, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.4) 40%, rgba(0,0,0,0.9) 70%),
+          url('/images/gradient-background.jpg')
+        `,
+        backgroundSize: "auto, cover",
+        backgroundPosition: "center, 15% center",
+        backgroundRepeat: "no-repeat",
+      }}
+    >
+
+      <Card
+        className="max-w-md w-full hover-lift relative z-10"
+        style={{
+          background: "rgba(255, 255, 255, 0.04)",
+          backdropFilter: "blur(20px)",
+          border: "1px solid rgba(255, 255, 255, 0.12)",
+          boxShadow: "0 8px 24px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08)",
+        }}
+      >
+        <CardHeader className="text-center space-y-2">
           <div className="flex items-center justify-center mb-4">
-            <Building2 className="h-12 w-12 text-primary" />
+            <Building2 className="h-12 w-12 text-white/80" />
           </div>
-          <CardTitle className="text-3xl font-bold text-center">
+          <CardTitle className="text-3xl font-bold text-white" style={{ fontFamily: "var(--font-heading)" }}>
             Registration
           </CardTitle>
-          <CardDescription className="text-center">
+          <CardDescription style={{ color: "rgba(255, 255, 255, 0.7)" }}>
             Create a new organization and get access to the system
           </CardDescription>
         </CardHeader>
-        <CardContent>
+
+        <CardContent className="space-y-6">
           {step === 1 ? (
             <form onSubmit={handleStep1Submit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="tenantName">Organization Name *</Label>
+                <Label htmlFor="tenantName" className="text-sm font-medium text-white">
+                  Organization Name *
+                </Label>
                 <Input
                   id="tenantName"
                   placeholder="Your company name"
                   value={formData.tenantName}
                   onChange={(e) => handleTenantSlugChange(e.target.value)}
+                  className="py-3 text-white placeholder:text-white/40 focus:border-[#00CFFF] focus:ring-[#00CFFF] transition-all duration-300"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.06)",
+                    border: "1px solid rgba(255, 255, 255, 0.15)",
+                  }}
                   required
                   disabled={isLoading}
                 />
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="tenantSlug">Organization Identifier *</Label>
+                <Label htmlFor="tenantSlug" className="text-sm font-medium text-white">
+                  Organization Identifier *
+                </Label>
                 <Input
                   id="tenantSlug"
                   placeholder="company-slug"
@@ -157,15 +172,23 @@ export default function RegisterPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, tenantSlug: e.target.value })
                   }
+                  className="py-3 text-white placeholder:text-white/40 focus:border-[#00CFFF] focus:ring-[#00CFFF] transition-all duration-300"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.06)",
+                    border: "1px solid rgba(255, 255, 255, 0.15)",
+                  }}
                   required
                   disabled={isLoading}
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs" style={{ color: "rgba(255, 255, 255, 0.6)" }}>
                   Used in URL. Only lowercase letters, numbers, and hyphens
                 </p>
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="tenantDomain">Domain (optional)</Label>
+                <Label htmlFor="tenantDomain" className="text-sm font-medium text-white">
+                  Domain (optional)
+                </Label>
                 <Input
                   id="tenantDomain"
                   placeholder="company.com"
@@ -173,22 +196,46 @@ export default function RegisterPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, tenantDomain: e.target.value })
                   }
+                  className="py-3 text-white placeholder:text-white/40 focus:border-[#00CFFF] focus:ring-[#00CFFF] transition-all duration-300"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.06)",
+                    border: "1px solid rgba(255, 255, 255, 0.15)",
+                  }}
                   disabled={isLoading}
                 />
               </div>
+
               {error && (
-                <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                <div
+                  className="text-sm p-3 rounded-md"
+                  style={{
+                    color: "#FF6B6B",
+                    background: "rgba(255, 107, 107, 0.1)",
+                    border: "1px solid rgba(255, 107, 107, 0.3)",
+                  }}
+                >
                   {error}
                 </div>
               )}
-              <Button type="submit" className="w-full" disabled={isLoading}>
+
+              <Button
+                type="submit"
+                className="w-full ripple-effect hover-lift font-bold py-5 transition-all duration-300 border-none hover:shadow-[0_0_10px_rgba(0,207,255,0.4)]"
+                style={{
+                  background: "linear-gradient(90deg, #007BFF, #00CFFF)",
+                  color: "#FFFFFF",
+                }}
+                disabled={isLoading}
+              >
                 Next
               </Button>
             </form>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Your Name *</Label>
+                <Label htmlFor="name" className="text-sm font-medium text-white">
+                  Your Name *
+                </Label>
                 <Input
                   id="name"
                   placeholder="First Last"
@@ -196,12 +243,20 @@ export default function RegisterPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
+                  className="py-3 text-white placeholder:text-white/40 focus:border-[#00CFFF] focus:ring-[#00CFFF] transition-all duration-300"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.06)",
+                    border: "1px solid rgba(255, 255, 255, 0.15)",
+                  }}
                   required
                   disabled={isLoading}
                 />
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="email">Email *</Label>
+                <Label htmlFor="email" className="text-sm font-medium text-white">
+                  Email *
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -210,18 +265,31 @@ export default function RegisterPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
+                  className="py-3 text-white placeholder:text-white/40 focus:border-[#00CFFF] focus:ring-[#00CFFF] transition-all duration-300"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.06)",
+                    border: "1px solid rgba(255, 255, 255, 0.15)",
+                  }}
                   required
                   disabled={isLoading}
                 />
               </div>
+
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Administrator Password *</Label>
+                  <Label htmlFor="password" className="text-sm font-medium text-white">
+                    Administrator Password *
+                  </Label>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={generatePassword}
+                    className="transition-all hover:bg-white/10 text-white"
+                    style={{
+                      background: "rgba(255, 255, 255, 0.04)",
+                      border: "1px solid rgba(255, 255, 255, 0.12)",
+                    }}
                     disabled={isLoading}
                   >
                     <RefreshCw className="mr-1 h-3 w-3" />
@@ -237,6 +305,11 @@ export default function RegisterPage() {
                     onChange={(e) =>
                       setFormData({ ...formData, password: e.target.value })
                     }
+                    className="py-3 text-white placeholder:text-white/40 focus:border-[#00CFFF] focus:ring-[#00CFFF] transition-all duration-300 pr-10"
+                    style={{
+                      background: "rgba(255, 255, 255, 0.06)",
+                      border: "1px solid rgba(255, 255, 255, 0.15)",
+                    }}
                     required
                     disabled={isLoading}
                   />
@@ -244,7 +317,7 @@ export default function RegisterPage() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-white/60 hover:text-white"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isLoading}
                   >
@@ -255,12 +328,15 @@ export default function RegisterPage() {
                     )}
                   </Button>
                 </div>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs" style={{ color: "rgba(255, 255, 255, 0.6)" }}>
                   Password will be automatically generated. You can change it or use the generated one.
                 </p>
               </div>
+
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                <Label htmlFor="confirmPassword" className="text-sm font-medium text-white">
+                  Confirm Password *
+                </Label>
                 <Input
                   id="confirmPassword"
                   type={showPassword ? "text" : "password"}
@@ -269,26 +345,52 @@ export default function RegisterPage() {
                   onChange={(e) =>
                     setFormData({ ...formData, confirmPassword: e.target.value })
                   }
+                  className="py-3 text-white placeholder:text-white/40 focus:border-[#00CFFF] focus:ring-[#00CFFF] transition-all duration-300"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.06)",
+                    border: "1px solid rgba(255, 255, 255, 0.15)",
+                  }}
                   required
                   disabled={isLoading}
                 />
               </div>
+
               {error && (
-                <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                <div
+                  className="text-sm p-3 rounded-md"
+                  style={{
+                    color: "#FF6B6B",
+                    background: "rgba(255, 107, 107, 0.1)",
+                    border: "1px solid rgba(255, 107, 107, 0.3)",
+                  }}
+                >
                   {error}
                 </div>
               )}
+
               <div className="flex gap-2">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setStep(1)}
+                  className="flex-1 transition-all hover:bg-white/10 text-white"
+                  style={{
+                    background: "rgba(255, 255, 255, 0.04)",
+                    border: "1px solid rgba(255, 255, 255, 0.12)",
+                  }}
                   disabled={isLoading}
-                  className="flex-1"
                 >
                   Back
                 </Button>
-                <Button type="submit" disabled={isLoading} className="flex-1">
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 ripple-effect hover-lift font-bold transition-all duration-300 border-none hover:shadow-[0_0_10px_rgba(0,207,255,0.4)]"
+                  style={{
+                    background: "linear-gradient(90deg, #007BFF, #00CFFF)",
+                    color: "#FFFFFF",
+                  }}
+                >
                   {isLoading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -301,13 +403,15 @@ export default function RegisterPage() {
               </div>
             </form>
           )}
-          <div className="mt-4 text-center">
-            <p className="text-sm text-muted-foreground">
+
+          <div className="text-center pt-4" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}>
+            <p className="text-sm" style={{ color: "rgba(255, 255, 255, 0.7)" }}>
               Already have an account?{" "}
               <Button
                 variant="link"
                 onClick={() => router.push("/login")}
-                className="p-0 h-auto"
+                className="p-0 h-auto transition-colors duration-300 hover:text-[#4FC3F7]"
+                style={{ color: "#00CFFF" }}
               >
                 Sign In
               </Button>
