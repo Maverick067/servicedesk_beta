@@ -343,7 +343,13 @@ export function DashboardSidebar({ mobileMenuOpen = false, onClose }: DashboardS
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden lg:block w-64 border-r bg-white min-h-[calc(100vh-4rem)]">
+      <aside 
+        className="hidden lg:block w-64 border-r min-h-[calc(100vh-4rem)] shadow-2xl" 
+        style={{
+          background: 'linear-gradient(to bottom, #0f172a, #1e293b, #0f172a)',
+          borderColor: 'rgb(30, 41, 59)'
+        }}
+      >
         <nav className="p-4 space-y-2">
           {filteredMenuItems.map((item) => {
             const Icon = item.icon;
@@ -355,11 +361,27 @@ export function DashboardSidebar({ mobileMenuOpen = false, onClose }: DashboardS
                 key={href}
                 href={href}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative",
-                  isActive
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 relative group",
+                  isActive ? "text-slate-900 font-bold" : "text-slate-300 hover:text-white"
                 )}
+                style={isActive ? {
+                  background: 'linear-gradient(135deg, #06b6d4, #22d3ee, #67e8f9)',
+                  boxShadow: '0 10px 40px rgba(6, 182, 212, 0.4), 0 0 20px rgba(6, 182, 212, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
+                } : {
+                  background: 'transparent'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'rgba(6, 182, 212, 0.1)';
+                    e.currentTarget.style.borderLeft = '3px solid #06b6d4';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.borderLeft = 'none';
+                  }
+                }}
               >
                 <Icon className="h-5 w-5" />
                 <span className="font-medium">{item.label}</span>
@@ -402,9 +424,13 @@ export function DashboardSidebar({ mobileMenuOpen = false, onClose }: DashboardS
       {/* Mobile sidebar (sliding) */}
       <aside 
         className={cn(
-          "fixed top-0 left-0 z-50 h-full w-64 bg-white border-r shadow-xl lg:hidden transition-transform duration-300 ease-in-out",
+          "fixed top-0 left-0 z-50 h-full w-64 border-r shadow-2xl backdrop-blur-md lg:hidden transition-transform duration-300 ease-in-out",
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
+        style={{
+          background: 'linear-gradient(to bottom, #0f172a, #1e293b, #0f172a)',
+          borderColor: 'rgb(30, 41, 59)'
+        }}
       >
         <div className="flex flex-col h-full">
           {/* Mobile menu header */}
@@ -425,11 +451,13 @@ export function DashboardSidebar({ mobileMenuOpen = false, onClose }: DashboardS
                   href={href}
                   onClick={onClose}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative touch-manipulation",
-                    isActive
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground active:bg-accent"
+                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 relative touch-manipulation group",
+                    isActive ? "text-slate-900 font-bold" : "text-slate-300"
                   )}
+                  style={isActive ? {
+                    background: 'linear-gradient(135deg, #06b6d4, #22d3ee, #67e8f9)',
+                    boxShadow: '0 10px 40px rgba(6, 182, 212, 0.4), 0 0 20px rgba(6, 182, 212, 0.2)'
+                  } : {}}
                 >
                   <Icon className="h-5 w-5 flex-shrink-0" />
                   <span className="font-medium flex-1">{item.label}</span>

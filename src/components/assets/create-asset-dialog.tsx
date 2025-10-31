@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -9,15 +9,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { Loader2, Search, User, Check, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const assetSchema = z.object({
   name: z.string().min(1, "Name is required"),
   type: z.string().min(1, "Select type"),
   status: z.string().default("AVAILABLE"),
+  assignedToId: z.string().optional(),
   manufacturer: z.string().optional(),
   model: z.string().optional(),
   serialNumber: z.string().optional(),
@@ -27,15 +30,43 @@ const assetSchema = z.object({
 
 type AssetFormValues = z.infer<typeof assetSchema>;
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export function CreateAssetDialog({ children, onAssetCreated }: { children: React.ReactNode; onAssetCreated?: () => void }) {
   const { data: session } = useSession();
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [users, setUsers] = useState<User[]>([]);
+  const [userSearchOpen, setUserSearchOpen] = useState(false);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
 
   const { register, handleSubmit, control, reset, formState: { errors } } = useForm<AssetFormValues>({
     resolver: zodResolver(assetSchema),
-    defaultValues: { name: "", type: "", status: "AVAILABLE", manufacturer: "", model: "", serialNumber: "", inventoryNumber: "", notes: "" },
+    defaultValues: { name: "", type: "", status: "AVAILABLE", assignedToId: undefined, manufacturer: "", model: "", serialNumber: "", inventoryNumber: "", notes: "" },
   });
+
+  // Fetch users when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchUsers();
+    }
+  }, [isOpen]);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch("/api/users");
+      if (response.ok) {
+        const data = await response.json();
+        setUsers(data);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
 
   const onSubmit = async (data: AssetFormValues) => {
     setIsSubmitting(true);
@@ -47,7 +78,19 @@ export function CreateAssetDialog({ children, onAssetCreated }: { children: Reac
       });
       if (!response.ok) throw new Error("Failed to create asset");
       toast.success("Asset created");
-      reset();
+      reset({
+        name: "",
+        type: "",
+        status: "AVAILABLE",
+        assignedToId: undefined,
+        manufacturer: "",
+        model: "",
+        serialNumber: "",
+        inventoryNumber: "",
+        notes: "",
+      });
+      setUserSearchQuery("");
+      setUserSearchOpen(false);
       setIsOpen(false);
       onAssetCreated?.();
     } catch (e: any) {
@@ -110,6 +153,108 @@ export function CreateAssetDialog({ children, onAssetCreated }: { children: Reac
                 <SelectContent>{statusOptions.map((opt) => (<SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>))}</SelectContent>
               </Select>
             )} />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="assignedToId" className="text-right">Assigned To</Label>
+            <Controller name="assignedToId" control={control} render={({ field }) => {
+              const selectedUser = users.find(u => u.id === field.value);
+              const filteredUsers = users.filter(user => 
+                user.name.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+                user.email.toLowerCase().includes(userSearchQuery.toLowerCase())
+              );
+
+              return (
+                <Popover open={userSearchOpen} onOpenChange={setUserSearchOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className={cn(
+                        "col-span-3 justify-between",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      {selectedUser ? (
+                        <span className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          {selectedUser.name} ({selectedUser.email})
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          Select user or leave empty
+                        </span>
+                      )}
+                      <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[400px] p-0" align="start">
+                    <div className="flex items-center border-b px-3">
+                      <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+                      <Input
+                        placeholder="Search users..."
+                        value={userSearchQuery}
+                        onChange={(e) => setUserSearchQuery(e.target.value)}
+                        className="h-9 border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+                      />
+                    </div>
+                    <div className="max-h-[300px] overflow-auto">
+                      <div
+                        className={cn(
+                          "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm hover:bg-accent",
+                          !field.value && "bg-accent"
+                        )}
+                        onClick={() => {
+                          field.onChange(undefined);
+                          setUserSearchOpen(false);
+                          setUserSearchQuery("");
+                        }}
+                      >
+                        <div className="flex items-center gap-2 flex-1">
+                          <div className="flex items-center gap-2">
+                            <div className="h-4 w-4 flex items-center justify-center">
+                              {!field.value && <Check className="h-4 w-4" />}
+                            </div>
+                            <span className="text-muted-foreground">None (Not assigned)</span>
+                          </div>
+                        </div>
+                      </div>
+                      {filteredUsers.length === 0 ? (
+                        <div className="py-6 text-center text-sm text-muted-foreground">
+                          No users found
+                        </div>
+                      ) : (
+                        filteredUsers.map((user) => (
+                          <div
+                            key={user.id}
+                            className={cn(
+                              "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm hover:bg-accent",
+                              field.value === user.id && "bg-accent"
+                            )}
+                            onClick={() => {
+                              field.onChange(user.id);
+                              setUserSearchOpen(false);
+                              setUserSearchQuery("");
+                            }}
+                          >
+                            <div className="flex items-center gap-2 flex-1">
+                              <User className="h-4 w-4 text-muted-foreground" />
+                              <div className="flex-1">
+                                <div className="font-medium">{user.name}</div>
+                                <div className="text-xs text-muted-foreground">{user.email}</div>
+                              </div>
+                              {field.value === user.id && (
+                                <Check className="h-4 w-4" />
+                              )}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              );
+            }} />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="manufacturer" className="text-right">Manufacturer</Label>

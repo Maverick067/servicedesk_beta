@@ -130,7 +130,7 @@ export default function DashboardPage() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-4 sm:p-6 md:p-8 text-white shadow-2xl"
+        className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 md:p-8 text-white shadow-2xl border border-cyan-500/20"
       >
         <div className="absolute inset-0 bg-black/10"></div>
         <div className="relative z-10">
@@ -182,7 +182,7 @@ export default function DashboardPage() {
                 <motion.div key={stat.title} variants={itemVariants}>
                   <Card 
                     onClick={handleCardClick}
-                    className="relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 sm:hover:-translate-y-1 cursor-pointer group touch-manipulation active:scale-95"
+                    className="relative overflow-hidden border border-purple-100 shadow-lg hover:shadow-xl hover:shadow-purple-200/50 transition-all duration-300 sm:hover:-translate-y-2 cursor-pointer group touch-manipulation active:scale-95 hover:scale-[1.02] hover:border-purple-300"
                   >
                     {/* Gradient overlay on hover */}
                     <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
@@ -227,11 +227,11 @@ export default function DashboardPage() {
             transition={{ delay: 0.5 }}
             className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-3"
           >
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 sm:hover:-translate-y-1 cursor-pointer group touch-manipulation active:scale-95">
+            <Card className="border border-slate-800 shadow-lg hover:shadow-xl hover:border-cyan-500/30 transition-all duration-300 sm:hover:-translate-y-2 cursor-pointer group touch-manipulation active:scale-95 hover:scale-[1.02]">
               <CardHeader className="pb-2 sm:pb-6">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg group-hover:text-blue-600 transition-colors">
-                  <div className="p-1.5 sm:p-2 rounded-lg bg-blue-100 group-hover:bg-blue-200 transition-colors">
-                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg group-hover:text-cyan-400 transition-colors">
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-cyan-500/20 group-hover:bg-cyan-500/30 transition-colors">
+                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-400" />
                   </div>
                   Activity
                 </CardTitle>
@@ -243,11 +243,11 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 sm:hover:-translate-y-1 cursor-pointer group touch-manipulation active:scale-95">
+            <Card className="border border-slate-800 shadow-lg hover:shadow-xl hover:border-cyan-500/30 transition-all duration-300 sm:hover:-translate-y-2 cursor-pointer group touch-manipulation active:scale-95 hover:scale-[1.02]">
               <CardHeader className="pb-2 sm:pb-6">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg group-hover:text-purple-600 transition-colors">
-                  <div className="p-1.5 sm:p-2 rounded-lg bg-purple-100 group-hover:bg-purple-200 transition-colors">
-                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg group-hover:text-cyan-400 transition-colors">
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-cyan-500/20 group-hover:bg-cyan-500/30 transition-colors">
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-400" />
                   </div>
                   {isSuperAdmin ? "Platform" : "Team"}
                 </CardTitle>
@@ -261,12 +261,12 @@ export default function DashboardPage() {
 
             <Card 
               onClick={handleCardClick}
-              className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 sm:hover:-translate-y-1 cursor-pointer group touch-manipulation active:scale-95"
+              className="border border-slate-800 shadow-lg hover:shadow-xl hover:border-cyan-500/30 transition-all duration-300 sm:hover:-translate-y-2 cursor-pointer group touch-manipulation active:scale-95 hover:scale-[1.02]"
             >
               <CardHeader className="pb-2 sm:pb-6">
-                <CardTitle className="flex items-center gap-2 text-base sm:text-lg group-hover:text-green-600 transition-colors">
-                  <div className="p-1.5 sm:p-2 rounded-lg bg-green-100 group-hover:bg-green-200 transition-colors">
-                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg group-hover:text-cyan-400 transition-colors">
+                  <div className="p-1.5 sm:p-2 rounded-lg bg-cyan-500/20 group-hover:bg-cyan-500/30 transition-colors">
+                    <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-400" />
                   </div>
                   Today
                 </CardTitle>

@@ -96,7 +96,7 @@ export default function SupportTicketsPage() {
         <h1 className="text-3xl font-bold">Support Tickets</h1>
         <div className="grid gap-4">
           {[1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse">
+            <Card key={i} className="animate-pulse border border-slate-800">
               <CardContent className="h-32" />
             </Card>
           ))}
@@ -112,10 +112,19 @@ export default function SupportTicketsPage() {
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6" style={{ background: '#0f172a', minHeight: '100vh' }}>
       <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent flex items-center gap-3">
-          <MessageSquare className="h-8 w-8 text-orange-600" />
+        <h1 
+          className="text-3xl font-bold flex items-center gap-3"
+          style={{
+            background: 'linear-gradient(135deg, #06b6d4, #22d3ee, #67e8f9)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            filter: 'drop-shadow(0 0 8px rgba(6, 182, 212, 0.5))'
+          }}
+        >
+          <MessageSquare className="h-8 w-8 text-cyan-400" />
           Support Tickets
         </h1>
         <p className="text-muted-foreground mt-2">
@@ -125,34 +134,79 @@ export default function SupportTicketsPage() {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+        <Card 
+          className="transition-all duration-300 hover:scale-105"
+          style={{
+            background: 'rgba(15, 23, 42, 0.6)',
+            border: '1px solid rgb(30, 41, 59)',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.5)';
+            e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 0 20px rgba(6, 182, 212, 0.2)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'rgb(30, 41, 59)';
+            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.3)';
+          }}
+        >
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium" style={{ color: 'rgb(148, 163, 184)' }}>
               Total Tickets
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-2xl font-bold" style={{ color: '#22d3ee' }}>{stats.total}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card 
+          className="transition-all duration-300 hover:scale-105"
+          style={{
+            background: 'rgba(15, 23, 42, 0.6)',
+            border: '1px solid rgb(30, 41, 59)',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.5)';
+            e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 0 20px rgba(6, 182, 212, 0.2)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'rgb(30, 41, 59)';
+            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.3)';
+          }}
+        >
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium" style={{ color: 'rgb(148, 163, 184)' }}>
               Open
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{stats.open}</div>
+            <div className="text-2xl font-bold" style={{ color: '#22d3ee' }}>{stats.open}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card 
+          className="transition-all duration-300 hover:scale-105"
+          style={{
+            background: 'rgba(15, 23, 42, 0.6)',
+            border: '1px solid rgb(30, 41, 59)',
+            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.5)';
+            e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 0 20px rgba(6, 182, 212, 0.2)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.borderColor = 'rgb(30, 41, 59)';
+            e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.3)';
+          }}
+        >
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardTitle className="text-sm font-medium" style={{ color: 'rgb(148, 163, 184)' }}>
               Resolved
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.resolved}</div>
+            <div className="text-2xl font-bold" style={{ color: '#22d3ee' }}>{stats.resolved}</div>
           </CardContent>
         </Card>
       </div>
@@ -162,7 +216,23 @@ export default function SupportTicketsPage() {
         {tickets.map((ticket) => (
           <Card
             key={ticket.id}
-            className="border-2 hover:border-primary hover:shadow-lg transition-all cursor-pointer"
+            className="transition-all cursor-pointer"
+            style={{
+              background: 'rgba(15, 23, 42, 0.6)',
+              border: '1px solid rgb(30, 41, 59)',
+              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+              backdropFilter: 'blur(10px)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(6, 182, 212, 0.7)';
+              e.currentTarget.style.boxShadow = '0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 0 30px rgba(6, 182, 212, 0.3)';
+              e.currentTarget.style.transform = 'scale(1.02)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = 'rgb(30, 41, 59)';
+              e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.3)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
             onClick={() => router.push(`/admin/support-tickets/${ticket.id}`)}
           >
             <CardContent className="p-6">
@@ -200,11 +270,14 @@ export default function SupportTicketsPage() {
         ))}
 
         {tickets.length === 0 && (
-          <Card>
+          <Card style={{
+            background: 'rgba(15, 23, 42, 0.6)',
+            border: '1px solid rgb(30, 41, 59)',
+          }}>
             <CardContent className="py-12 text-center">
-              <MessageSquare className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+              <MessageSquare className="mx-auto h-12 w-12 mb-4" style={{ color: 'rgba(34, 211, 238, 0.5)' }} />
               <h3 className="text-lg font-semibold mb-2">No tickets</h3>
-              <p className="text-muted-foreground">
+              <p style={{ color: 'rgb(148, 163, 184)' }}>
                 Requests from organization administrators will be displayed here
               </p>
             </CardContent>

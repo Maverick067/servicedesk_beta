@@ -41,9 +41,18 @@ export function QueueList() {
       try {
         const response = await fetch("/api/queues");
         const data = await response.json();
-        setQueues(data);
+        // Ensure data is an array
+        if (Array.isArray(data)) {
+          setQueues(data);
+        } else if (data && Array.isArray(data.queues)) {
+          setQueues(data.queues);
+        } else {
+          console.error("Unexpected data format:", data);
+          setQueues([]);
+        }
       } catch (error) {
         console.error("Error fetching queues:", error);
+        setQueues([]);
       } finally {
         setIsLoading(false);
       }
@@ -85,7 +94,7 @@ export function QueueList() {
     );
   }
 
-  if (queues.length === 0) {
+  if (!Array.isArray(queues) || queues.length === 0) {
     return (
       <Card>
         <CardContent className="py-12 text-center">
@@ -103,7 +112,7 @@ export function QueueList() {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {queues.map((queue, index) => (
+      {Array.isArray(queues) && queues.map((queue, index) => (
         <motion.div
           key={queue.id}
           initial={{ opacity: 0, y: 20 }}

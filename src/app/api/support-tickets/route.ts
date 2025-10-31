@@ -29,35 +29,128 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    let where: any = {};
-
     // TENANT_ADMIN sees only their own tickets
     if (session.user.role === "TENANT_ADMIN" && session.user.tenantId) {
-      where.tenantId = session.user.tenantId;
+      const tickets = await prisma.supportTicket.findMany({
+        where: {
+          tenantId: session.user.tenantId,
+        },
+        include: {
+          tenant: {
+            select: {
+              name: true,
+              slug: true,
+            },
+          },
+          _count: {
+            select: {
+              comments: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+
+      return NextResponse.json(tickets);
     }
-    // SUPER_ADMIN sees all tickets (where is empty)
 
-    const tickets = await prisma.supportTicket.findMany({
-      where,
-      include: {
-        tenant: {
-          select: {
-            name: true,
-            slug: true,
+    // SUPER_ADMIN (ADMIN without tenantId) - try Prisma first, fallback to raw SQL if RLS blocks
+    if (session.user.role === "ADMIN" && !session.user.tenantId) {
+      try {
+        // Try Prisma query first
+        const tickets = await prisma.supportTicket.findMany({
+          include: {
+            tenant: {
+              select: {
+                name: true,
+                slug: true,
+              },
+            },
+            _count: {
+              select: {
+                comments: true,
+              },
+            },
           },
-        },
-        _count: {
-          select: {
-            comments: true,
+          orderBy: {
+            createdAt: "desc",
           },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+        });
 
-    return NextResponse.json(tickets);
+        return NextResponse.json(tickets);
+      } catch (prismaError: any) {
+        console.error("Prisma query failed for super-admin, trying raw query:", prismaError);
+
+        // Fallback to raw query if Prisma fails due to RLS
+        try {
+          const tickets = await prisma.$queryRaw<Array<{
+            id: string;
+            number: number;
+            title: string;
+            description: string;
+            status: string;
+            priority: string;
+            tenantId: string;
+            creatorId: string;
+            createdAt: Date;
+            updatedAt: Date;
+            tenant_name: string;
+            tenant_slug: string;
+            comments_count: bigint;
+          }>>`
+            SELECT
+              st.id,
+              st.number,
+              st.title,
+              st.description,
+              st.status,
+              st.priority,
+              st."tenantId",
+              st."creatorId",
+              st."createdAt",
+              st."updatedAt",
+              t.name as tenant_name,
+              t.slug as tenant_slug,
+              COALESCE((SELECT COUNT(*) FROM support_comments WHERE "ticketId" = st.id), 0)::bigint as comments_count
+            FROM support_tickets st
+            LEFT JOIN tenants t ON st."tenantId" = t.id
+            ORDER BY st."createdAt" DESC
+          `;
+
+          // Transform to match expected format
+          const formatted = tickets.map((t) => ({
+            id: t.id,
+            number: t.number,
+            title: t.title,
+            description: t.description,
+            status: t.status,
+            priority: t.priority,
+            tenantId: t.tenantId,
+            creatorId: t.creatorId,
+            createdAt: t.createdAt,
+            updatedAt: t.updatedAt,
+            tenant: {
+              name: t.tenant_name,
+              slug: t.tenant_slug,
+            },
+            _count: {
+              comments: Number(t.comments_count) || 0,
+            },
+          }));
+
+          return NextResponse.json(formatted);
+        } catch (rawError: any) {
+          console.error("Raw query also failed:", rawError);
+          // Last resort: return empty array
+          return NextResponse.json([]);
+        }
+      }
+    }
+
+    // Fallback for other cases
+    return NextResponse.json([]);
   } catch (error: any) {
     console.error("Error fetching support tickets:", error);
     return NextResponse.json(

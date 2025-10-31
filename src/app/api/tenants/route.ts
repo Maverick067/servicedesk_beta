@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { setRLSContext, getRLSContextFromSession, withRLSContext } from "@/lib/prisma-rls";
 import { z } from "zod";
 
 const createTenantSchema = z.object({
@@ -20,64 +21,104 @@ export async function GET() {
 
     // Global admin sees all organizations with groups
     if (session.user.role === "ADMIN" && !session.user.tenantId) {
+      // For super-admin, try Prisma query first (might work if RLS allows)
       try {
-        // Temporarily disable RLS for super-admin
-        const tenants = await prisma.$queryRaw<Array<{
-          id: string;
-          name: string;
-          slug: string;
-          domain: string | null;
-          createdAt: Date;
-          users_count: bigint;
-          tickets_count: bigint;
-          group_id: string | null;
-          group_name: string | null;
-        }>>`
-          SELECT 
-            t.id, 
-            t.name, 
-            t.slug, 
-            t.domain, 
-            t."createdAt",
-            (SELECT COUNT(*) FROM users WHERE "tenantId" = t.id) as users_count,
-            (SELECT COUNT(*) FROM tickets WHERE "tenantId" = t.id) as tickets_count,
-            tg.id as group_id,
-            tg.name as group_name
-          FROM tenants t
-          LEFT JOIN tenant_groups tg ON t."groupId" = tg.id
-          ORDER BY t."createdAt" DESC
-        `;
-
-        console.log("Raw tenants data:", tenants);
-
-        // Transform result to required format
-        const formattedTenants = tenants.map((t) => ({
-          id: t.id,
-          name: t.name,
-          slug: t.slug,
-          domain: t.domain,
-          createdAt: t.createdAt,
-          _count: {
-            users: Number(t.users_count) || 0,
-            tickets: Number(t.tickets_count) || 0,
+        const tenants = await prisma.tenant.findMany({
+          include: {
+            _count: {
+              select: {
+                users: true,
+                tickets: true,
+              },
+            },
+            group: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
-          group: t.group_id
-            ? {
-                id: t.group_id,
-                name: t.group_name,
-              }
-            : null,
-        }));
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
 
-        console.log("Formatted tenants data:", formattedTenants);
+        return NextResponse.json(tenants);
+      } catch (prismaError: any) {
+        console.error("❌ Prisma query failed for super-admin:", prismaError);
+        console.error("Error details:", {
+          message: prismaError.message,
+          code: prismaError.code,
+          meta: prismaError.meta,
+        });
 
-        return NextResponse.json(formattedTenants);
-      } catch (error: any) {
-        console.error("Error in tenant query:", error);
-        return NextResponse.json(
-          { error: error.message || "Failed to fetch tenants" },
-          { status: 500 }
-        );
+        // Fallback: use raw SQL query
+        try {
+          console.log("🔄 Trying raw SQL query as fallback...");
+          
+          const tenants = await prisma.$queryRawUnsafe(`
+            SELECT 
+              t.id, 
+              t.name, 
+              t.slug, 
+              t.domain, 
+              t."createdAt",
+              (SELECT COUNT(*)::bigint FROM users WHERE "tenantId" = t.id) as users_count,
+              (SELECT COUNT(*)::bigint FROM tickets WHERE "tenantId" = t.id) as tickets_count,
+              tg.id as group_id,
+              tg.name as group_name
+            FROM tenants t
+            LEFT JOIN tenant_groups tg ON t."groupId" = tg.id
+            ORDER BY t."createdAt" DESC
+          `) as Array<{
+            id: string;
+            name: string;
+            slug: string;
+            domain: string | null;
+            createdAt: Date;
+            users_count: bigint;
+            tickets_count: bigint;
+            group_id: string | null;
+            group_name: string | null;
+          }>;
+
+          // Transform result to required format
+          const formattedTenants = tenants.map((t) => ({
+            id: t.id,
+            name: t.name,
+            slug: t.slug,
+            domain: t.domain,
+            createdAt: t.createdAt,
+            _count: {
+              users: Number(t.users_count) || 0,
+              tickets: Number(t.tickets_count) || 0,
+            },
+            group: t.group_id
+              ? {
+                  id: t.group_id,
+                  name: t.group_name,
+                }
+              : null,
+          }));
+
+          console.log(`✅ Raw SQL query succeeded, found ${formattedTenants.length} tenants`);
+          return NextResponse.json(formattedTenants);
+        } catch (rawError: any) {
+          console.error("❌ Raw SQL query also failed:", rawError);
+          console.error("Error details:", {
+            message: rawError.message,
+            code: rawError.code,
+            meta: rawError.meta,
+          });
+          
+          return NextResponse.json(
+            { 
+              error: rawError.message || "Failed to fetch tenants",
+              details: rawError.meta || null,
+            },
+            { status: 500 }
+          );
+        }
       }
     }
 

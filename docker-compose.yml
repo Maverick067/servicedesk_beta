@@ -71,7 +71,7 @@ services:
     command: >
       sh -c "
         bunx prisma migrate deploy &&
-        bun run server.js
+        bun run .next/standalone/server.js
       "
 
   # Prometheus (Monitoring)

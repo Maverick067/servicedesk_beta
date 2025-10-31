@@ -37,7 +37,14 @@ export function DashboardHeader({ onMenuToggle, mobileMenuOpen }: DashboardHeade
   };
 
   return (
-    <header className="border-b bg-white sticky top-0 z-30">
+    <header 
+      className="border-b backdrop-blur-xl sticky top-0 z-30 shadow-lg" 
+      style={{
+        background: 'rgba(15, 23, 42, 0.8)',
+        backdropFilter: 'blur(20px)',
+        borderColor: 'rgb(30, 41, 59)'
+      }}
+    >
       <div className="flex h-14 sm:h-16 items-center px-3 sm:px-6 justify-between">
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Mobile menu button */}
@@ -54,7 +61,18 @@ export function DashboardHeader({ onMenuToggle, mobileMenuOpen }: DashboardHeade
             )}
           </Button>
           
-          <h1 className="text-lg sm:text-2xl font-bold text-primary">ServiceDesk</h1>
+          <h1 
+            className="text-lg sm:text-2xl font-extrabold"
+            style={{
+              background: 'linear-gradient(135deg, #06b6d4, #22d3ee, #67e8f9)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              filter: 'drop-shadow(0 0 8px rgba(6, 182, 212, 0.5))'
+            }}
+          >
+            ServiceDesk
+          </h1>
           {session?.user.tenantSlug && (
             <span className="hidden sm:inline text-sm text-muted-foreground">
               {session.user.tenantSlug}

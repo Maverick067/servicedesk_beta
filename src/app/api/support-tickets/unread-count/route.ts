@@ -19,6 +19,60 @@ export async function GET() {
 
     // ====== FOR SUPER-ADMIN (ADMIN) ======
     if (session.user.role === "ADMIN") {
+      // For super-admin without tenantId, use raw query to bypass RLS
+      if (!session.user.tenantId) {
+        try {
+          const tickets = await prisma.$queryRaw<Array<{
+            id: string;
+            lastviewedbyadminat: Date | null;
+            creatorid: string;
+          }>>`
+            SELECT 
+              id, 
+              "lastViewedByAdminAt" as lastviewedbyadminat, 
+              "creatorId" as creatorid
+            FROM support_tickets
+          `;
+
+          // Get comments for each ticket
+          let unreadCount = 0;
+          for (const ticket of tickets) {
+            try {
+              const comments = await prisma.$queryRaw<Array<{ createdat: Date }>>`
+                SELECT "createdAt" as createdat
+                FROM support_comments
+                WHERE "ticketId" = ${ticket.id}
+                  AND "authorId" != ${session.user.id}
+                  AND "isInternal" = false
+                ORDER BY "createdAt" DESC
+              `;
+
+              if (comments.length === 0) continue;
+
+              if (!ticket.lastviewedbyadminat) {
+                unreadCount += comments.length;
+                continue;
+              }
+
+              const newComments = comments.filter(
+                (c) => c.createdat > ticket.lastviewedbyadminat!
+              );
+              unreadCount += newComments.length;
+            } catch (commentError: any) {
+              console.error(`Error fetching comments for ticket ${ticket.id}:`, commentError);
+              // Continue with next ticket
+            }
+          }
+
+          console.log("📊 [ADMIN] Unread comments count:", unreadCount);
+          return NextResponse.json({ count: unreadCount });
+        } catch (error: any) {
+          console.error("Error in raw query for super-admin unread count:", error);
+          // Return 0 instead of error to avoid breaking UI
+          return NextResponse.json({ count: 0 });
+        }
+      }
+
       // Get all support tickets with comments (not from super-admin themselves)
       const tickets = await prisma.supportTicket.findMany({
         select: {

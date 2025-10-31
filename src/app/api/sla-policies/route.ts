@@ -37,7 +37,120 @@ export async function GET(request: Request) {
     // Super-admin (ADMIN without tenantId) sees all policies
     const whereClause = session.user.role === "ADMIN" && !session.user.tenantId
       ? {} // Super-admin sees all
-      : { tenantId: session.user.tenantId };
+      : session.user.tenantId 
+        ? { tenantId: session.user.tenantId }
+        : { id: "never-match" }; // Safety: no tenantId and not super-admin
+
+    // For super-admin, try to use Prisma first (might work if RLS allows)
+    if (session.user.role === "ADMIN" && !session.user.tenantId) {
+      try {
+        // Try Prisma query first
+        const policies = await prisma.slaPolicy.findMany({
+          include: {
+            _count: {
+              select: {
+                tickets: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
+        
+        return NextResponse.json(policies);
+      } catch (prismaError: any) {
+        console.error("Prisma query failed for super-admin, trying raw query:", prismaError);
+        
+        // Fallback to raw query if Prisma fails due to RLS
+        try {
+          const policies = await prisma.$queryRaw<Array<{
+            id: string;
+            name: string;
+            description: string | null;
+            tenantId: string;
+            isActive: boolean;
+            responseTime: number | null;
+            resolutionTime: number;
+            priorities: string[];
+            categoryIds: string[];
+            queueIds: string[];
+            businessHoursOnly: boolean;
+            businessHoursStart: string | null;
+            businessHoursEnd: string | null;
+            businessDays: number[];
+            createdAt: Date;
+            updatedAt: Date;
+            tickets_count: bigint;
+          }>>`
+            SELECT 
+              sp.id,
+              sp.name,
+              sp.description,
+              sp."tenantId",
+              sp."isActive",
+              sp."responseTime",
+              sp."resolutionTime",
+              sp.priorities,
+              sp."categoryIds",
+              sp."queueIds",
+              sp."businessHoursOnly",
+              sp."businessHoursStart",
+              sp."businessHoursEnd",
+              sp."businessDays",
+              sp."createdAt",
+              sp."updatedAt",
+              COALESCE((SELECT COUNT(*) FROM tickets WHERE "slaId" = sp.id), 0)::bigint as tickets_count
+            FROM sla_policies sp
+            ORDER BY sp."createdAt" DESC
+          `;
+          
+          // Transform to match expected format
+          const formatted = policies.map((p) => {
+            // Handle PostgreSQL arrays - they might come as strings or arrays
+            const parseArray = (val: any): any[] => {
+              if (Array.isArray(val)) return val;
+              if (typeof val === 'string') {
+                try {
+                  return JSON.parse(val);
+                } catch {
+                  return [];
+                }
+              }
+              return [];
+            };
+
+            return {
+              id: p.id,
+              name: p.name,
+              description: p.description,
+              tenantId: p.tenantId,
+              isActive: p.isActive,
+              responseTime: p.responseTime,
+              resolutionTime: p.resolutionTime,
+              priorities: parseArray(p.priorities),
+              categoryIds: parseArray(p.categoryIds),
+              queueIds: parseArray(p.queueIds),
+              businessHoursOnly: p.businessHoursOnly ?? false,
+              businessHoursStart: p.businessHoursStart,
+              businessHoursEnd: p.businessHoursEnd,
+              businessDays: parseArray(p.businessDays).length > 0 ? parseArray(p.businessDays) : [1, 2, 3, 4, 5],
+              createdAt: p.createdAt,
+              updatedAt: p.updatedAt,
+              _count: {
+                tickets: Number(p.tickets_count) || 0,
+              },
+            };
+          });
+          
+          return NextResponse.json(formatted);
+        } catch (rawError: any) {
+          console.error("Raw query also failed:", rawError);
+          // Last resort: return empty array
+          return NextResponse.json([]);
+        }
+      }
+    }
 
     const policies = await prisma.slaPolicy.findMany({
       where: whereClause,
@@ -54,10 +167,10 @@ export async function GET(request: Request) {
     });
 
     return NextResponse.json(policies);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error fetching SLA policies:", error);
     return NextResponse.json(
-      { error: "Failed to fetch SLA policies" },
+      { error: error.message || "Failed to fetch SLA policies", details: error.stack },
       { status: 500 }
     );
   }
