@@ -130,14 +130,14 @@ export default function DashboardPage() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 sm:p-6 md:p-8 text-white shadow-2xl border border-cyan-500/20"
+        className="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-950 p-4 text-white shadow-[0_25px_60px_-30px_rgba(6,182,212,0.45)] sm:rounded-2xl sm:p-6 md:p-8"
       >
-        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="absolute inset-0 bg-black/20" />
         <div className="relative z-10">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-1 sm:mb-2">
+          <h1 className="mb-1 text-2xl font-bold tracking-tight sm:mb-2 sm:text-3xl md:text-4xl">
             Welcome, {session?.user.name || "User"}! 👋
           </h1>
-          <p className="text-sm sm:text-base md:text-lg text-white/90">
+          <p className="text-sm text-white/80 sm:text-base md:text-lg">
             {new Date().toLocaleDateString("en-US", {
               weekday: "long",
               year: "numeric",
@@ -153,7 +153,7 @@ export default function DashboardPage() {
 
       {/* Tabs for Overview and Analytics - Responsive */}
       <Tabs defaultValue="overview" className="space-y-4 sm:space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-md grid-cols-2 rounded-xl border border-white/10 bg-slate-900/50 p-1">
           <TabsTrigger value="overview" className="gap-1 sm:gap-2 text-xs sm:text-sm">
             <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
             <span className="hidden xs:inline">Overview</span>
@@ -182,22 +182,22 @@ export default function DashboardPage() {
                 <motion.div key={stat.title} variants={itemVariants}>
                   <Card 
                     onClick={handleCardClick}
-                    className="relative overflow-hidden border border-purple-100 shadow-lg hover:shadow-xl hover:shadow-purple-200/50 transition-all duration-300 sm:hover:-translate-y-2 cursor-pointer group touch-manipulation active:scale-95 hover:scale-[1.02] hover:border-purple-300"
+                    className="group relative cursor-pointer overflow-hidden border border-white/10 bg-slate-900/50 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-cyan-400/40 hover:shadow-[0_20px_50px_-25px_rgba(34,211,238,0.6)] sm:hover:-translate-y-1 touch-manipulation active:scale-95"
                   >
                     {/* Gradient overlay on hover */}
                     <div className={`absolute inset-0 bg-gradient-to-br ${stat.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
                     
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
-                      <CardTitle className="text-[10px] sm:text-sm font-medium text-muted-foreground">
+                      <CardTitle className="text-[10px] font-medium text-slate-300 sm:text-sm">
                         {stat.title}
                       </CardTitle>
-                      <div className={`p-2 sm:p-3 rounded-lg sm:rounded-xl ${stat.iconBg} backdrop-blur-sm transition-transform duration-300 group-hover:scale-110`}>
+                      <div className={`rounded-lg p-2 backdrop-blur-sm transition-transform duration-300 group-hover:scale-110 sm:rounded-xl sm:p-3 ${stat.iconBg}`}>
                         <Icon className={`h-3 w-3 sm:h-5 sm:w-5 ${stat.iconColor}`} />
                       </div>
                     </CardHeader>
                     
                     <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-                      <div className="text-xl sm:text-2xl md:text-3xl font-bold">
+                      <div className="text-xl font-bold text-white sm:text-2xl md:text-3xl">
                         {isLoading ? (
                           <div className="h-6 sm:h-8 md:h-9 w-12 sm:w-14 md:w-16 bg-gray-200 animate-pulse rounded"></div>
                         ) : (
@@ -210,7 +210,7 @@ export default function DashboardPage() {
                           </motion.span>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="mt-1 text-xs text-slate-400">
                         Current status
                       </p>
                     </CardContent>
@@ -227,7 +227,7 @@ export default function DashboardPage() {
             transition={{ delay: 0.5 }}
             className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-3"
           >
-            <Card className="border border-slate-800 shadow-lg hover:shadow-xl hover:border-cyan-500/30 transition-all duration-300 sm:hover:-translate-y-2 cursor-pointer group touch-manipulation active:scale-95 hover:scale-[1.02]">
+            <Card className="group cursor-pointer border border-white/10 bg-slate-900/50 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-cyan-500/30 hover:shadow-xl sm:hover:-translate-y-1 touch-manipulation active:scale-95">
               <CardHeader className="pb-2 sm:pb-6">
                 <CardTitle className="flex items-center gap-2 text-base sm:text-lg group-hover:text-cyan-400 transition-colors">
                   <div className="p-1.5 sm:p-2 rounded-lg bg-cyan-500/20 group-hover:bg-cyan-500/30 transition-colors">
@@ -243,7 +243,7 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
 
-            <Card className="border border-slate-800 shadow-lg hover:shadow-xl hover:border-cyan-500/30 transition-all duration-300 sm:hover:-translate-y-2 cursor-pointer group touch-manipulation active:scale-95 hover:scale-[1.02]">
+            <Card className="group cursor-pointer border border-white/10 bg-slate-900/50 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-cyan-500/30 hover:shadow-xl sm:hover:-translate-y-1 touch-manipulation active:scale-95">
               <CardHeader className="pb-2 sm:pb-6">
                 <CardTitle className="flex items-center gap-2 text-base sm:text-lg group-hover:text-cyan-400 transition-colors">
                   <div className="p-1.5 sm:p-2 rounded-lg bg-cyan-500/20 group-hover:bg-cyan-500/30 transition-colors">
@@ -261,7 +261,7 @@ export default function DashboardPage() {
 
             <Card 
               onClick={handleCardClick}
-              className="border border-slate-800 shadow-lg hover:shadow-xl hover:border-cyan-500/30 transition-all duration-300 sm:hover:-translate-y-2 cursor-pointer group touch-manipulation active:scale-95 hover:scale-[1.02]"
+              className="group cursor-pointer border border-white/10 bg-slate-900/50 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-cyan-500/30 hover:shadow-xl sm:hover:-translate-y-1 touch-manipulation active:scale-95"
             >
               <CardHeader className="pb-2 sm:pb-6">
                 <CardTitle className="flex items-center gap-2 text-base sm:text-lg group-hover:text-cyan-400 transition-colors">

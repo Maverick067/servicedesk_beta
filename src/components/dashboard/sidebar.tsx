@@ -343,13 +343,7 @@ export function DashboardSidebar({ mobileMenuOpen = false, onClose }: DashboardS
   return (
     <>
       {/* Desktop sidebar */}
-      <aside 
-        className="hidden lg:block w-64 border-r min-h-[calc(100vh-4rem)] shadow-2xl" 
-        style={{
-          background: 'linear-gradient(to bottom, #0f172a, #1e293b, #0f172a)',
-          borderColor: 'rgb(30, 41, 59)'
-        }}
-      >
+      <aside className="hidden min-h-[calc(100vh-4rem)] w-64 border-r border-white/10 bg-slate-950/80 shadow-[20px_0_40px_-30px_rgba(0,0,0,0.9)] backdrop-blur-xl lg:block">
         <nav className="p-4 space-y-2">
           {filteredMenuItems.map((item) => {
             const Icon = item.icon;
@@ -361,30 +355,14 @@ export function DashboardSidebar({ mobileMenuOpen = false, onClose }: DashboardS
                 key={href}
                 href={href}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 relative group",
-                  isActive ? "text-slate-900 font-bold" : "text-slate-300 hover:text-white"
+                  "group relative flex items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200",
+                  isActive
+                    ? "bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 shadow-[0_8px_30px_-10px_rgba(6,182,212,0.65)]"
+                    : "text-slate-300 hover:bg-white/10 hover:text-white"
                 )}
-                style={isActive ? {
-                  background: 'linear-gradient(135deg, #06b6d4, #22d3ee, #67e8f9)',
-                  boxShadow: '0 10px 40px rgba(6, 182, 212, 0.4), 0 0 20px rgba(6, 182, 212, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.3)'
-                } : {
-                  background: 'transparent'
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'rgba(6, 182, 212, 0.1)';
-                    e.currentTarget.style.borderLeft = '3px solid #06b6d4';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.borderLeft = 'none';
-                  }
-                }}
               >
                 <Icon className="h-5 w-5" />
-                <span className="font-medium">{item.label}</span>
+                <span className="font-medium tracking-tight">{item.label}</span>
                 
                 {/* Badge for unread regular tickets */}
                 {item.href === "/dashboard/tickets" && ticketUnreadCount > 0 && (
@@ -424,18 +402,14 @@ export function DashboardSidebar({ mobileMenuOpen = false, onClose }: DashboardS
       {/* Mobile sidebar (sliding) */}
       <aside 
         className={cn(
-          "fixed top-0 left-0 z-50 h-full w-64 border-r shadow-2xl backdrop-blur-md lg:hidden transition-transform duration-300 ease-in-out",
+          "fixed top-0 left-0 z-50 h-full w-64 border-r border-white/10 bg-slate-950/90 shadow-2xl backdrop-blur-xl transition-transform duration-300 ease-in-out lg:hidden",
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
-        style={{
-          background: 'linear-gradient(to bottom, #0f172a, #1e293b, #0f172a)',
-          borderColor: 'rgb(30, 41, 59)'
-        }}
       >
         <div className="flex flex-col h-full">
           {/* Mobile menu header */}
-          <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-lg font-bold text-primary">Menu</h2>
+          <div className="flex items-center justify-between border-b border-white/10 p-4">
+            <h2 className="text-lg font-bold text-slate-100">Menu</h2>
           </div>
           
           {/* Navigation */}
@@ -451,13 +425,11 @@ export function DashboardSidebar({ mobileMenuOpen = false, onClose }: DashboardS
                   href={href}
                   onClick={onClose}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 relative touch-manipulation group",
-                    isActive ? "text-slate-900 font-bold" : "text-slate-300"
+                    "group relative flex touch-manipulation items-center gap-3 rounded-xl px-4 py-3 transition-all duration-200",
+                    isActive
+                      ? "bg-gradient-to-r from-cyan-400 to-sky-400 text-slate-950 font-semibold"
+                      : "text-slate-300 hover:bg-white/10 hover:text-white"
                   )}
-                  style={isActive ? {
-                    background: 'linear-gradient(135deg, #06b6d4, #22d3ee, #67e8f9)',
-                    boxShadow: '0 10px 40px rgba(6, 182, 212, 0.4), 0 0 20px rgba(6, 182, 212, 0.2)'
-                  } : {}}
                 >
                   <Icon className="h-5 w-5 flex-shrink-0" />
                   <span className="font-medium flex-1">{item.label}</span>

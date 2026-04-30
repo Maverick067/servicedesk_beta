@@ -37,15 +37,8 @@ export function DashboardHeader({ onMenuToggle, mobileMenuOpen }: DashboardHeade
   };
 
   return (
-    <header 
-      className="border-b backdrop-blur-xl sticky top-0 z-30 shadow-lg" 
-      style={{
-        background: 'rgba(15, 23, 42, 0.8)',
-        backdropFilter: 'blur(20px)',
-        borderColor: 'rgb(30, 41, 59)'
-      }}
-    >
-      <div className="flex h-14 sm:h-16 items-center px-3 sm:px-6 justify-between">
+    <header className="sticky top-0 z-30 border-b border-white/10 bg-slate-950/75 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.8)] backdrop-blur-xl">
+      <div className="flex h-14 items-center justify-between px-3 sm:h-16 sm:px-6">
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Mobile menu button */}
           <Button
@@ -61,20 +54,11 @@ export function DashboardHeader({ onMenuToggle, mobileMenuOpen }: DashboardHeade
             )}
           </Button>
           
-          <h1 
-            className="text-lg sm:text-2xl font-extrabold"
-            style={{
-              background: 'linear-gradient(135deg, #06b6d4, #22d3ee, #67e8f9)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              filter: 'drop-shadow(0 0 8px rgba(6, 182, 212, 0.5))'
-            }}
-          >
+          <h1 className="bg-gradient-to-r from-cyan-300 via-sky-300 to-indigo-300 bg-clip-text text-lg font-extrabold tracking-tight text-transparent sm:text-2xl">
             ServiceDesk
           </h1>
           {session?.user.tenantSlug && (
-            <span className="hidden sm:inline text-sm text-muted-foreground">
+            <span className="hidden rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-slate-300 sm:inline">
               {session.user.tenantSlug}
             </span>
           )}
@@ -82,20 +66,21 @@ export function DashboardHeader({ onMenuToggle, mobileMenuOpen }: DashboardHeade
 
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Desktop profile version */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden items-center gap-4 md:flex">
             <div className="text-right">
-              <p className="text-sm font-medium">{session?.user.name || session?.user.email}</p>
-              <p className="text-xs text-muted-foreground">{getRoleLabel()}</p>
+              <p className="text-sm font-medium text-slate-100">{session?.user.name || session?.user.email}</p>
+              <p className="text-xs text-slate-400">{getRoleLabel()}</p>
             </div>
-            <Avatar>
+            <Avatar className="ring-2 ring-cyan-400/30 ring-offset-2 ring-offset-slate-950">
               <AvatarImage src={session?.user.image || undefined} />
-              <AvatarFallback>
+              <AvatarFallback className="bg-slate-800 text-slate-100">
                 {session?.user.name ? getInitials(session.user.name) : "UN"}
               </AvatarFallback>
             </Avatar>
             <Button
               variant="ghost"
               size="icon"
+              className="text-slate-300 hover:bg-white/10 hover:text-white"
               onClick={() => signOut({ callbackUrl: "/login" })}
             >
               <LogOut className="h-4 w-4" />
