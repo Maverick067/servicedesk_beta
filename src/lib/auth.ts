@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import AzureADProvider from "next-auth/providers/azure-ad";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { UserRole } from "@prisma/client";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 import { authenticateWithLdap } from "./ldap-auth";
@@ -62,8 +63,8 @@ export const authOptions: NextAuthOptions = {
               email: user.email,
               name: user.name,
               role: user.role,
-              tenantId: user.tenantId,
-              tenantSlug: user.tenant?.slug || null,
+              tenantId: user.tenantId || "",
+              tenantSlug: user.tenant?.slug || "",
               permissions: user.permissions,
             };
           }
@@ -119,8 +120,8 @@ export const authOptions: NextAuthOptions = {
             email: ldapUser.email,
             name: ldapUser.name,
             role: ldapUser.role,
-            tenantId: ldapUser.tenantId,
-            tenantSlug: ldapUser.tenant?.slug || null,
+            tenantId: ldapUser.tenantId || "",
+            tenantSlug: ldapUser.tenant?.slug || "",
             permissions: ldapUser.permissions,
           };
         }
@@ -238,8 +239,8 @@ export const authOptions: NextAuthOptions = {
         if (dbUser) {
           token.id = dbUser.id;
           token.role = dbUser.role;
-          token.tenantId = dbUser.tenantId;
-          token.tenantSlug = dbUser.tenant?.slug || null;
+          token.tenantId = dbUser.tenantId || "";
+          token.tenantSlug = dbUser.tenant?.slug || "";
           token.permissions = dbUser.permissions;
         }
       }
@@ -249,7 +250,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as string;
+        session.user.role = token.role as UserRole;
         session.user.tenantId = token.tenantId as string;
         session.user.tenantSlug = token.tenantSlug as string;
         session.user.permissions = token.permissions as any;

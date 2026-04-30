@@ -41,7 +41,7 @@ type ArticleFormValues = z.infer<typeof articleSchema>;
 interface Article {
   id: string;
   title: string;
-  content: string;
+  content?: string;
   excerpt: string | null;
   status: string;
   isPublic: boolean;
@@ -73,7 +73,7 @@ export function EditArticleDialog({
     resolver: zodResolver(articleSchema),
     defaultValues: {
       title: article.title,
-      content: article.content,
+      content: article.content || "",
       excerpt: article.excerpt || "",
       status: article.status as "DRAFT" | "PUBLISHED" | "ARCHIVED",
       isPublic: article.isPublic,
@@ -84,7 +84,7 @@ export function EditArticleDialog({
   useEffect(() => {
     reset({
       title: article.title,
-      content: article.content,
+      content: article.content || "",
       excerpt: article.excerpt || "",
       status: article.status as "DRAFT" | "PUBLISHED" | "ARCHIVED",
       isPublic: article.isPublic,

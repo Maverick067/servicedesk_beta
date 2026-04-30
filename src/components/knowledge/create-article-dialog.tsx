@@ -32,8 +32,8 @@ const articleSchema = z.object({
   title: z.string().min(1, "Title is required"),
   content: z.string().min(1, "Content is required"),
   excerpt: z.string().optional(),
-  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]).default("DRAFT"),
-  isPublic: z.boolean().default(false),
+  status: z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]),
+  isPublic: z.boolean(),
   tags: z.string().optional(),
 });
 

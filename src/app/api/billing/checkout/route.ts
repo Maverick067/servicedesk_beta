@@ -5,6 +5,8 @@ import { prisma } from '@/lib/prisma';
 import { stripe } from '@/lib/stripe';
 import { PlanType } from '@prisma/client';
 
+type PaidPlan = Extract<PlanType, 'PRO' | 'ENTERPRISE'>;
+
 /**
  * POST /api/billing/checkout - Create Stripe Checkout Session
  */
@@ -22,6 +24,8 @@ export async function POST(req: NextRequest) {
     if (!plan || !['PRO', 'ENTERPRISE'].includes(plan)) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
     }
+
+    const selectedPlan = plan as PaidPlan;
 
     // Check access rights
     const user = await prisma.user.findUnique({
@@ -47,12 +51,12 @@ export async function POST(req: NextRequest) {
     });
 
     // Prices in cents
-    const priceMap = {
+    const priceMap: Record<PaidPlan, number> = {
       PRO: 4900, // $49/month
       ENTERPRISE: 19900, // $199/month
     };
 
-    const price = priceMap[plan];
+    const price = priceMap[selectedPlan];
 
     // Create Stripe Checkout Session
     const checkoutSession = await stripe.checkout.sessions.create({
@@ -77,7 +81,7 @@ export async function POST(req: NextRequest) {
       ],
       metadata: {
         tenantId: user.tenantId,
-        plan,
+        plan: selectedPlan,
         userId: user.id,
       },
       success_url: `${process.env.NEXTAUTH_URL}/dashboard/billing?success=true`,

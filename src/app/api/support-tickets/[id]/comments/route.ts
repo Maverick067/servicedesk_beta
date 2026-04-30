@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { buildTenantScopedWhere, requireSessionWithRoles } from "@/lib/api-helpers";
 import { z } from "zod";
 
 const createCommentSchema = z.object({
@@ -18,27 +17,15 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const session = await requireSessionWithRoles(["ADMIN", "TENANT_ADMIN"]);
 
     // Check ticket existence
-    const ticket = await prisma.supportTicket.findUnique({
-      where: { id: params.id },
+    const ticket = await prisma.supportTicket.findFirst({
+      where: buildTenantScopedWhere(session, params.id),
     });
 
     if (!ticket) {
       return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
-    }
-
-    // Check access rights
-    if (
-      session.user.role === "TENANT_ADMIN" &&
-      ticket.tenantId !== session.user.tenantId
-    ) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const body = await request.json();
@@ -65,6 +52,12 @@ export async function POST(
 
     return NextResponse.json(comment, { status: 201 });
   } catch (error: any) {
+    if (error?.message === "UNAUTHORIZED") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (error?.message === "FORBIDDEN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     console.error("Error creating support comment:", error);
 
     if (error instanceof z.ZodError) {

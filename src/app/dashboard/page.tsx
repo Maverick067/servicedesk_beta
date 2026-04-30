@@ -254,7 +254,7 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent className="pb-4 sm:pb-6">
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  {isSuperAdmin ? "Manage all organizations" : (session?.user.tenant?.name || "Your organization")}
+                  {isSuperAdmin ? "Manage all organizations" : (session?.user.tenantSlug || "Your organization")}
                 </p>
               </CardContent>
             </Card>

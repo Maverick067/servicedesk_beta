@@ -302,7 +302,7 @@ export default function EditTenantPage() {
             <CardContent>
               <div className="grid gap-4 md:grid-cols-2">
                 {modulesList.map((moduleKey) => {
-                  const module = MODULE_METADATA[moduleKey];
+                  const moduleMeta = MODULE_METADATA[moduleKey];
                   const isEnabled = modules[moduleKey] === true;
                   const isUpdating = updatingModules.has(moduleKey);
                   const requiredPlan = MODULE_PLAN_REQUIREMENTS[moduleKey];
@@ -313,21 +313,21 @@ export default function EditTenantPage() {
                       className={`relative overflow-hidden transition-all duration-300 ${
                         isEnabled ? "border-l-4 shadow-md" : "opacity-80"
                       }`}
-                      style={isEnabled ? { borderLeftColor: module.color } : {}}
+                      style={isEnabled ? { borderLeftColor: moduleMeta.color } : {}}
                     >
                       {isEnabled && (
                         <div
                           className="absolute inset-0 opacity-5"
-                          style={{ backgroundColor: module.color }}
+                          style={{ backgroundColor: moduleMeta.color }}
                         />
                       )}
                       <CardContent className="pt-6 relative">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-2">
-                              <span className="text-2xl">{module.icon}</span>
-                              <h3 className="font-semibold">{module.name}</h3>
-                              {module.comingSoon && (
+                              <span className="text-2xl">{moduleMeta.icon}</span>
+                              <h3 className="font-semibold">{moduleMeta.name}</h3>
+                              {moduleMeta.comingSoon && (
                                 <Badge variant="secondary" className="text-xs">
                                   Soon
                                 </Badge>
@@ -346,11 +346,11 @@ export default function EditTenantPage() {
                               </Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">
-                              {module.description}
+                              {moduleMeta.description}
                             </p>
                           </div>
                           <div className="ml-4">
-                            {module.comingSoon ? (
+                            {moduleMeta.comingSoon ? (
                               <Switch disabled checked={false} />
                             ) : (
                               <Switch
@@ -382,7 +382,7 @@ export default function EditTenantPage() {
                   </p>
                   <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
                     As super admin, you can enable/disable any modules for the organization regardless of subscription plan. 
-                    Modules marked "Soon" are in development. Enabled modules will be available to all organization users.
+                    Modules marked &quot;Soon&quot; are in development. Enabled modules will be available to all organization users.
                   </p>
                 </div>
               </div>

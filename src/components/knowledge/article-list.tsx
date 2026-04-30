@@ -38,6 +38,7 @@ import { enUS } from "date-fns/locale";
 interface KnowledgeArticle {
   id: string;
   title: string;
+  content?: string;
   slug: string;
   excerpt: string | null;
   status: string;

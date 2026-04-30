@@ -161,7 +161,7 @@ export function SyncSettingsDialog({
                   synchronization, you need to configure a cron job on the server:
                 </p>
                 <code className="block mt-2 p-2 bg-muted text-xs rounded">
-                  0 * * * * curl -H "Authorization: Bearer YOUR_CRON_SECRET"
+                  0 * * * * curl -H &quot;Authorization: Bearer YOUR_CRON_SECRET&quot;
                   https://yourapp.com/api/cron/ldap-sync
                 </code>
               </div>

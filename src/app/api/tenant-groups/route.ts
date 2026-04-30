@@ -73,7 +73,15 @@ export async function POST(request: NextRequest) {
 
     // Temporarily disable RLS for super-admin
     // Use cuid() for ID generation
-    const result = await prisma.$queryRaw`
+    const result = await prisma.$queryRaw<
+      Array<{
+        id: string;
+        name: string;
+        description: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+      }>
+    >`
       INSERT INTO tenant_groups (id, name, description, "createdAt", "updatedAt")
       VALUES (
         concat('cm', left(md5(random()::text || clock_timestamp()::text), 10)),
@@ -86,6 +94,9 @@ export async function POST(request: NextRequest) {
     `;
 
     const group = result[0];
+    if (!group) {
+      return NextResponse.json({ error: "Failed to create tenant group" }, { status: 500 });
+    }
 
     return NextResponse.json(group, { status: 201 });
   } catch (error: any) {

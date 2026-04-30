@@ -253,7 +253,7 @@ export default function LoginPage() {
 
           <div className="text-center pt-4" style={{ borderTop: "1px solid rgba(255, 255, 255, 0.1)" }}>
             <p className="text-sm" style={{ color: "rgba(255, 255, 255, 0.7)" }}>
-              Don't have an account?
+              Don&apos;t have an account?
             </p>
             <Button
               variant="link"

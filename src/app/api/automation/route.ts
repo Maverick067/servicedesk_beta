@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     const rule = await prisma.automationRule.create({
       data: {
         ...data,
-        ...getTenantWhereClause(session),
+        tenantId: getTenantIdForCreate(session),
       },
     });
 

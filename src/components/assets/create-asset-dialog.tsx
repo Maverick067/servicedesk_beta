@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 const assetSchema = z.object({
   name: z.string().min(1, "Name is required"),
   type: z.string().min(1, "Select type"),
-  status: z.string().default("AVAILABLE"),
+  status: z.string().min(1, "Select status"),
   assignedToId: z.string().optional(),
   manufacturer: z.string().optional(),
   model: z.string().optional(),

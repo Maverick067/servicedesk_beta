@@ -21,11 +21,13 @@
 
 # environment variables
 .env
+.env.*
 .env*.local
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+!.env.example
 
 # debug
 npm-debug.log*
@@ -43,7 +45,3 @@ next-env.d.ts
 /prisma/migrations
 
 uploads/
-
-# Allow .env files to be tracked
-!.env
-!.env.*

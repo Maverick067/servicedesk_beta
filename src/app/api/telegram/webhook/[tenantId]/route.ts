@@ -40,15 +40,15 @@ export async function POST(
 
     const message = update.message;
     const chatId = message.chat.id;
-    const text = message.text;
+    const text = message.text ?? "";
     const userId = message.from.id;
 
     // Save Telegram user if not exists
     await prisma.telegramUser.upsert({
       where: {
-        telegramId_botId: {
-          telegramId: userId.toString(),
+        botId_telegramId: {
           botId: bot.id,
+          telegramId: userId.toString(),
         },
       },
       create: {
@@ -56,14 +56,15 @@ export async function POST(
         botId: bot.id,
         firstName: message.from.first_name,
         lastName: message.from.last_name,
-        username: message.from.username,
-        chatId: chatId.toString(),
+        telegramUsername: message.from.username,
+        // Store deterministic placeholder to satisfy required schema field.
+        // Real ServiceDesk user id must be written during account linking.
+        userId: `telegram:${userId}`,
       },
       update: {
         firstName: message.from.first_name,
         lastName: message.from.last_name,
-        username: message.from.username,
-        chatId: chatId.toString(),
+        telegramUsername: message.from.username,
       },
     });
 
@@ -71,11 +72,11 @@ export async function POST(
     await prisma.telegramMessage.create({
       data: {
         botId: bot.id,
-        messageId: message.message_id.toString(),
-        chatId: chatId.toString(),
-        fromUserId: userId.toString(),
+        telegramMessageId: message.message_id.toString(),
+        telegramChatId: chatId.toString(),
         text: text,
         messageType: "text",
+        direction: "incoming",
       },
     });
 
@@ -133,7 +134,7 @@ async function handleCommand(
 
     case "/ticket":
       // Parse command: /ticket Title - Description
-      const ticketMatch = text.match(/^\/ticket\s+(.+?)\s+-\s+(.+)$/s);
+      const ticketMatch = text.match(/^\/ticket\s+([\s\S]+?)\s+-\s+([\s\S]+)$/);
       
       if (!ticketMatch) {
         await sendTelegramMessage(
@@ -153,17 +154,13 @@ async function handleCommand(
           telegramId: message.from.id.toString(),
           botId,
         },
-        include: {
-          user: {
-            select: {
-              id: true,
-              tenantId: true,
-            },
-          },
-        },
       });
 
-      if (!telegramUser?.userId) {
+      if (
+        !telegramUser?.isVerified ||
+        !telegramUser.userId ||
+        telegramUser.userId.startsWith("telegram:")
+      ) {
         await sendTelegramMessage(
           botToken,
           chatId,
@@ -173,9 +170,23 @@ async function handleCommand(
         break;
       }
 
+      const botRecord = await prisma.telegramBot.findUnique({
+        where: { id: botId },
+        select: { tenantId: true },
+      });
+
+      if (!botRecord?.tenantId) {
+        await sendTelegramMessage(
+          botToken,
+          chatId,
+          "❌ Error: bot configuration not found."
+        );
+        break;
+      }
+
       // Get tenant for ticket number generation
       const tenant = await prisma.tenant.findUnique({
-        where: { id: telegramUser.user!.tenantId! },
+        where: { id: botRecord.tenantId },
         select: { slug: true, name: true },
       });
 
@@ -190,41 +201,42 @@ async function handleCommand(
 
       // Generate ticket number
       const ticketCount = await prisma.ticket.count({
-        where: { tenantId: telegramUser.user!.tenantId! },
+        where: { tenantId: botRecord.tenantId },
       });
-      const ticketNumber = `${tenant.slug.toUpperCase()}-${String(ticketCount + 1).padStart(3, "0")}`;
+      const nextTicketNumber = ticketCount + 1;
+      const ticketCode = `${tenant.slug.toUpperCase()}-${String(nextTicketNumber).padStart(3, "0")}`;
 
       // Create ticket
-      const newTicket = await prisma.ticket.create({
+      await prisma.ticket.create({
         data: {
-          number: ticketNumber,
+          number: nextTicketNumber,
           title: ticketTitle.trim(),
           description: ticketDescription.trim(),
           status: "OPEN",
           priority: "MEDIUM",
-          tenantId: telegramUser.user!.tenantId!,
-          creatorId: telegramUser.user!.id,
+          tenantId: botRecord.tenantId,
+          creatorId: telegramUser.userId,
         },
       });
 
       await sendTelegramMessage(
         botToken,
         chatId,
-        `✅ Ticket created successfully!\n\n*Number:* ${ticketNumber}\n*Title:* ${ticketTitle.trim()}\n*Status:* Open`,
+        `✅ Ticket created successfully!\n\n*Number:* ${ticketCode}\n*Title:* ${ticketTitle.trim()}\n*Status:* Open`,
         { parse_mode: "Markdown" }
       );
 
       // If agent notification group is configured, send there
-      const bot = await prisma.telegramBot.findUnique({
+      const botSettings = await prisma.telegramBot.findUnique({
         where: { id: botId },
         select: { groupChatId: true, notifyOnNewTicket: true },
       });
 
-      if (bot?.groupChatId && bot.notifyOnNewTicket) {
+      if (botSettings?.groupChatId && botSettings.notifyOnNewTicket) {
         await sendTelegramMessage(
           botToken,
-          bot.groupChatId,
-          `🎫 *New Ticket: ${ticketNumber}*\n\n*Title:* ${ticketTitle.trim()}\n*Description:* ${ticketDescription.trim()}\n*Creator:* ${message.from.first_name}`,
+          botSettings.groupChatId,
+          `🎫 *New Ticket: ${ticketCode}*\n\n*Title:* ${ticketTitle.trim()}\n*Description:* ${ticketDescription.trim()}\n*Creator:* ${message.from.first_name}`,
           { parse_mode: "Markdown" }
         );
       }
@@ -236,21 +248,21 @@ async function handleCommand(
           telegramId: message.from.id.toString(),
           botId,
         },
-        include: {
-          user: {
-            select: {
-              name: true,
-              email: true,
-            },
-          },
-        },
       });
 
-      if (linkTelegramUser?.userId) {
+      if (
+        linkTelegramUser?.isVerified &&
+        linkTelegramUser.userId &&
+        !linkTelegramUser.userId.startsWith("telegram:")
+      ) {
+        const linkedUser = await prisma.user.findUnique({
+          where: { id: linkTelegramUser.userId },
+          select: { name: true, email: true },
+        });
         await sendTelegramMessage(
           botToken,
           chatId,
-          `✅ Your Telegram is already linked to account:\n*${linkTelegramUser.user?.name}* (${linkTelegramUser.user?.email})`,
+          `✅ Your Telegram is already linked to account:\n*${linkedUser?.name || "Unknown"}* (${linkedUser?.email || "unknown"})`,
           { parse_mode: "Markdown" }
         );
       } else {

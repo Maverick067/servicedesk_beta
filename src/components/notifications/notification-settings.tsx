@@ -299,7 +299,7 @@ export function NotificationSettings() {
             Quiet Hours
           </CardTitle>
           <CardDescription>
-            Don't receive notifications during specific time
+            Don&apos;t receive notifications during specific time
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

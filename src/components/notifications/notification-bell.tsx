@@ -32,7 +32,9 @@ interface Notification {
   } | null;
 }
 
-const getPriorityColor = (priority: Notification["ticket"]["priority"]) => {
+type TicketPriority = "LOW" | "MEDIUM" | "HIGH" | "URGENT";
+
+const getPriorityColor = (priority: TicketPriority) => {
   switch (priority) {
     case "LOW":
       return "bg-green-500";

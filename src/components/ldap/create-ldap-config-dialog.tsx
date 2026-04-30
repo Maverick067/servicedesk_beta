@@ -23,7 +23,7 @@ const ldapSchema = z.object({
   bindPassword: z.string().optional(),
   userSearchBase: z.string().optional(),
   userSearchFilter: z.string().optional(),
-  isActive: z.boolean().default(false),
+  isActive: z.boolean(),
 });
 
 type LdapFormValues = z.infer<typeof ldapSchema>;

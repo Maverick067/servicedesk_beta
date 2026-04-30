@@ -7,6 +7,15 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from './auth';
 import { prisma } from './prisma';
 import { setRLSContext, getRLSContextFromSession, validateTenantAccess } from './prisma-rls';
+import type { Session } from 'next-auth';
+
+type UserRole = 'ADMIN' | 'TENANT_ADMIN' | 'AGENT' | 'USER';
+
+interface SessionUserLike {
+  id: string;
+  role: UserRole;
+  tenantId?: string;
+}
 
 /**
  * Get authenticated session for API route
@@ -29,6 +38,36 @@ export async function getAuthenticatedSession() {
   }
 
   return session;
+}
+
+export async function requireSessionWithRoles(allowedRoles: UserRole[]): Promise<Session> {
+  const session = await getAuthenticatedSession();
+  const user = session.user as SessionUserLike | undefined;
+
+  if (!user?.id) {
+    throw new Error('UNAUTHORIZED');
+  }
+
+  if (!allowedRoles.includes(user.role)) {
+    throw new Error('FORBIDDEN');
+  }
+
+  if (user.role !== 'ADMIN' && !user.tenantId) {
+    throw new Error('FORBIDDEN');
+  }
+
+  return session;
+}
+
+export function buildTenantScopedWhere<T extends { id: string; tenantId?: string }>(
+  session: Session,
+  id: string
+): T {
+  const user = session.user as SessionUserLike;
+  if (user.role === 'ADMIN') {
+    return { id } as T;
+  }
+  return { id, tenantId: user.tenantId } as T;
 }
 
 /**

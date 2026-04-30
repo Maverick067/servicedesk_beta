@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { buildTenantScopedWhere, requireSessionWithRoles } from "@/lib/api-helpers";
 import { z } from "zod";
 
 const updateSupportTicketSchema = z.object({
@@ -17,14 +16,10 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await requireSessionWithRoles(["ADMIN", "TENANT_ADMIN"]);
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const ticket = await prisma.supportTicket.findUnique({
-      where: { id: params.id },
+    const ticket = await prisma.supportTicket.findFirst({
+      where: buildTenantScopedWhere(session, params.id),
       include: {
         tenant: {
           select: {
@@ -80,6 +75,12 @@ export async function GET(
 
     return NextResponse.json(ticket);
   } catch (error: any) {
+    if (error?.message === "UNAUTHORIZED") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (error?.message === "FORBIDDEN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     console.error("Error fetching support ticket:", error);
     return NextResponse.json(
       { error: error.message || "Internal Server Error" },
@@ -96,26 +97,14 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await requireSessionWithRoles(["ADMIN", "TENANT_ADMIN"]);
 
-    if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const ticket = await prisma.supportTicket.findUnique({
-      where: { id: params.id },
+    const ticket = await prisma.supportTicket.findFirst({
+      where: buildTenantScopedWhere(session, params.id),
     });
 
     if (!ticket) {
       return NextResponse.json({ error: "Ticket not found" }, { status: 404 });
-    }
-
-    // Check access rights
-    if (
-      session.user.role === "TENANT_ADMIN" &&
-      ticket.tenantId !== session.user.tenantId
-    ) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const body = await request.json();
@@ -141,6 +130,12 @@ export async function PATCH(
 
     return NextResponse.json(updatedTicket);
   } catch (error: any) {
+    if (error?.message === "UNAUTHORIZED") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (error?.message === "FORBIDDEN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     console.error("Error updating support ticket:", error);
 
     if (error instanceof z.ZodError) {

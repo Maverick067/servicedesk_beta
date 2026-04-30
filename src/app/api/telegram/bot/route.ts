@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireSessionWithRoles } from "@/lib/api-helpers";
 import {
   getTelegramBotInfo,
   setTelegramWebhook,
@@ -13,24 +12,15 @@ import {
  */
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    const session = await requireSessionWithRoles(["ADMIN", "TENANT_ADMIN"]);
+    const userId = session.user.id as string;
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: { role: true, tenantId: true },
     });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    // Only TENANT_ADMIN and ADMIN can manage bot
-    if (user.role !== "TENANT_ADMIN" && user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const tenantId = user.role === "ADMIN" && !user.tenantId ? null : user.tenantId;
@@ -54,16 +44,12 @@ export async function GET(req: NextRequest) {
           select: {
             id: true,
             telegramId: true,
-            username: true,
+            telegramUsername: true,
             firstName: true,
             lastName: true,
-            chatId: true,
-            user: {
-              select: {
-                name: true,
-                email: true,
-              },
-            },
+            userId: true,
+            isVerified: true,
+            verifiedAt: true,
           },
         },
       },
@@ -71,6 +57,12 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ bot });
   } catch (error) {
+    if ((error as Error)?.message === "UNAUTHORIZED") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if ((error as Error)?.message === "FORBIDDEN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     console.error("[Telegram Bot GET Error]", error);
     return NextResponse.json(
       { error: "Internal server error" },
@@ -84,23 +76,15 @@ export async function GET(req: NextRequest) {
  */
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    const session = await requireSessionWithRoles(["ADMIN", "TENANT_ADMIN"]);
+    const userId = session.user.id as string;
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: { role: true, tenantId: true },
     });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    if (user.role !== "TENANT_ADMIN" && user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const tenantId = user.tenantId;
@@ -114,6 +98,10 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const { botToken, groupChatId, notifyOnNewTicket, notifyOnTicketUpdate, notifyOnNewComment } = body;
+    const normalizedGroupChatId =
+      groupChatId === null || groupChatId === undefined || groupChatId === ""
+        ? null
+        : String(groupChatId);
 
     if (!botToken) {
       return NextResponse.json(
@@ -154,7 +142,7 @@ export async function POST(req: NextRequest) {
         tenantId,
         botToken,
         botUsername: botInfo.username,
-        groupChatId: groupChatId || null,
+        groupChatId: normalizedGroupChatId,
         notifyOnNewTicket: notifyOnNewTicket ?? true,
         notifyOnTicketUpdate: notifyOnTicketUpdate ?? true,
         notifyOnNewComment: notifyOnNewComment ?? true,
@@ -162,7 +150,7 @@ export async function POST(req: NextRequest) {
       update: {
         botToken,
         botUsername: botInfo.username,
-        groupChatId: groupChatId || null,
+        groupChatId: normalizedGroupChatId,
         notifyOnNewTicket: notifyOnNewTicket ?? true,
         notifyOnTicketUpdate: notifyOnTicketUpdate ?? true,
         notifyOnNewComment: notifyOnNewComment ?? true,
@@ -172,6 +160,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ bot });
   } catch (error) {
+    if ((error as Error)?.message === "UNAUTHORIZED") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if ((error as Error)?.message === "FORBIDDEN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     console.error("[Telegram Bot POST Error]", error);
     return NextResponse.json(
       { error: "Internal server error" },
@@ -185,23 +179,15 @@ export async function POST(req: NextRequest) {
  */
 export async function DELETE(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+    const session = await requireSessionWithRoles(["ADMIN", "TENANT_ADMIN"]);
+    const userId = session.user.id as string;
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: { role: true, tenantId: true },
     });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    if (user.role !== "TENANT_ADMIN" && user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const tenantId = user.tenantId;
@@ -235,6 +221,12 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
+    if ((error as Error)?.message === "UNAUTHORIZED") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if ((error as Error)?.message === "FORBIDDEN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     console.error("[Telegram Bot DELETE Error]", error);
     return NextResponse.json(
       { error: "Internal server error" },

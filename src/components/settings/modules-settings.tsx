@@ -108,7 +108,7 @@ export function ModulesSettings() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {modulesList.map((moduleKey, index) => {
-          const module = MODULE_METADATA[moduleKey];
+          const moduleMeta = MODULE_METADATA[moduleKey];
           const isEnabled = modules[moduleKey] === true;
           const isUpdating = updatingModules.has(moduleKey);
           const requiredPlan = MODULE_PLAN_REQUIREMENTS[moduleKey];
@@ -129,13 +129,13 @@ export function ModulesSettings() {
                 className={`relative overflow-hidden transition-all duration-300 ${
                   isEnabled ? "border-l-4 shadow-md" : "opacity-80"
                 } ${isLocked ? "bg-gray-50 dark:bg-gray-900" : ""}`}
-                style={isEnabled ? { borderLeftColor: module.color } : {}}
+                style={isEnabled ? { borderLeftColor: moduleMeta.color } : {}}
               >
                 {isEnabled && !isLocked && (
                   <div
                     className="absolute inset-0 opacity-5"
                     style={{
-                      background: `linear-gradient(135deg, ${module.color} 0%, ${module.color}88 100%)`,
+                      background: `linear-gradient(135deg, ${moduleMeta.color} 0%, ${moduleMeta.color}88 100%)`,
                     }}
                   ></div>
                 )}
@@ -145,10 +145,10 @@ export function ModulesSettings() {
                       <div
                         className="text-3xl p-3 rounded-lg relative"
                         style={{
-                          backgroundColor: isEnabled && !isLocked ? `${module.color}20` : "#f1f5f9",
+                          backgroundColor: isEnabled && !isLocked ? `${moduleMeta.color}20` : "#f1f5f9",
                         }}
                       >
-                        {module.icon}
+                        {moduleMeta.icon}
                         {isLocked && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
                             <Lock className="h-5 w-5 text-gray-600" />
@@ -157,7 +157,7 @@ export function ModulesSettings() {
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <CardTitle className="text-lg">{module.name}</CardTitle>
+                          <CardTitle className="text-lg">{moduleMeta.name}</CardTitle>
                           {isFree ? (
                             <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
                               Free
@@ -175,7 +175,7 @@ export function ModulesSettings() {
                               {requiredPlan}
                             </Badge>
                           )}
-                          {module.comingSoon && (
+                          {moduleMeta.comingSoon && (
                             <Badge variant="outline" className="text-xs">
                               Coming Soon
                             </Badge>
@@ -187,7 +187,7 @@ export function ModulesSettings() {
                           )}
                         </div>
                         <CardDescription className="mt-1">
-                          {module.description}
+                          {moduleMeta.description}
                           {isLocked && (
                             <span className="block mt-1 text-xs text-muted-foreground">
                               {isEnabled 
@@ -206,7 +206,7 @@ export function ModulesSettings() {
                         id={moduleKey}
                         checked={isEnabled}
                         onCheckedChange={(checked) => handleToggleModule(moduleKey, checked)}
-                        disabled={isUpdating || module.comingSoon || isLocked}
+                        disabled={isUpdating || moduleMeta.comingSoon || isLocked}
                       />
                     </div>
                   </div>

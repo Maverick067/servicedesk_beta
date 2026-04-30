@@ -88,7 +88,7 @@ export function DashboardHeader({ onMenuToggle, mobileMenuOpen }: DashboardHeade
               <p className="text-xs text-muted-foreground">{getRoleLabel()}</p>
             </div>
             <Avatar>
-              <AvatarImage src={session?.user.avatar} />
+              <AvatarImage src={session?.user.image || undefined} />
               <AvatarFallback>
                 {session?.user.name ? getInitials(session.user.name) : "UN"}
               </AvatarFallback>
@@ -107,7 +107,7 @@ export function DashboardHeader({ onMenuToggle, mobileMenuOpen }: DashboardHeade
             <DropdownMenuTrigger asChild className="md:hidden">
               <Button variant="ghost" size="icon" className="rounded-full">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src={session?.user.avatar} />
+                  <AvatarImage src={session?.user.image || undefined} />
                   <AvatarFallback className="text-xs">
                     {session?.user.name ? getInitials(session.user.name) : "UN"}
                   </AvatarFallback>

@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { requireSessionWithRoles } from "@/lib/api-helpers";
 import { z } from "zod";
 import { createAuditLog } from "@/lib/audit-log";
-import { getTenantWhereClause, getTenantIdForCreate } from "@/lib/api-utils";
 
 const webhookSchema = z.object({
   name: z.string().min(1),
@@ -17,9 +15,9 @@ const webhookSchema = z.object({
 
 export async function GET(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.tenantId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await requireSessionWithRoles(["ADMIN", "TENANT_ADMIN", "AGENT", "USER"]);
+    if (!session.user.tenantId) {
+      return NextResponse.json({ error: "Tenant not found" }, { status: 400 });
     }
 
     const webhooks = await prisma.webhook.findMany({
@@ -29,6 +27,12 @@ export async function GET(request: Request) {
 
     return NextResponse.json(webhooks);
   } catch (error: any) {
+    if (error?.message === "UNAUTHORIZED") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (error?.message === "FORBIDDEN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     console.error("Error fetching webhooks:", error);
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }
@@ -36,13 +40,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.tenantId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    if (session.user.role !== "TENANT_ADMIN" && session.user.role !== "ADMIN") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const session = await requireSessionWithRoles(["ADMIN", "TENANT_ADMIN"]);
+    if (!session.user.tenantId) {
+      return NextResponse.json({ error: "Tenant not found" }, { status: 400 });
     }
 
     const json = await request.json();
@@ -64,6 +64,12 @@ export async function POST(request: Request) {
 
     return NextResponse.json(webhook, { status: 201 });
   } catch (error: any) {
+    if (error?.message === "UNAUTHORIZED") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (error?.message === "FORBIDDEN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     console.error("Error creating webhook:", error);
     return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
   }

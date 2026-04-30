@@ -427,7 +427,7 @@ export default function TenantGroupsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the group "{selectedGroup?.name}"?
+              Are you sure you want to delete the group &quot;{selectedGroup?.name}&quot;?
               Organizations will not be deleted, they will just be removed from the group.
             </AlertDialogDescription>
           </AlertDialogHeader>

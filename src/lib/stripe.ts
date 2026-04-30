@@ -9,7 +9,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
 }
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: '2024-11-20.acacia',
+  apiVersion: '2025-09-30.clover',
   typescript: true,
 });
 
@@ -223,14 +223,22 @@ export async function createUsageRecord({
   quantity: number;
   timestamp?: number;
 }) {
-  const usageRecord = await stripe.subscriptionItems.createUsageRecord(
-    subscriptionItemId,
-    {
-      quantity,
-      timestamp: timestamp || Math.floor(Date.now() / 1000),
-      action: 'set',
-    }
-  );
+  const legacyUsageApi = stripe.subscriptionItems as unknown as {
+    createUsageRecord?: (
+      itemId: string,
+      payload: { quantity: number; timestamp: number; action: "set" | "increment" }
+    ) => Promise<unknown>;
+  };
+
+  if (!legacyUsageApi.createUsageRecord) {
+    throw new Error("Stripe usage records API is unavailable in the installed Stripe SDK version");
+  }
+
+  const usageRecord = await legacyUsageApi.createUsageRecord(subscriptionItemId, {
+    quantity,
+    timestamp: timestamp || Math.floor(Date.now() / 1000),
+    action: 'set',
+  });
 
   return usageRecord;
 }

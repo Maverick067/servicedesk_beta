@@ -210,7 +210,7 @@ export function SimpleADConfigDialog({
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  Example: "Corporate AD" or "Office Domain"
+                  Example: &quot;Corporate AD&quot; or &quot;Office Domain&quot;
                 </p>
               </div>
 

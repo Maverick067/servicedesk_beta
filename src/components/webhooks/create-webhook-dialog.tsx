@@ -17,7 +17,7 @@ const webhookSchema = z.object({
   name: z.string().min(1, "Name is required"),
   url: z.string().url("Enter a valid URL"),
   secret: z.string().optional(),
-  isActive: z.boolean().default(true),
+  isActive: z.boolean(),
   events: z.array(z.string()).min(1, "Select at least one event"),
 });
 

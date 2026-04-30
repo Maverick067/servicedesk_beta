@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { WebhookEvent } from "@prisma/client";
 import { z } from "zod";
 import { createAuditLog } from "@/lib/audit-log";
 
@@ -9,7 +10,7 @@ const updateWebhookSchema = z.object({
   name: z.string().min(1).optional(),
   url: z.string().url().optional(),
   secret: z.string().optional(),
-  events: z.array(z.string()).optional(),
+  events: z.array(z.nativeEnum(WebhookEvent)).optional(),
   isActive: z.boolean().optional(),
   headers: z.record(z.string()).optional(),
 });

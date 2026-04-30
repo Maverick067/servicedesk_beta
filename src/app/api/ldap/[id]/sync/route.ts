@@ -93,6 +93,7 @@ async function syncUsersFromLdap(config: any): Promise<{
   usersFound: number;
   usersCreated: number;
   usersUpdated: number;
+  usersDeactivated?: number;
   users: any[];
   error?: string;
 }> {

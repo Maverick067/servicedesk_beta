@@ -46,6 +46,10 @@ export async function GET(
       isSupportTicket = true;
     }
 
+    if (!attachment) {
+      return NextResponse.json({ error: "Attachment not found" }, { status: 404 });
+    }
+
     // Check access rights
     if (isSupportTicket) {
       const supportTicket = attachment.ticket as any;
@@ -128,6 +132,10 @@ export async function DELETE(
 
       attachment = supportAttachment as any;
       isSupportTicket = true;
+    }
+
+    if (!attachment) {
+      return NextResponse.json({ error: "Attachment not found" }, { status: 404 });
     }
 
     // Check access rights (only ticket creator or admins can delete)

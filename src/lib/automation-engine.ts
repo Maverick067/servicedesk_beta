@@ -3,6 +3,7 @@
  */
 
 import { prisma } from "./prisma";
+import { TicketPriority, TicketStatus } from "@prisma/client";
 
 type TriggerType =
   | "TICKET_CREATED"
@@ -47,6 +48,12 @@ interface TicketData {
   tenantId: string;
   [key: string]: any;
 }
+
+const isTicketStatus = (value: string): value is TicketStatus =>
+  ["OPEN", "IN_PROGRESS", "PENDING", "RESOLVED", "CLOSED"].includes(value);
+
+const isTicketPriority = (value: string): value is TicketPriority =>
+  ["LOW", "MEDIUM", "HIGH", "URGENT"].includes(value);
 
 /**
  * Checks condition
@@ -94,6 +101,10 @@ async function executeAction(action: Action, ticketData: TicketData): Promise<vo
   try {
     switch (action.type) {
       case "CHANGE_STATUS":
+        if (!isTicketStatus(action.value)) {
+          console.warn(`[Automation] Invalid status "${action.value}" for ticket ${ticketData.id}`);
+          break;
+        }
         await prisma.ticket.update({
           where: { id: ticketData.id },
           data: { status: action.value },
@@ -101,6 +112,10 @@ async function executeAction(action: Action, ticketData: TicketData): Promise<vo
         break;
 
       case "CHANGE_PRIORITY":
+        if (!isTicketPriority(action.value)) {
+          console.warn(`[Automation] Invalid priority "${action.value}" for ticket ${ticketData.id}`);
+          break;
+        }
         await prisma.ticket.update({
           where: { id: ticketData.id },
           data: { priority: action.value },
@@ -115,13 +130,17 @@ async function executeAction(action: Action, ticketData: TicketData): Promise<vo
         break;
 
       case "ADD_COMMENT":
+        if (!ticketData.assigneeId) {
+          console.warn(`[Automation] Skipping ADD_COMMENT: no assignee for ticket ${ticketData.id}`);
+          break;
+        }
         // Create system comment
         await prisma.comment.create({
           data: {
             content: action.value,
             ticketId: ticketData.id,
-            authorId: action.value || ticketData.assigneeId || ticketData.tenantId, // Fallback to system
-            tenantId: ticketData.tenantId,
+            authorId: ticketData.assigneeId,
+            isInternal: true,
           },
         });
         break;
@@ -132,11 +151,10 @@ async function executeAction(action: Action, ticketData: TicketData): Promise<vo
           await prisma.notification.create({
             data: {
               type: "TICKET_UPDATED",
+              title: "Automation rule notification",
               message: action.value,
               userId: ticketData.assigneeId,
-              tenantId: ticketData.tenantId,
-              resourceType: "ticket",
-              resourceId: ticketData.id,
+              ticketId: ticketData.id,
             },
           });
         }

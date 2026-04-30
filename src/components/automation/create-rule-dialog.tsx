@@ -32,9 +32,9 @@ import { Badge } from "@/components/ui/badge";
 const ruleSchema = z.object({
   name: z.string().min(1, "Name is required"),
   description: z.string().optional(),
-  isActive: z.boolean().default(true),
+  isActive: z.boolean(),
   triggerType: z.string().min(1, "Select a trigger"),
-  priority: z.number().int().default(0),
+  priority: z.number().int(),
 });
 
 type RuleFormValues = z.infer<typeof ruleSchema>;

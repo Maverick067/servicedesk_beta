@@ -239,7 +239,7 @@ export default function TelegramSettingsPage() {
               className="font-mono"
             />
             <p className="text-sm text-muted-foreground mt-1">
-              Group ID for sending notifications to agents (starts with "-")
+              Group ID for sending notifications to agents (starts with &quot;-&quot;)
             </p>
           </div>
 

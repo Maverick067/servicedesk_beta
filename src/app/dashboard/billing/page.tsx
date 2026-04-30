@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PlanCard } from "@/components/billing/plan-card";
@@ -12,7 +12,7 @@ import { CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { PlanType, Subscription } from "@prisma/client";
 import { toast } from "sonner";
 
-export default function BillingPage() {
+function BillingPageContent() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -207,6 +207,32 @@ export default function BillingPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BillingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold">Pricing & Billing</h1>
+            <p className="text-muted-foreground">Manage subscription and billing plan</p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Skeleton className="h-[300px]" />
+            <Skeleton className="h-[300px]" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Skeleton className="h-[500px]" />
+            <Skeleton className="h-[500px]" />
+            <Skeleton className="h-[500px]" />
+          </div>
+        </div>
+      }
+    >
+      <BillingPageContent />
+    </Suspense>
   );
 }
 

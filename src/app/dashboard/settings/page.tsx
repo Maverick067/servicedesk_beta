@@ -392,7 +392,7 @@ export default function SettingsPage() {
                     </CardHeader>
                     <CardContent>
                       <p className="text-sm text-muted-foreground mb-4">
-                        To delete the organization, contact the global platform administrator through the "Support" section.
+                        To delete the organization, contact the global platform administrator through the &quot;Support&quot; section.
                       </p>
                       <Button
                         variant="outline"

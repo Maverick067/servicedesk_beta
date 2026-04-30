@@ -156,9 +156,18 @@ async function tryLdapAuth(
           userFound = true;
           hasResolved = true;
 
-          const obj = entry.object as any;
-          const userEmail = obj.mail || obj.userPrincipalName || email;
-          const userName = obj.displayName || obj.cn || username;
+          const entryAttributes = entry.pojo.attributes ?? [];
+          const getAttributeValue = (attributeType: string): string | undefined => {
+            const attribute = entryAttributes.find(
+              (item) => item.type.toLowerCase() === attributeType.toLowerCase()
+            );
+            return attribute?.values?.[0];
+          };
+
+          const userEmail =
+            getAttributeValue("mail") || getAttributeValue("userPrincipalName") || email;
+          const userName = getAttributeValue("displayName") || getAttributeValue("cn") || username;
+          const accountName = getAttributeValue("sAMAccountName") || username;
 
           console.log(`[LDAP Auth] User found: ${userName} (${userEmail})`);
 
@@ -173,7 +182,7 @@ async function tryLdapAuth(
             user: {
               email: userEmail,
               name: userName,
-              username: obj.sAMAccountName || username,
+              username: accountName,
               tenantId: config.tenantId, // Bind to organization
             },
           });

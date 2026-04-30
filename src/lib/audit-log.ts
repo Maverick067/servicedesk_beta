@@ -24,17 +24,27 @@ export type ResourceType =
   | "COMMENT"
   | "ROLE"
   | "PERMISSION"
-  | "SETTINGS";
+  | "SETTINGS"
+  | "ASSET"
+  | "AUTOMATION_RULE"
+  | "CUSTOM_FIELD"
+  | "KNOWLEDGE_ARTICLE"
+  | "LDAP_CONFIG"
+  | "QUEUE"
+  | "SLA_POLICY"
+  | "TENANT_MODULES"
+  | "WEBHOOK";
 
 interface AuditLogOptions {
   tenantId: string;
-  userId?: string;
-  action: AuditAction;
-  resourceType: ResourceType;
+  userId?: string | null;
+  action: AuditAction | string;
+  resourceType: ResourceType | string;
   resourceId?: string;
   metadata?: Record<string, any>;
-  ipAddress?: string;
-  userAgent?: string;
+  request?: Request;
+  ipAddress?: string | null;
+  userAgent?: string | null;
 }
 
 /**
@@ -42,6 +52,9 @@ interface AuditLogOptions {
  */
 export async function createAuditLog(options: AuditLogOptions): Promise<void> {
   try {
+    const ipAddress = options.ipAddress || (options.request ? getClientIp(options.request) : undefined);
+    const userAgent = options.userAgent || (options.request ? getUserAgent(options.request) : undefined);
+
     await prisma.auditLog.create({
       data: {
         tenantId: options.tenantId,
@@ -49,9 +62,9 @@ export async function createAuditLog(options: AuditLogOptions): Promise<void> {
         action: options.action,
         resourceType: options.resourceType,
         resourceId: options.resourceId || null,
-        metadata: options.metadata || null,
-        ipAddress: options.ipAddress || null,
-        userAgent: options.userAgent || null,
+        metadata: options.metadata ?? undefined,
+        ipAddress: ipAddress || null,
+        userAgent: userAgent || null,
       },
     });
   } catch (error) {
@@ -150,6 +163,15 @@ export function formatAuditAction(action: string, resourceType: string): string 
     ROLE: "role",
     PERMISSION: "permission",
     SETTINGS: "settings",
+    ASSET: "asset",
+    AUTOMATION_RULE: "automation rule",
+    CUSTOM_FIELD: "custom field",
+    KNOWLEDGE_ARTICLE: "knowledge article",
+    LDAP_CONFIG: "LDAP config",
+    QUEUE: "queue",
+    SLA_POLICY: "SLA policy",
+    TENANT_MODULES: "tenant modules",
+    WEBHOOK: "webhook",
   };
 
   const actionText = actionMap[action] || action;

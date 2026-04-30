@@ -146,19 +146,22 @@ export async function PATCH(
     });
 
     // Log action
-    await createAuditLog({
-      tenantId: existingUser.tenantId,
-      userId: session.user.id,
-      action: "UPDATE",
-      resourceType: "USER",
-      resourceId: params.id,
-      metadata: {
-        changes: validatedData,
-        updatedBy: session.user.role,
-      },
-      ipAddress: getClientIp(req),
-      userAgent: getUserAgent(req),
-    });
+    const updateAuditTenantId = existingUser.tenantId || session.user.tenantId;
+    if (updateAuditTenantId) {
+      await createAuditLog({
+        tenantId: updateAuditTenantId,
+        userId: session.user.id,
+        action: "UPDATE",
+        resourceType: "USER",
+        resourceId: params.id,
+        metadata: {
+          changes: validatedData,
+          updatedBy: session.user.role,
+        },
+        ipAddress: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
+    }
 
     return NextResponse.json(updatedUser);
   } catch (error: any) {
@@ -243,19 +246,22 @@ export async function DELETE(
     });
 
     // Log action
-    await createAuditLog({
-      tenantId: existingUser.tenantId,
-      userId: session.user.id,
-      action: "DELETE",
-      resourceType: "USER",
-      resourceId: params.id,
-      metadata: {
-        deletedUser: existingUser.email,
-        deletedBy: session.user.role,
-      },
-      ipAddress: getClientIp(req),
-      userAgent: getUserAgent(req),
-    });
+    const deleteAuditTenantId = existingUser.tenantId || session.user.tenantId;
+    if (deleteAuditTenantId) {
+      await createAuditLog({
+        tenantId: deleteAuditTenantId,
+        userId: session.user.id,
+        action: "DELETE",
+        resourceType: "USER",
+        resourceId: params.id,
+        metadata: {
+          deletedUser: existingUser.email,
+          deletedBy: session.user.role,
+        },
+        ipAddress: getClientIp(req),
+        userAgent: getUserAgent(req),
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

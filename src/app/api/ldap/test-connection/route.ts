@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     console.log(`[LDAP Test] Base DN: ${baseDn}`);
     console.log(`[LDAP Test] Bind DN: ${bindDn}`);
 
-    return new Promise((resolve) => {
+    return new Promise<NextResponse>((resolve) => {
       const clientOptions: any = {
         url: ldapUrl,
         timeout: 5000,

@@ -11,7 +11,15 @@ export async function GET(req: NextRequest) {
   try {
     // Check secret key to protect cron endpoint
     const authHeader = req.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET || "change-me-in-production";
+    const cronSecret = process.env.CRON_SECRET;
+
+    if (!cronSecret) {
+      console.error("[LDAP Cron] CRON_SECRET is not configured");
+      return NextResponse.json(
+        { error: "Cron endpoint is not configured" },
+        { status: 503 }
+      );
+    }
 
     if (authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

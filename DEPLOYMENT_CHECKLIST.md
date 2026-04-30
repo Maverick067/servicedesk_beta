@@ -30,7 +30,7 @@
 
 ### 4. Stripe Billing Setup
 - [ ] Stripe аккаунт активирован в production mode
-- [ ] Webhook URL настроен: `https://onpoints.it/api/billing/webhook`
+- [ ] Webhook URL настроен: `https://onpoints.it/api/webhooks/stripe`
 - [ ] Webhook events подписаны:
   - [ ] `checkout.session.completed`
   - [ ] `customer.subscription.created`
